@@ -1,0 +1,36 @@
+[project]
+name = "stackstream"
+description = "Bitcoin-native payroll streaming protocol for DAOs on Stacks"
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+
+# SIP-010 Trait - Fungible Token Standard
+[contracts.sip-010-trait]
+path = "contracts/traits/sip-010-trait.clar"
+clarity_version = 3
+epoch = "3.0"
+
+# Mock SIP-010 Token for Testing
+[contracts.mock-sip010-token]
+path = "contracts/mocks/mock-sip010-token.clar"
+clarity_version = 3
+epoch = "3.0"
+depends_on = ["sip-010-trait"]
+
+# Core Stream Manager Contract
+[contracts.stream-manager]
+path = "contracts/stream-manager.clar"
+clarity_version = 3
+epoch = "3.0"
+depends_on = ["sip-010-trait"]
+
+# Stream Factory Contract
+[contracts.stream-factory]
+path = "contracts/stream-factory.clar"
+clarity_version = 3
+epoch = "3.0"
+depends_on = ["stream-manager"]
+
+[repl.analysis]
+passes = []

@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { QueryProvider } from "@/providers/query-provider";
 import { StacksProvider } from "@/providers/stacks-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "StackStream — Bitcoin-Native Payroll Streaming",
@@ -34,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-surface-0 text-zinc-100`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased bg-surface-0 text-zinc-100`}
       >
         <QueryProvider>
           <StacksProvider>

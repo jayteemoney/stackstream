@@ -1,0 +1,17 @@
+"use client";
+
+import { Sidebar } from "./sidebar";
+import { Header } from "./header";
+import type { ReactNode } from "react";
+
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-screen bg-surface-0">
+      <Sidebar />
+      <div className="pl-64">
+        <Header />
+        <main className="p-6">{children}</main>
+      </div>
+    </div>
+  );
+}

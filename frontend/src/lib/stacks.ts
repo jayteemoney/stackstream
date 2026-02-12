@@ -8,25 +8,21 @@
  */
 
 import {
-  callReadOnlyFunction,
+  fetchCallReadOnlyFunction,
   cvToJSON,
   uintCV,
   principalCV,
   optionalCVOf,
   stringUtf8CV,
   noneCV,
-  ClarityValue,
+  type ClarityValue,
   PostConditionMode,
   Pc,
-  FungibleConditionCode,
-  makeContractSTXPostCondition,
 } from "@stacks/transactions";
 import {
   HIRO_API_BASE,
   STREAM_MANAGER_CONTRACT,
   STREAM_FACTORY_CONTRACT,
-  MOCK_TOKEN_CONTRACT,
-  CONTRACT_DEPLOYER,
   IS_MAINNET,
 } from "./constants";
 
@@ -58,7 +54,7 @@ async function callReadOnly(
   senderAddress?: string
 ) {
   const [contractAddress, contractName] = splitContract(contractId);
-  const result = await callReadOnlyFunction({
+  const result = await fetchCallReadOnlyFunction({
     contractAddress,
     contractName,
     functionName,

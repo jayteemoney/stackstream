@@ -9,6 +9,7 @@ import {
   PlusCircle,
   List,
   BarChart3,
+  Building2,
   Coins,
   Clock,
   Zap,
@@ -19,6 +20,7 @@ const adminLinks = [
   { href: "/dashboard/create", label: "Create Stream", icon: PlusCircle },
   { href: "/dashboard/streams", label: "Manage Streams", icon: List },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/register", label: "Register DAO", icon: Building2 },
 ];
 
 const earnLinks = [

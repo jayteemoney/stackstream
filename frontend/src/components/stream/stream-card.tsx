@@ -82,6 +82,11 @@ export function StreamCard({
               Block {stream.startBlock.toLocaleString()} &rarr;{" "}
               {stream.endBlock.toLocaleString()}
             </p>
+            {stream.memo && (
+              <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-[200px]" title={stream.memo}>
+                &ldquo;{stream.memo}&rdquo;
+              </p>
+            )}
           </div>
         </div>
         <Badge variant={streamStatusToBadge(stream.status)}>

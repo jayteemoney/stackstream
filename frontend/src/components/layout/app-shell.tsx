@@ -2,6 +2,7 @@
 
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
+import { AssistantWidget } from "@/components/openclaw/assistant-widget";
 import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Header />
         <main className="p-6">{children}</main>
       </div>
+      <AssistantWidget />
     </div>
   );
 }

@@ -13,6 +13,8 @@ import {
   buildResumeStreamTx,
   buildCancelStreamTx,
 } from "@/lib/stacks";
+import type { StreamData } from "@/lib/stacks";
+import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -36,6 +38,7 @@ export default function ManageStreamsPage() {
   useBlockHeight();
   const { execute, isPending } = useStacksTx();
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [topUpTarget, setTopUpTarget] = useState<{ id: number; stream: StreamData } | null>(null);
 
   const filteredStreams =
     filter === "all"
@@ -138,6 +141,7 @@ export default function ManageStreamsPage() {
                   toast.error("Failed to resume");
                 }
               }}
+              onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
               onCancel={async () => {
                 try {
                   await execute(
@@ -155,6 +159,19 @@ export default function ManageStreamsPage() {
             />
           ))}
         </div>
+      )}
+
+      {topUpTarget && (
+        <TopUpDialog
+          open
+          streamId={topUpTarget.id}
+          stream={topUpTarget.stream}
+          onClose={() => setTopUpTarget(null)}
+          onSuccess={() => {
+            setTopUpTarget(null);
+            refetch();
+          }}
+        />
       )}
     </div>
   );

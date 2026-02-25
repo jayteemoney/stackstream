@@ -10,15 +10,19 @@ import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { formatTokenAmount } from "@/lib/utils";
-import { buildPauseStreamTx, buildResumeStreamTx } from "@/lib/stacks";
+import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
+import type { StreamData } from "@/lib/stacks";
 import { STREAM_STATUS } from "@/lib/constants";
+import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { PlusCircle, Zap, Users, Coins, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export default function DashboardPage() {
   const { isConnected } = useWalletStore();
+  const [topUpTarget, setTopUpTarget] = useState<{ id: number; stream: StreamData } | null>(null);
   const { streams, isLoading, refetch } = useSenderStreams();
   useBlockHeight();
   const { execute, isPending } = useStacksTx();
@@ -129,9 +133,37 @@ export default function DashboardPage() {
                   toast.error("Failed to resume stream");
                 }
               }}
+              onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
+              onCancel={async () => {
+                try {
+                  await execute(
+                    buildCancelStreamTx({
+                      streamId: stream.id,
+                      tokenContract: stream.token,
+                    })
+                  );
+                  toast.success("Cancel transaction submitted");
+                  refetch();
+                } catch {
+                  toast.error("Failed to cancel stream");
+                }
+              }}
             />
           ))}
         </div>
+      )}
+
+      {topUpTarget && (
+        <TopUpDialog
+          open
+          streamId={topUpTarget.id}
+          stream={topUpTarget.stream}
+          onClose={() => setTopUpTarget(null)}
+          onSuccess={() => {
+            setTopUpTarget(null);
+            refetch();
+          }}
+        />
       )}
     </div>
   );

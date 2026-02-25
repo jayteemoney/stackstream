@@ -104,9 +104,11 @@ export default function CreateStreamPage() {
           />
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-zinc-300">Duration</label>
+            <label htmlFor="duration-value" className="block text-sm font-medium text-zinc-300">Duration</label>
             <div className="flex gap-2">
               <input
+                id="duration-value"
+                name="duration-value"
                 type="number"
                 step={durationUnit === "minutes" ? "10" : "1"}
                 min={durationUnit === "minutes" ? "10" : "1"}
@@ -116,6 +118,8 @@ export default function CreateStreamPage() {
                 className="flex-1 rounded-xl border bg-surface-2 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50 border-border"
               />
               <select
+                id="duration-unit"
+                name="duration-unit"
                 value={durationUnit}
                 onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}
                 className="rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50"

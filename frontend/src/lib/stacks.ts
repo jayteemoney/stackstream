@@ -375,7 +375,10 @@ export function buildRegisterDaoTx(name: string) {
 // ============================================================================
 
 export async function getCurrentBlockHeight(): Promise<number> {
-  const res = await fetch(getApiUrl("/v2/info"));
+  const res = await fetch(getApiUrl("/v2/info"), {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return 0;
   const data = await res.json();
   return data.stacks_tip_height;
 }
@@ -384,9 +387,12 @@ export async function getTokenBalance(
   address: string,
   tokenContract: string
 ): Promise<bigint> {
+  if (!address) return 0n;
   const res = await fetch(
-    getApiUrl(`/extended/v1/address/${address}/balances`)
+    getApiUrl(`/extended/v1/address/${address}/balances`),
+    { headers: { Accept: "application/json" } }
   );
+  if (!res.ok) return 0n;
   const data = await res.json();
   const ftBalances = data.fungible_tokens || {};
   const key = `${tokenContract}::mock-sbtc`;

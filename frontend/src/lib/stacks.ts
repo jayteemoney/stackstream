@@ -23,6 +23,7 @@ import {
   HIRO_API_BASE,
   STREAM_MANAGER_CONTRACT,
   STREAM_FACTORY_CONTRACT,
+  MOCK_TOKEN_CONTRACT,
   IS_MAINNET,
 } from "./constants";
 
@@ -336,6 +337,22 @@ export function buildTopUpStreamTx(params: {
         .willSendLte(params.amount)
         .ft(`${tokenAddr}.${tokenName}`, "mock-sbtc"),
     ],
+    network: getNetwork(),
+  };
+}
+
+export function buildFaucetTx(params: {
+  amount: bigint;
+  senderAddress: string;
+}) {
+  const [tokenAddr, tokenName] = splitContract(MOCK_TOKEN_CONTRACT);
+
+  return {
+    contractAddress: tokenAddr,
+    contractName: tokenName,
+    functionName: "faucet",
+    functionArgs: [uintCV(params.amount)],
+    postConditionMode: PostConditionMode.Allow,
     network: getNetwork(),
   };
 }

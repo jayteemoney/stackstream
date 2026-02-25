@@ -19,6 +19,10 @@ export const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;
 export const MOCK_TOKEN_CONTRACT = `${CONTRACT_DEPLOYER}.mock-sip010-token`;
 export const SIP010_TRAIT_CONTRACT = `${CONTRACT_DEPLOYER}.sip-010-trait`;
 
+// OpenClaw API
+export const OPENCLAW_API_URL =
+  process.env.NEXT_PUBLIC_OPENCLAW_API_URL ?? "http://localhost:3001";
+
 // Hiro API
 export const HIRO_API_BASE = IS_MAINNET
   ? "https://api.mainnet.hiro.so"
@@ -56,6 +60,22 @@ export const BLOCKS_PER_DAY = 144;
 
 /** Blocks per month (approx 30 days) */
 export const BLOCKS_PER_MONTH = 4320;
+
+/** Blocks per hour (approx) */
+export const BLOCKS_PER_HOUR = 6;
+
+/** Blocks per minute (approx — 1 block / 10 min) */
+export const BLOCKS_PER_MINUTE = 1 / 10;
+
+/** Duration unit options for stream creation */
+export const DURATION_UNITS = [
+  { value: "minutes", label: "Minutes", blocksPerUnit: BLOCKS_PER_MINUTE },
+  { value: "hours", label: "Hours", blocksPerUnit: BLOCKS_PER_HOUR },
+  { value: "days", label: "Days", blocksPerUnit: BLOCKS_PER_DAY },
+  { value: "months", label: "Months", blocksPerUnit: BLOCKS_PER_MONTH },
+] as const;
+
+export type DurationUnit = (typeof DURATION_UNITS)[number]["value"];
 
 /** Maximum streams per user (from contract) */
 export const MAX_STREAMS_PER_USER = 100;

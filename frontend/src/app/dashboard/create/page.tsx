@@ -9,7 +9,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildCreateStreamTx } from "@/lib/stacks";
-import { MOCK_TOKEN_CONTRACT, BLOCKS_PER_DAY, BLOCKS_PER_MONTH } from "@/lib/constants";
+import { MOCK_TOKEN_CONTRACT, DURATION_UNITS, type DurationUnit } from "@/lib/constants";
 import { formatTokenAmount, blocksToTimeString } from "@/lib/utils";
 import { toast } from "sonner";
 import { Zap, ArrowRight, Info } from "lucide-react";
@@ -21,7 +21,8 @@ export default function CreateStreamPage() {
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [durationDays, setDurationDays] = useState("30");
+  const [durationValue, setDurationValue] = useState("30");
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>("days");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,7 +36,8 @@ export default function CreateStreamPage() {
     );
   }
 
-  const durationBlocks = Math.round(parseFloat(durationDays || "0") * BLOCKS_PER_DAY);
+  const unitConfig = DURATION_UNITS.find((u) => u.value === durationUnit)!;
+  const durationBlocks = Math.max(1, Math.round(parseFloat(durationValue || "0") * unitConfig.blocksPerUnit));
   const amountRaw = Math.round(parseFloat(amount || "0") * 1e8);
   const ratePerBlock = durationBlocks > 0 ? amountRaw / durationBlocks : 0;
 
@@ -44,7 +46,8 @@ export default function CreateStreamPage() {
     if (!recipient || !recipient.startsWith("S")) errs.recipient = "Enter a valid Stacks address";
     if (recipient === address) errs.recipient = "Cannot stream to yourself";
     if (!amount || parseFloat(amount) <= 0) errs.amount = "Enter a positive amount";
-    if (!durationDays || parseFloat(durationDays) <= 0) errs.duration = "Enter a positive duration";
+    if (!durationValue || parseFloat(durationValue) <= 0) errs.duration = "Enter a positive duration";
+    if (durationBlocks < 1) errs.duration = "Duration must be at least 1 block (~10 minutes)";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -100,17 +103,33 @@ export default function CreateStreamPage() {
             hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units` : undefined}
           />
 
-          <Input
-            label="Duration (days)"
-            type="number"
-            step="1"
-            min="1"
-            placeholder="30"
-            value={durationDays}
-            onChange={(e) => setDurationDays(e.target.value)}
-            error={errors.duration}
-            hint={durationBlocks > 0 ? `${durationBlocks.toLocaleString()} blocks (~${blocksToTimeString(durationBlocks)})` : undefined}
-          />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-zinc-300">Duration</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step={durationUnit === "minutes" ? "10" : "1"}
+                min={durationUnit === "minutes" ? "10" : "1"}
+                placeholder={durationUnit === "minutes" ? "20" : durationUnit === "hours" ? "4" : "30"}
+                value={durationValue}
+                onChange={(e) => setDurationValue(e.target.value)}
+                className="flex-1 rounded-xl border bg-surface-2 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50 border-border"
+              />
+              <select
+                value={durationUnit}
+                onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}
+                className="rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50"
+              >
+                {DURATION_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))}
+              </select>
+            </div>
+            {errors.duration && <p className="text-xs text-red-400">{errors.duration}</p>}
+            {!errors.duration && durationBlocks > 0 && (
+              <p className="text-xs text-zinc-600">{durationBlocks.toLocaleString()} blocks (~{blocksToTimeString(durationBlocks)})</p>
+            )}
+          </div>
 
           <Input
             label="Memo (optional)"

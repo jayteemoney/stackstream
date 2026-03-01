@@ -92,7 +92,7 @@ I have a **working MVP** deployed to Stacks testnet with a fully functional fron
 
 ### Supporting Infrastructure
 
-- OpenClaw assistant service (REST API for querying on-chain data)
+- OpenClaw data service (custom-built Express.js REST API for on-chain queries, transaction building, and the in-app assistant widget)
 - Comprehensive user guide (329 lines covering all workflows)
 
 ---

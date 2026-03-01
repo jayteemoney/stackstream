@@ -156,6 +156,33 @@ Instead, the factory provides:
 | @stacks/connect | Wallet integration (Leather, Xverse) |
 | @stacks/transactions | Read-only contract calls via Hiro API |
 
+---
+
+## Data Service Architecture (OpenClaw API)
+
+A custom-built REST API that serves as the backend data layer for StackStream, providing on-chain query endpoints and transaction builders.
+
+### Stack
+
+| Technology | Purpose |
+|---|---|
+| Express.js | HTTP server |
+| TypeScript | Type safety |
+| @stacks/transactions | Blockchain interaction and read-only contract calls |
+| Zod | Request validation and schema enforcement |
+| Hiro API | Stacks blockchain state queries |
+
+### Endpoints
+
+| Category | Endpoints | Description |
+|---|---|---|
+| Streams | `GET /api/streams/{id}`, `/sender/{addr}`, `/recipient/{addr}` | Stream details, balances, progress, and lookups by address |
+| DAOs | `GET /api/daos/{admin}`, `/api/daos/count` | DAO registry queries |
+| Blockchain | `GET /api/blocks/current`, `/api/tokens/{contract}/balance/{addr}` | Block height and token balances |
+| Transactions | `POST /api/tx/create-stream`, `/claim`, `/pause`, `/resume`, `/cancel`, `/top-up` | Build serialized transaction parameters for wallet signing |
+
+The frontend integrates the API through an interactive assistant widget that allows users to query stream data, check balances, and look up DAO information directly from the UI.
+
 ### Page Structure
 
 ```
@@ -210,15 +237,15 @@ All on-chain reads use `fetchCallReadOnlyFunction` through the Hiro API with Tan
 ### Testnet (Current)
 
 - **Contracts:** Deployed via Clarinet to Stacks testnet
-- **Frontend:** Local development server (Next.js dev mode)
-- **Data Service:** OpenClaw REST API on localhost:3001
+- **Frontend:** Vercel (production build, CDN-distributed)
+- **Data Service:** OpenClaw REST API hosted on Railway
 - **Deployer:** `ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB`
 
 ### Mainnet (Planned)
 
 - **Contracts:** Deploy via Clarinet with mainnet plan
 - **Frontend:** Vercel (production build, CDN-distributed)
-- **Data:** Hiro API + Chainhook event indexer
+- **Data:** OpenClaw API (Railway) + Hiro API + Chainhook event indexer
 - **Monitoring:** Contract event tracking, TVL dashboard
 
 ---

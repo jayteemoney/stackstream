@@ -200,49 +200,25 @@ StackStream uses Stacks post-conditions to protect users:
 - When cancelling, post-conditions ensure the correct refund and payout amounts
 - These are enforced at the blockchain level — the transaction fails if conditions aren't met
 
-## 7. Using the AI Assistant (OpenClaw)
+## 7. Using the Assistant Widget (OpenClaw)
 
-StackStream includes an AI assistant powered by [OpenClaw](https://github.com/openclaw) that can help you query streams, check balances, and prepare transactions through natural language.
+StackStream includes a built-in assistant widget powered by the OpenClaw data service. It provides a quick way to query on-chain data directly from the UI without navigating between pages.
 
-### Setup
+### How to Use
 
-1. Install OpenClaw following its documentation
-2. Copy the skill folder into your OpenClaw skills directory:
-   ```bash
-   cp -r openclaw-service/skill ~/.openclaw/skills/stackstream
-   ```
-3. Set the environment variable in your OpenClaw config:
-   ```
-   STACKSTREAM_API_URL=http://localhost:3001
-   ```
-4. Start the StackStream API service:
-   ```bash
-   cd openclaw-service
-   npm install
-   npm run dev
-   ```
+1. Click the assistant button in the bottom-right corner of the app
+2. Select a query type from the tabs: **Stream**, **Sender**, **Recipient**, **DAO**, or **Block**
+3. Enter the relevant input and submit
 
-### Example Conversations
+### Query Types
 
-**Checking a stream:**
-> "Show me stream #5"
-> → Returns full stream details including status, progress, claimable amount
-
-**Finding your streams:**
-> "What streams am I receiving at ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM?"
-> → Lists all stream IDs where that address is a recipient
-
-**Checking balances:**
-> "What's my msBTC balance?"
-> → Returns your token balance
-
-**Building a transaction:**
-> "Create a stream of 1 msBTC to ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG over 30 days"
-> → Builds the transaction parameters (you still sign with your wallet)
-
-**Understanding concepts:**
-> "What does Paused status mean?"
-> → Explains the status and what actions are available
+| Tab | Input | What You Get |
+|-----|-------|-------------|
+| **Stream** | Stream ID (e.g., `1`) | Full stream details — sender, recipient, deposit, streamed, claimable, remaining, progress %, status |
+| **Sender** | Stacks address | List of stream IDs created by that address |
+| **Recipient** | Stacks address | List of stream IDs where that address receives tokens |
+| **DAO** | Admin address | DAO name, status, total streams, total deposited |
+| **Block** | *(no input needed)* | Current Stacks block height |
 
 ## 8. Error Reference
 

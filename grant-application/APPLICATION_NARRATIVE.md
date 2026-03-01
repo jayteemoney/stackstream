@@ -170,8 +170,8 @@ StackStream aims to become the default payment infrastructure for Stacks DAOs, a
 
 ## 9. Links & Resources
 
-- **Testnet App:** [TODO: Add deployed frontend URL]
-- **GitHub Repository:** [TODO: Add repository URL]
+- **Testnet App:** https://stackstream.vercel.app/
+- **GitHub Repository:** https://github.com/jayteemoney/stackstream
 - **User Guide:** Included in repository (`USER_GUIDE.md`)
 - **Technical Architecture:** See [TECHNICAL_ARCHITECTURE.md](./TECHNICAL_ARCHITECTURE.md)
 

@@ -10,29 +10,29 @@ plan:
       transactions:
         - contract-publish:
             contract-name: sip-010-trait
-            expected-sender: STV9VBEA4NB0Q2N67HD6AXP2MGSEKVAJFC8GFTT7
-            cost: 10260
+            expected-sender: ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 1717170
             path: contracts/traits/sip-010-trait.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: mock-sip010-token
-            expected-sender: STV9VBEA4NB0Q2N67HD6AXP2MGSEKVAJFC8GFTT7
-            cost: 26500
+            expected-sender: ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 1719418
             path: contracts/mocks/mock-sip010-token.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-manager
-            expected-sender: STV9VBEA4NB0Q2N67HD6AXP2MGSEKVAJFC8GFTT7
-            cost: 234880
+            expected-sender: ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 1747518
             path: contracts/stream-manager.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-factory
-            expected-sender: STV9VBEA4NB0Q2N67HD6AXP2MGSEKVAJFC8GFTT7
-            cost: 60810
+            expected-sender: ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 1717908
             path: contracts/stream-factory.clar
             anchor-block-only: true
             clarity-version: 3

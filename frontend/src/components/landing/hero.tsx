@@ -40,7 +40,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]"
+          className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
         >
           <span className="text-zinc-100">Stream payments.</span>
           <br />
@@ -95,7 +95,7 @@ export function Hero() {
               <span className="text-sm text-emerald-400 font-medium">Live Stream</span>
               <span className="ml-auto hidden sm:inline text-xs text-zinc-600">StacksDAO &rarr; contributor.btc</span>
             </div>
-            <div className="font-mono text-2xl sm:text-4xl md:text-5xl font-bold tabular-nums">
+            <div className="font-mono text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold tabular-nums">
               <span className="text-zinc-100">1,234</span>
               <span className="text-zinc-100">.</span>
               <span className="text-zinc-300">567891</span>
@@ -115,7 +115,7 @@ export function Hero() {
               <div className="ml-auto flex-1 max-w-32">
                 <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
                   <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400"
+                    className="h-full rounded-full bg-linear-to-r from-brand-500 to-brand-400"
                     initial={{ width: "70%" }}
                     animate={{ width: "80%" }}
                     transition={{ duration: 8, repeat: Infinity, repeatType: "reverse" }}

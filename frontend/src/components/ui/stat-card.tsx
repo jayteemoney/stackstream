@@ -14,7 +14,7 @@ export function StatCard({ label, value, sub, icon, className, trend }: StatCard
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-surface-1 p-4 sm:p-5",
+        "rounded-2xl border border-border bg-surface-1 p-3 sm:p-4 lg:p-5",
         "transition-all duration-300 hover:border-brand-500/20",
         className
       )}

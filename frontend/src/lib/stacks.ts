@@ -243,7 +243,7 @@ export function buildCreateStreamTx(params: {
     contractName: mgrName,
     functionName: "create-stream",
     functionArgs,
-    postConditionMode: PostConditionMode.Deny,
+    postConditionMode: PostConditionMode.Allow,
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.depositAmount)
@@ -355,7 +355,7 @@ export function buildTopUpStreamTx(params: {
       principalCV(params.tokenContract),
       uintCV(params.amount),
     ],
-    postConditionMode: PostConditionMode.Deny,
+    postConditionMode: PostConditionMode.Allow,
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.amount)

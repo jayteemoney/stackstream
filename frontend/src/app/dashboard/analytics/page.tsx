@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[500px]">
+                <table className="w-full text-xs sm:text-sm min-w-125">
                   <thead>
                     <tr className="border-b border-border text-left">
                       <th className="py-2 pr-4 text-xs font-medium uppercase tracking-wider text-zinc-500">

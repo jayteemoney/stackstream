@@ -79,7 +79,7 @@ export function RealtimeBalance({
       <div
         className={cn(
           "font-mono tabular-nums tracking-tight",
-          size === "lg" ? "text-4xl md:text-5xl font-bold" : "text-xl font-semibold"
+          size === "lg" ? "text-2xl sm:text-4xl md:text-5xl font-bold" : "text-xl font-semibold"
         )}
       >
         <span className="text-zinc-100">{Number(intPart).toLocaleString()}</span>

@@ -190,7 +190,7 @@ export function AssistantWidget() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-16 sm:bottom-20 right-3 sm:right-6 z-50 flex w-[calc(100vw-1.5rem)] sm:w-96 flex-col rounded-2xl border border-border bg-surface-1 shadow-2xl overflow-hidden"
+        <div className="fixed bottom-16 sm:bottom-20 right-3 sm:right-6 z-50 flex w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:w-96 sm:max-w-96 flex-col rounded-2xl border border-border bg-surface-1 shadow-2xl overflow-hidden"
           style={{ maxHeight: "70vh" }}
         >
           {/* Header */}

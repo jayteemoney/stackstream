@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-surface-0">
       <Sidebar />
-      <div className="pl-64">
+      <div className="md:pl-64">
         <Header />
         <main className="p-6">{children}</main>
       </div>

@@ -83,7 +83,7 @@ export function StreamCard({
               {stream.endBlock.toLocaleString()}
             </p>
             {stream.memo && (
-              <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-[200px]" title={stream.memo}>
+              <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-[150px] sm:max-w-[200px]" title={stream.memo}>
                 &ldquo;{stream.memo}&rdquo;
               </p>
             )}
@@ -106,7 +106,7 @@ export function StreamCard({
           />
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Deposited</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
@@ -138,7 +138,7 @@ export function StreamCard({
       />
 
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-2 border-t border-border">
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
         {perspective === "sender" && !isTerminal && (
           <>
             {isActive && onPause && (

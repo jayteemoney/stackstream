@@ -36,7 +36,7 @@ export default function ManageStreamsPage() {
   const { isConnected } = useWalletStore();
   const { streams, isLoading, refetch } = useSenderStreams();
   useBlockHeight();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isPending, isConfirming } = useStacksTx();
   const [filter, setFilter] = useState<FilterValue>("all");
   const [topUpTarget, setTopUpTarget] = useState<{ id: number; stream: StreamData } | null>(null);
 
@@ -64,8 +64,8 @@ export default function ManageStreamsPage() {
   return (
     <div className="space-y-6">
       {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-xl bg-surface-2 border border-border p-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1 rounded-xl bg-surface-2 border border-border p-1 overflow-x-auto max-w-full">
           {filterOptions.map((opt) => (
             <button
               key={opt.value}
@@ -90,7 +90,7 @@ export default function ManageStreamsPage() {
 
       {/* Streams grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-64 rounded-2xl" />
           ))}
@@ -115,45 +115,45 @@ export default function ManageStreamsPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredStreams.map((stream) => (
             <StreamCard
               key={stream.id}
               id={stream.id}
               stream={stream}
               perspective="sender"
-              actionLoading={isPending}
+              actionLoading={isPending || isConfirming}
               onPause={async () => {
-                try {
-                  await execute(buildPauseStreamTx(stream.id));
-                  toast.success("Pause transaction submitted");
+                const result = await execute(buildPauseStreamTx(stream.id));
+                if (result?.confirmed) {
+                  toast.success("Stream paused");
                   refetch();
-                } catch {
-                  toast.error("Failed to pause");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to pause: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
               onResume={async () => {
-                try {
-                  await execute(buildResumeStreamTx(stream.id));
-                  toast.success("Resume transaction submitted");
+                const result = await execute(buildResumeStreamTx(stream.id));
+                if (result?.confirmed) {
+                  toast.success("Stream resumed");
                   refetch();
-                } catch {
-                  toast.error("Failed to resume");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to resume: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
               onCancel={async () => {
-                try {
-                  await execute(
-                    buildCancelStreamTx({
-                      streamId: stream.id,
-                      tokenContract: stream.token,
-                    })
-                  );
-                  toast.success("Cancel transaction submitted");
+                const result = await execute(
+                  buildCancelStreamTx({
+                    streamId: stream.id,
+                    tokenContract: stream.token,
+                  })
+                );
+                if (result?.confirmed) {
+                  toast.success("Stream cancelled");
                   refetch();
-                } catch {
-                  toast.error("Failed to cancel");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to cancel: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
             />

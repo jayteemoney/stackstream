@@ -70,14 +70,32 @@ async function callReadOnly(
 // Stream Manager read-only calls
 // ============================================================================
 
+/**
+ * Unwrap cvToJSON optional nesting.
+ *
+ * cvToJSON converts Clarity (optional T) into:
+ *   some → { type: "(optional T)", value: { type: "T", value: <inner> } }
+ *   none → { type: "(optional T)", value: null }
+ *
+ * This helper returns the inner value object or null.
+ */
+function unwrapOptional(cv: { value: any }): any {
+  if (cv.value === null || cv.value === undefined) return null;
+  // If the value itself has a .value property, it's the optional wrapper
+  // around a typed value (tuple, uint, principal, etc.)
+  return cv.value;
+}
+
 export async function getStream(streamId: number) {
   const result = await callReadOnly(
     STREAM_MANAGER_CONTRACT,
     "get-stream",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return parseStreamData(result.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  // inner is { type: "(tuple ...)", value: { sender: ..., ... } }
+  return parseStreamData(inner.value);
 }
 
 export async function getStreamStatus(streamId: number): Promise<number | null> {
@@ -86,8 +104,9 @@ export async function getStreamStatus(streamId: number): Promise<number | null> 
     "get-stream-status",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return Number(result.value.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return Number(inner.value);
 }
 
 export async function getClaimableBalance(streamId: number): Promise<bigint | null> {
@@ -96,8 +115,9 @@ export async function getClaimableBalance(streamId: number): Promise<bigint | nu
     "get-claimable-balance",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return BigInt(result.value.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return BigInt(inner.value);
 }
 
 export async function getStreamedAmount(streamId: number): Promise<bigint | null> {
@@ -106,8 +126,9 @@ export async function getStreamedAmount(streamId: number): Promise<bigint | null
     "get-streamed-amount",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return BigInt(result.value.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return BigInt(inner.value);
 }
 
 export async function getRemainingBalance(streamId: number): Promise<bigint | null> {
@@ -116,8 +137,9 @@ export async function getRemainingBalance(streamId: number): Promise<bigint | nu
     "get-remaining-balance",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return BigInt(result.value.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return BigInt(inner.value);
 }
 
 export async function getRefundableAmount(streamId: number): Promise<bigint | null> {
@@ -126,8 +148,9 @@ export async function getRefundableAmount(streamId: number): Promise<bigint | nu
     "get-refundable-amount",
     [uintCV(streamId)]
   );
-  if (result.value === null) return null;
-  return BigInt(result.value.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return BigInt(inner.value);
 }
 
 export async function getSenderStreams(sender: string): Promise<number[]> {
@@ -168,8 +191,9 @@ export async function getDao(admin: string) {
     "get-dao",
     [principalCV(admin)]
   );
-  if (result.value === null) return null;
-  return parseDaoData(result.value);
+  const inner = unwrapOptional(result);
+  if (inner === null) return null;
+  return parseDaoData(inner.value);
 }
 
 export async function getDaoCount(): Promise<number> {
@@ -397,6 +421,103 @@ export async function getTokenBalance(
   const ftBalances = data.fungible_tokens || {};
   const key = `${tokenContract}::mock-sbtc`;
   return BigInt(ftBalances[key]?.balance ?? "0");
+}
+
+// ============================================================================
+// Clarity error code mapping
+// ============================================================================
+
+const CLARITY_ERROR_MESSAGES: Record<string, string> = {
+  "u100": "Not authorized",
+  "u101": "Only the stream sender can do this",
+  "u102": "Only the stream recipient can do this",
+  "u200": "Stream not found",
+  "u201": "Stream is fully depleted",
+  "u202": "Stream has been cancelled",
+  "u203": "Stream is paused",
+  "u204": "Stream is not paused",
+  "u207": "Stream has already ended",
+  "u300": "Invalid amount",
+  "u301": "Invalid duration",
+  "u302": "Start block is in the past",
+  "u303": "Cannot stream to yourself",
+  "u304": "Nothing available to claim yet",
+  "u305": "Maximum streams limit reached (100)",
+  "u401": "Token contract mismatch",
+  // Factory errors
+  "u501": "DAO not found",
+  "u502": "DAO already registered",
+  "u503": "Not the DAO admin",
+  "u504": "Invalid DAO name",
+  "u505": "Stream not found",
+  "u506": "Stream already tracked",
+};
+
+/**
+ * Convert a Clarity error code (e.g. "u100") to a human-readable message.
+ */
+export function clarityErrorMessage(errorCode?: string): string | undefined {
+  if (!errorCode) return undefined;
+  return CLARITY_ERROR_MESSAGES[errorCode];
+}
+
+// ============================================================================
+// Transaction confirmation polling
+// ============================================================================
+
+/**
+ * Poll the Hiro API until a transaction is confirmed (or fails).
+ * Returns the final tx status: "success" | "abort_by_response" | "abort_by_post_condition" | null (timeout).
+ */
+export interface TxConfirmationResult {
+  status: string;
+  confirmed: boolean;
+  /** Clarity error code (e.g. "u105") when status is "abort_by_response" */
+  errorCode?: string;
+  /** Raw tx_result repr string from the API */
+  errorRepr?: string;
+}
+
+export async function waitForTxConfirmation(
+  txId: string,
+  {
+    interval = 5_000,
+    timeout = 600_000,
+  }: { interval?: number; timeout?: number } = {}
+): Promise<TxConfirmationResult> {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await fetch(getApiUrl(`/extended/v1/tx/${txId}`), {
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const status = data.tx_status;
+        if (status === "success") {
+          return { status, confirmed: true };
+        }
+        if (status === "abort_by_response" || status === "abort_by_post_condition") {
+          const repr: string | undefined = data.tx_result?.repr;
+          // Extract error code from repr like "(err u105)" -> "u105"
+          const codeMatch = repr?.match(/\(err\s+(.+?)\)/);
+          return {
+            status,
+            confirmed: false,
+            errorCode: codeMatch?.[1],
+            errorRepr: repr,
+          };
+        }
+        // "pending" — keep polling
+      }
+    } catch {
+      // Network error — keep trying
+    }
+    await new Promise((r) => setTimeout(r, interval));
+  }
+
+  return { status: "timeout", confirmed: false };
 }
 
 // ============================================================================

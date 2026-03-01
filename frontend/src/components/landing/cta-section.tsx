@@ -13,9 +13,9 @@ export function CTASection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="max-w-3xl mx-auto text-center rounded-3xl border border-brand-500/20 bg-gradient-to-b from-brand-500/5 to-transparent p-12"
+        className="max-w-3xl mx-auto text-center rounded-3xl border border-brand-500/20 bg-gradient-to-b from-brand-500/5 to-transparent p-6 sm:p-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-zinc-100">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-100">
           Ready to stream?
         </h2>
         <p className="mt-4 text-zinc-400 max-w-md mx-auto">

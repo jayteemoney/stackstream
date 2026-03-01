@@ -20,10 +20,10 @@ export default function LandingPage() {
           </span>
         </Link>
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+          <Link href="/dashboard" className="hidden md:inline text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
             Dashboard
           </Link>
-          <Link href="/earn" className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+          <Link href="/earn" className="hidden md:inline text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
             Earn
           </Link>
           <Link

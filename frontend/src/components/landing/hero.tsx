@@ -40,7 +40,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]"
+          className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]"
         >
           <span className="text-zinc-100">Stream payments.</span>
           <br />
@@ -52,7 +52,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-6 max-w-2xl mx-auto text-lg text-zinc-400 leading-relaxed"
+          className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-zinc-400 leading-relaxed"
         >
           StackStream lets DAOs pay contributors in real-time. Funds flow
           continuously on-chain, and workers can claim earnings at any moment.
@@ -86,16 +86,16 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mt-20 relative"
         >
-          <div className="rounded-2xl border border-border bg-surface-1/80 backdrop-blur-md p-8 glow-orange">
+          <div className="rounded-2xl border border-border bg-surface-1/80 backdrop-blur-md p-4 sm:p-8 glow-orange">
             <div className="flex items-center gap-3 mb-4">
               <span className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
               </span>
               <span className="text-sm text-emerald-400 font-medium">Live Stream</span>
-              <span className="ml-auto text-xs text-zinc-600">StacksDAO &rarr; contributor.btc</span>
+              <span className="ml-auto hidden sm:inline text-xs text-zinc-600">StacksDAO &rarr; contributor.btc</span>
             </div>
-            <div className="font-mono text-4xl md:text-5xl font-bold tabular-nums">
+            <div className="font-mono text-2xl sm:text-4xl md:text-5xl font-bold tabular-nums">
               <span className="text-zinc-100">1,234</span>
               <span className="text-zinc-100">.</span>
               <span className="text-zinc-300">567891</span>

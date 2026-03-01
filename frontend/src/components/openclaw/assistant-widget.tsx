@@ -179,7 +179,7 @@ export function AssistantWidget() {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-300",
+          "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-300",
           open
             ? "bg-zinc-700 hover:bg-zinc-600"
             : "bg-brand-500 hover:bg-brand-600 shadow-brand-500/30"
@@ -190,7 +190,7 @@ export function AssistantWidget() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-20 right-6 z-50 flex w-96 flex-col rounded-2xl border border-border bg-surface-1 shadow-2xl overflow-hidden"
+        <div className="fixed bottom-16 sm:bottom-20 right-3 sm:right-6 z-50 flex w-[calc(100vw-1.5rem)] sm:w-96 flex-col rounded-2xl border border-border bg-surface-1 shadow-2xl overflow-hidden"
           style={{ maxHeight: "70vh" }}
         >
           {/* Header */}

@@ -35,16 +35,16 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
       return;
     }
 
-    try {
-      const txOptions = buildFaucetTx({
-        amount: BigInt(amountRaw),
-        senderAddress: address,
-      });
-      await execute(txOptions);
-      toast.success("Faucet transaction submitted!");
-      setTimeout(() => refetch(), 5000);
-    } catch {
-      toast.error("Failed to mint test tokens");
+    const txOptions = buildFaucetTx({
+      amount: BigInt(amountRaw),
+      senderAddress: address,
+    });
+    const result = await execute(txOptions);
+    if (result?.confirmed) {
+      toast.success("Test tokens minted!");
+      refetch();
+    } else if (result && !result.confirmed) {
+      toast.error(result.status === "timeout" ? "Transaction timed out" : `Mint failed: ${result.errorCode ?? result.status}`);
     }
   }
 

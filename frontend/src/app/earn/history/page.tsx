@@ -45,7 +45,7 @@ export default function HistoryPage() {
     <Card>
       <CardTitle className="mb-4">Claim History</CardTitle>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="py-2 pr-4 text-xs font-medium uppercase tracking-wider text-zinc-500">

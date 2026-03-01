@@ -46,19 +46,19 @@ export function TopUpDialog({
     e.preventDefault();
     if (!validate() || !address) return;
 
-    try {
-      const txOptions = buildTopUpStreamTx({
-        streamId,
-        tokenContract: stream.token,
-        amount: BigInt(amountRaw),
-        senderAddress: address,
-      });
-      await execute(txOptions);
-      toast.success("Top-up transaction submitted!");
+    const txOptions = buildTopUpStreamTx({
+      streamId,
+      tokenContract: stream.token,
+      amount: BigInt(amountRaw),
+      senderAddress: address,
+    });
+    const result = await execute(txOptions);
+    if (result?.confirmed) {
+      toast.success("Stream topped up!");
       setAmount("");
       onSuccess();
-    } catch {
-      toast.error("Failed to top up stream");
+    } else if (result && !result.confirmed) {
+      toast.error(result.status === "timeout" ? "Transaction timed out" : `Top-up failed: ${result.errorCode ?? result.status}`);
     }
   }
 

@@ -15,7 +15,7 @@ export default function EarnStreamsPage() {
   const { isConnected } = useWalletStore();
   const { streams, isLoading, refetch } = useRecipientStreams();
   useBlockHeight();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isPending, isConfirming } = useStacksTx();
 
   if (!isConnected) {
     return (
@@ -29,7 +29,7 @@ export default function EarnStreamsPage() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-64 rounded-2xl" />
         ))}
@@ -48,7 +48,7 @@ export default function EarnStreamsPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {streams.map((stream) => (
         <StreamCard
           key={stream.id}
@@ -57,19 +57,19 @@ export default function EarnStreamsPage() {
           perspective="recipient"
           claimable={stream.claimable}
           streamed={stream.streamed}
-          actionLoading={isPending}
+          actionLoading={isPending || isConfirming}
           onClaim={async () => {
-            try {
-              await execute(
-                buildClaimAllTx({
-                  streamId: stream.id,
-                  tokenContract: stream.token,
-                })
-              );
-              toast.success("Claim transaction submitted!");
+            const result = await execute(
+              buildClaimAllTx({
+                streamId: stream.id,
+                tokenContract: stream.token,
+              })
+            );
+            if (result?.confirmed) {
+              toast.success("Tokens claimed!");
               refetch();
-            } catch {
-              toast.error("Failed to claim");
+            } else if (result && !result.confirmed) {
+              toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to claim: ${result.errorCode ? result.errorCode : result.status}`);
             }
           }}
         />

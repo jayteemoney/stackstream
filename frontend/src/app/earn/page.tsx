@@ -82,22 +82,27 @@ export default function EarnPage() {
                   disabled={totalClaimable === 0n}
                   loading={isPending}
                   onClick={async () => {
+                    let anySuccess = false;
                     for (const stream of streams) {
                       if ((stream.claimable ?? 0n) > 0n) {
-                        try {
-                          await execute(
-                            buildClaimAllTx({
-                              streamId: stream.id,
-                              tokenContract: stream.token,
-                            })
-                          );
-                          toast.success(`Claim submitted for stream #${stream.id}`);
-                        } catch {
-                          toast.error(`Failed to claim stream #${stream.id}`);
+                        const result = await execute(
+                          buildClaimAllTx({
+                            streamId: stream.id,
+                            tokenContract: stream.token,
+                          })
+                        );
+                        if (result?.confirmed) {
+                          toast.success(`Claimed stream #${stream.id}`);
+                          anySuccess = true;
+                        } else if (result && !result.confirmed) {
+                          toast.error(`Stream #${stream.id} failed: ${result.errorCode ?? result.status}`);
+                        } else {
+                          // User cancelled wallet prompt — stop the loop
+                          break;
                         }
                       }
                     }
-                    refetch();
+                    if (anySuccess) refetch();
                   }}
                 >
                   <Download className="h-4 w-4" />

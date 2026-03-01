@@ -14,7 +14,7 @@ export function StatCard({ label, value, sub, icon, className, trend }: StatCard
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-surface-1 p-5",
+        "rounded-2xl border border-border bg-surface-1 p-4 sm:p-5",
         "transition-all duration-300 hover:border-brand-500/20",
         className
       )}
@@ -23,7 +23,7 @@ export function StatCard({ label, value, sub, icon, className, trend }: StatCard
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</p>
         {icon && <div className="text-zinc-600">{icon}</div>}
       </div>
-      <p className="mt-2 text-2xl font-bold text-zinc-100 tabular-nums">{value}</p>
+      <p className="mt-2 text-xl sm:text-2xl font-bold text-zinc-100 tabular-nums">{value}</p>
       {sub && (
         <p
           className={cn(

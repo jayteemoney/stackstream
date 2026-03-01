@@ -41,7 +41,7 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
       {/* Panel */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-md rounded-2xl border border-border bg-surface-1 p-6 shadow-2xl",
+          "relative z-10 w-full max-w-md mx-3 sm:mx-0 rounded-2xl border border-border bg-surface-1 p-4 sm:p-6 shadow-2xl",
           className
         )}
       >

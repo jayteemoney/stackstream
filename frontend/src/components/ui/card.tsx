@@ -9,7 +9,7 @@ export function Card({ className, glow = "none", children, ...props }: CardProps
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-surface-1 p-5",
+        "rounded-2xl border border-border bg-surface-1 p-4 sm:p-5",
         "transition-all duration-300",
         glow === "orange" && "glow-orange",
         glow === "green" && "glow-green",

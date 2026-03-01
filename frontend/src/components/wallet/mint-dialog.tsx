@@ -95,7 +95,7 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
               key={preset}
               type="button"
               onClick={() => setAmount(String(preset))}
-              className="flex-1 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs text-zinc-400 hover:bg-surface-3 hover:text-zinc-200 transition-colors"
+              className="flex-1 rounded-lg border border-border bg-surface-2 px-2 py-2 sm:py-1.5 text-xs text-zinc-400 hover:bg-surface-3 hover:text-zinc-200 transition-colors"
             >
               {preset}
             </button>

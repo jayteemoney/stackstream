@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="md:pl-64">
         <Header />
-        <main className="p-6">{children}</main>
+        <main className="p-3 sm:p-4 md:p-6">{children}</main>
       </div>
       <AssistantWidget />
     </div>

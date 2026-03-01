@@ -45,7 +45,7 @@ export function ConnectButton() {
       </button>
 
       {menuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 p-1.5 shadow-2xl z-50">
+        <div className="absolute right-0 top-full mt-2 w-48 sm:w-56 rounded-xl border border-border bg-surface-2 p-1.5 shadow-2xl z-50">
           <div className="px-3 py-2 border-b border-border mb-1">
             <p className="text-xs text-zinc-500">Connected</p>
             <p className="text-xs font-mono text-zinc-300 mt-0.5 break-all">{address}</p>

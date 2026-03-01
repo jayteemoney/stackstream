@@ -45,10 +45,10 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           {isConnected && !isLoading && (
-            <div className="hidden sm:flex items-center gap-1.5 text-sm text-zinc-400">
-              <Coins className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-400">
+              <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span className="font-mono tabular-nums">{formatTokenAmount(balance)}</span>
-              <span className="text-zinc-600 text-xs">msBTC</span>
+              <span className="hidden sm:inline text-zinc-600 text-xs">msBTC</span>
             </div>
           )}
           {isConnected && (

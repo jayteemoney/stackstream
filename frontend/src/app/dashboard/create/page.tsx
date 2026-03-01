@@ -129,7 +129,7 @@ export default function CreateStreamPage() {
 
           <div className="space-y-1.5">
             <label htmlFor="duration-value" className="block text-sm font-medium text-zinc-300">Duration</label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 id="duration-value"
                 name="duration-value"
@@ -176,7 +176,7 @@ export default function CreateStreamPage() {
               <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
                 <Info className="h-3 w-3" /> Stream Preview
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                 <div>
                   <p className="text-zinc-500 text-xs">Rate per block</p>
                   <p className="text-zinc-200 font-mono">{formatTokenAmount(ratePerBlock)} msBTC</p>

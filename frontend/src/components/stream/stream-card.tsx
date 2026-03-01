@@ -83,7 +83,7 @@ export function StreamCard({
               {stream.endBlock.toLocaleString()}
             </p>
             {stream.memo && (
-              <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-[150px] sm:max-w-[200px]" title={stream.memo}>
+              <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-30 sm:max-w-50" title={stream.memo}>
                 &ldquo;{stream.memo}&rdquo;
               </p>
             )}

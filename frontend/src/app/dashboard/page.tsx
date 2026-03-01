@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [topUpTarget, setTopUpTarget] = useState<{ id: number; stream: StreamData } | null>(null);
   const { streams, isLoading, refetch } = useSenderStreams();
   useBlockHeight();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isPending, isConfirming } = useStacksTx();
 
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
   const totalDeposited = streams.reduce((acc, s) => acc + s.depositAmount, 0n);
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-2xl" />
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
       {/* Stream list */}
       {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-64 rounded-2xl" />
           ))}
@@ -107,45 +107,45 @@ export default function DashboardPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {streams.slice(0, 6).map((stream) => (
             <StreamCard
               key={stream.id}
               id={stream.id}
               stream={stream}
               perspective="sender"
-              actionLoading={isPending}
+              actionLoading={isPending || isConfirming}
               onPause={async () => {
-                try {
-                  await execute(buildPauseStreamTx(stream.id));
+                const result = await execute(buildPauseStreamTx(stream.id));
+                if (result?.confirmed) {
                   toast.success("Stream paused");
                   refetch();
-                } catch {
-                  toast.error("Failed to pause stream");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to pause: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
               onResume={async () => {
-                try {
-                  await execute(buildResumeStreamTx(stream.id));
+                const result = await execute(buildResumeStreamTx(stream.id));
+                if (result?.confirmed) {
                   toast.success("Stream resumed");
                   refetch();
-                } catch {
-                  toast.error("Failed to resume stream");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to resume: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
               onCancel={async () => {
-                try {
-                  await execute(
-                    buildCancelStreamTx({
-                      streamId: stream.id,
-                      tokenContract: stream.token,
-                    })
-                  );
-                  toast.success("Cancel transaction submitted");
+                const result = await execute(
+                  buildCancelStreamTx({
+                    streamId: stream.id,
+                    tokenContract: stream.token,
+                  })
+                );
+                if (result?.confirmed) {
+                  toast.success("Stream cancelled");
                   refetch();
-                } catch {
-                  toast.error("Failed to cancel stream");
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to cancel: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
             />

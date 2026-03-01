@@ -40,12 +40,13 @@ export default function RegisterDaoPage() {
     e.preventDefault();
     if (!validate()) return;
 
-    try {
-      const txOptions = buildRegisterDaoTx(name.trim());
-      await execute(txOptions);
-      toast.success("DAO registration submitted!");
-    } catch {
-      toast.error("Failed to register DAO");
+    const txOptions = buildRegisterDaoTx(name.trim());
+    const result = await execute(txOptions);
+    if (result?.confirmed) {
+      toast.success("DAO registered!");
+      setName("");
+    } else if (result && !result.confirmed) {
+      toast.error(result.status === "timeout" ? "Transaction timed out" : `Registration failed: ${result.errorCode ?? result.status}`);
     }
   }
 

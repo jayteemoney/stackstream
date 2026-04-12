@@ -286,7 +286,7 @@ Calls `stream-manager.get-stream` to verify the stream exists and that `contract
 
 This review was conducted by the contract author. Independent review is requested before mainnet launch.
 
-**GitHub Issue:** [Link will be added when issue is opened]  
+**GitHub Issue:** https://github.com/jayteemoney/stackstream/issues/1  
 **Review period:** April 12 – April 15, 2026 (60-hour window)  
 **Scope:** Authorization logic, arithmetic safety, state transition correctness, token handling  
 **Contact:** Open a comment on the GitHub issue or DM `@jayteemoney` on X

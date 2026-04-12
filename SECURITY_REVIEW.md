@@ -289,6 +289,6 @@ This review was conducted by the contract author. Independent review is requeste
 **GitHub Issue:** https://github.com/jayteemoney/stackstream/issues/1  
 **Review period:** April 12 – April 15, 2026 (60-hour window)  
 **Scope:** Authorization logic, arithmetic safety, state transition correctness, token handling  
-**Contact:** Open a comment on the GitHub issue or DM `@jayteemoney` on X
+**Contact:** Open a comment on the GitHub issue or DM `@dev_jayteee` on X
 
 Reviewers who identify valid findings will be credited in the v1.0.0 release notes.

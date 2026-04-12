@@ -23,14 +23,20 @@ export function StacksProvider({ children }: { children: ReactNode }) {
 
   // Rehydrate session on mount
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const userData = userSession.loadUserData();
-      const address = IS_MAINNET
-        ? userData.profile.stxAddress.mainnet
-        : userData.profile.stxAddress.testnet;
-      setAddress(address);
+    try {
+      if (userSession.isUserSignedIn()) {
+        const userData = userSession.loadUserData();
+        const address = IS_MAINNET
+          ? userData.profile.stxAddress.mainnet
+          : userData.profile.stxAddress.testnet;
+        setAddress(address);
+      }
+    } catch {
+      // Stale or incompatible session data in localStorage — clear it and start fresh
+      userSession.signUserOut();
+      disconnect();
     }
-  }, [setAddress]);
+  }, [setAddress, disconnect]);
 
   return <>{children}</>;
 }

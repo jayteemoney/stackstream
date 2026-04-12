@@ -3,6 +3,7 @@
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { CTASection } from "@/components/landing/cta-section";
+import { Footer } from "@/components/landing/footer";
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
@@ -38,31 +39,7 @@ export default function LandingPage() {
       <Hero />
       <Features />
       <CTASection />
-
-      {/* Footer */}
-      <footer className="border-t border-border py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
-          <p>StackStream &mdash; Bitcoin-native payroll streaming on Stacks</p>
-          <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/jayteemoney/stackstream"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-400 transition-colors"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://docs.stacks.co"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-400 transition-colors"
-            >
-              Stacks Docs
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

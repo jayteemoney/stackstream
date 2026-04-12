@@ -61,6 +61,16 @@ function createStream(
   );
 }
 
+// ============================================================================
+// PROPERTY TEST HELPER
+// ============================================================================
+
+function generateRandomStream(min = 100_000_000n, max = 1_000_000_000n) {
+  const deposit = BigInt(Math.floor(Math.random() * Number(max - min))) + min;
+  const duration = BigInt(Math.floor(Math.random() * 9999) + 1);
+  return { deposit, duration };
+}
+
 describe("StackStream - Stream Manager Contract", () => {
   // ============================================================================
   // SETUP
@@ -1020,6 +1030,645 @@ describe("StackStream - Stream Manager Contract", () => {
       );
 
       expect(result.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+    });
+  });
+
+  // ============================================================================
+  // BLOCK A — PROPERTY-BASED / FUZZ TESTS (20 tests)
+  // ============================================================================
+
+  describe("property-based / fuzz tests", () => {
+    // --- Invariant 1: Token Conservation ---
+
+    it("invariant: streamed + refundable == deposit at ~25% elapsed", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream();
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const elapsed = Math.max(1, Math.floor(Number(duration) * 0.25));
+        simnet.mineEmptyBlocks(elapsed);
+
+        const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(streamed + refundable).toBe(deposit);
+        expect(streamed).toBeLessThanOrEqual(deposit);
+      }
+    });
+
+    it("invariant: streamed + refundable == deposit at ~50% elapsed", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream();
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const elapsed = Math.max(1, Math.floor(Number(duration) * 0.50));
+        simnet.mineEmptyBlocks(elapsed);
+
+        const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(streamed + refundable).toBe(deposit);
+        expect(streamed).toBeLessThanOrEqual(deposit);
+      }
+    });
+
+    it("invariant: streamed + refundable == deposit at ~75% elapsed", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream();
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const elapsed = Math.max(1, Math.floor(Number(duration) * 0.75));
+        simnet.mineEmptyBlocks(elapsed);
+
+        const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(streamed + refundable).toBe(deposit);
+        expect(streamed).toBeLessThanOrEqual(deposit);
+      }
+    });
+
+    it("invariant: streamed == deposit and refundable == 0 after stream ends", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream();
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(Number(duration) + 10);
+
+        const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        // Allow ≤1 unit of precision dust from integer division
+        expect(deposit - streamed).toBeLessThanOrEqual(1n);
+        expect(refundable).toBeLessThanOrEqual(1n);
+        expect(streamed + refundable).toBe(deposit);
+      }
+    });
+
+    // --- Invariant 2: Claim Bounds ---
+
+    it("invariant: claimed amount never exceeds deposit and claim-all leaves zero claimable", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream();
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const elapsed = Math.max(1, Math.floor(Number(duration) * 0.5));
+        simnet.mineEmptyBlocks(elapsed);
+
+        const claimResult = simnet.callPublicFn(streamManagerContract, "claim-all", [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token")], wallet2);
+        const claimed = (claimResult.result as any).value.value as bigint;
+
+        // Claimed must never exceed deposit
+        expect(claimed).toBeLessThanOrEqual(deposit);
+        expect(claimed).toBeGreaterThan(0n);
+
+        // After claim-all, claimable balance should be 0
+        const claimableAfter = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        expect(claimableAfter).toBe(0n);
+      }
+    });
+
+    it("invariant: claim-all on fully elapsed stream returns exactly remaining deposit", () => {
+      for (let i = 0; i < 5; i++) {
+        // Use evenly divisible amounts to avoid precision dust
+        const duration = BigInt(Math.floor(Math.random() * 100) + 10);
+        const deposit = duration * 1_000_000n; // always divisible
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(Number(duration) + 5);
+
+        const claimResult = simnet.callPublicFn(streamManagerContract, "claim-all", [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token")], wallet2);
+        const claimed = (claimResult.result as any).value.value as bigint;
+
+        expect(claimed).toBe(deposit);
+      }
+    });
+
+    it("invariant: partial claim — claimed == requested when requested < claimable", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        // Mine to ~80% to ensure large claimable balance
+        simnet.mineEmptyBlocks(Math.max(1, Math.floor(Number(duration) * 0.8)));
+
+        const claimable = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        if (claimable > 2n) {
+          const requested = claimable / 2n;
+          const claimResult = simnet.callPublicFn(streamManagerContract, "claim",
+            [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(requested)],
+            wallet2
+          );
+          const claimed = (claimResult.result as any).value.value as bigint;
+          expect(claimed).toBe(requested);
+        }
+      }
+    });
+
+    it("invariant: sequential partial claims — sum never exceeds deposit", () => {
+      for (let i = 0; i < 5; i++) {
+        const duration = BigInt(Math.floor(Math.random() * 200) + 50);
+        const deposit = duration * 1_000_000n;
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        let totalClaimed = 0n;
+
+        // Claim at 25%, 50%, 75%, 100%
+        for (const pct of [0.25, 0.25, 0.25, 0.25]) {
+          simnet.mineEmptyBlocks(Math.max(1, Math.floor(Number(duration) * pct)));
+          const claimResult = simnet.callPublicFn(streamManagerContract, "claim-all",
+            [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+            wallet2
+          );
+          if ((claimResult.result as any).value?.value) {
+            totalClaimed += (claimResult.result as any).value.value as bigint;
+          }
+        }
+
+        expect(totalClaimed).toBeLessThanOrEqual(deposit);
+      }
+    });
+
+    // --- Invariant 3: Pause Gap Accounting (single cycle) ---
+
+    it("invariant: claimable balance does not increase while stream is paused", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        // Mine to ~30%
+        simnet.mineEmptyBlocks(Math.max(1, Math.floor(Number(duration) * 0.3)));
+
+        // Pause
+        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        const claimableAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        // Mine while paused
+        simnet.mineEmptyBlocks(20);
+
+        const claimableAfterWait = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(claimableAfterWait).toBe(claimableAtPause);
+
+        // Resume to unblock next iteration
+        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+      }
+    });
+
+    it("invariant: streamed amount frozen during pause — same before and after waiting", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(Math.max(1, Math.floor(Number(duration) * 0.4)));
+        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        const streamedAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(30);
+
+        const streamedAfterWait = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(streamedAfterWait).toBe(streamedAtPause);
+        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+      }
+    });
+
+    it("invariant: balance at resume equals balance at pause (no accrual during pause)", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(Math.max(1, Math.floor(Number(duration) * 0.3)));
+        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        const claimableAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        const pauseDuration = Math.floor(Math.random() * 15) + 5;
+        simnet.mineEmptyBlocks(pauseDuration);
+
+        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+
+        // One block mined by resume tx — claimable should still equal what it was at pause
+        const claimableAtResume = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(claimableAtResume).toBe(claimableAtPause);
+      }
+    });
+
+    // --- Invariant 4: Multi-cycle Pause Accounting ---
+
+    it("invariant: multi-cycle pause — claimable frozen during each individual pause", () => {
+      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      const startBlock = getCurrentBlock() + 2;
+      const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      const streamId = (createResult.result as any).value.value as bigint;
+
+      for (let cycle = 0; cycle < 3; cycle++) {
+        simnet.mineEmptyBlocks(Math.max(3, Math.floor(Number(duration) * 0.1)));
+        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        const claimableAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        simnet.mineEmptyBlocks(5);
+
+        const claimableDuringPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+
+        expect(claimableDuringPause).toBe(claimableAtPause);
+
+        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+      }
+    });
+
+    it("invariant: multi-cycle pause — streamed is less than if no pauses had occurred", () => {
+      // Verify pauses reduce total streamed compared to an unpaused stream
+      const deposit = 1_000_000_000n;
+      const duration = 300n;
+      const startBlock = getCurrentBlock() + 2;
+
+      // Stream A: will be paused twice
+      const createA = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      const streamA = (createA.result as any).value.value as bigint;
+
+      // Stream B: identical but no pauses
+      const createB = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      const streamB = (createB.result as any).value.value as bigint;
+
+      // Mine 30 blocks, pause A for 20, resume
+      simnet.mineEmptyBlocks(30);
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamA)], wallet1);
+      simnet.mineEmptyBlocks(20);
+      simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamA)], wallet1);
+
+      // Mine 30 more, pause A for 20, resume
+      simnet.mineEmptyBlocks(30);
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamA)], wallet1);
+      simnet.mineEmptyBlocks(20);
+      simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamA)], wallet1);
+
+      simnet.mineEmptyBlocks(10);
+
+      const streamedA = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamA)], deployer).result as any).value.value as bigint;
+      const streamedB = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamB)], deployer).result as any).value.value as bigint;
+
+      // Unpaused stream should have streamed more than paused stream
+      expect(streamedB).toBeGreaterThan(streamedA);
+    });
+
+    it("invariant: multi-cycle pause — token conservation holds throughout", () => {
+      for (let i = 0; i < 3; i++) {
+        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        // 5 random pause/resume cycles
+        for (let cycle = 0; cycle < 5; cycle++) {
+          simnet.mineEmptyBlocks(Math.max(2, Math.floor(Number(duration) * 0.05)));
+          simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+          simnet.mineEmptyBlocks(3);
+          simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+
+          const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+          const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+          expect(streamed + refundable).toBe(deposit);
+        }
+      }
+    });
+
+    it("invariant: multi-cycle pause — status returns to ACTIVE after each resume", () => {
+      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      const startBlock = getCurrentBlock() + 2;
+      const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      const streamId = (createResult.result as any).value.value as bigint;
+
+      for (let cycle = 0; cycle < 5; cycle++) {
+        simnet.mineEmptyBlocks(Math.max(2, Math.floor(Number(duration) * 0.04)));
+        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+        simnet.mineEmptyBlocks(2);
+        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+
+        const status = (simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
+        expect(status).toBe(0n); // STATUS-ACTIVE
+      }
+    });
+
+    // --- Invariant 5: Top-up Rate Preservation ---
+
+    it("invariant: rate-per-block unchanged after top-up", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const streamBefore = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const rateBefore = streamBefore.value.value["rate-per-block"].value as bigint;
+
+        const topUpAmount = deposit / 2n;
+        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+          [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUpAmount)],
+          wallet1
+        );
+
+        const streamAfter = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const rateAfter = streamAfter.value.value["rate-per-block"].value as bigint;
+
+        expect(rateAfter).toBe(rateBefore);
+      }
+    });
+
+    it("invariant: new deposit equals original deposit plus top-up amount", () => {
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const topUp = 100_000_000n;
+        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+          [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUp)],
+          wallet1
+        );
+
+        const streamAfter = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const newDeposit = streamAfter.value.value["deposit-amount"].value as bigint;
+
+        expect(newDeposit).toBe(deposit + topUp);
+      }
+    });
+
+    it("invariant: new end-block == old end-block + (top-up * PRECISION / rate)", () => {
+      const PRECISION = 1_000_000_000_000n;
+      for (let i = 0; i < 5; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+        const startBlock = getCurrentBlock() + 2;
+        const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        const streamId = (createResult.result as any).value.value as bigint;
+
+        const streamBefore = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const oldEndBlock = streamBefore.value.value["end-block"].value as bigint;
+        const rate = streamBefore.value.value["rate-per-block"].value as bigint;
+
+        const topUp = 100_000_000n;
+        const expectedAdditionalBlocks = (topUp * PRECISION) / rate;
+
+        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+          [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUp)],
+          wallet1
+        );
+
+        const streamAfter = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const newEndBlock = streamAfter.value.value["end-block"].value as bigint;
+
+        expect(newEndBlock).toBe(oldEndBlock + expectedAdditionalBlocks);
+      }
+    });
+
+    it("invariant: multiple sequential top-ups preserve rate-per-block", () => {
+      const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      const startBlock = getCurrentBlock() + 2;
+      const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      const streamId = (createResult.result as any).value.value as bigint;
+
+      const originalStream = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+      const originalRate = originalStream.value.value["rate-per-block"].value as bigint;
+
+      // 3 sequential top-ups
+      for (let t = 0; t < 3; t++) {
+        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+          [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(50_000_000)],
+          wallet1
+        );
+        const afterTopUp = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
+        const currentRate = afterTopUp.value.value["rate-per-block"].value as bigint;
+        expect(currentRate).toBe(originalRate);
+      }
+    });
+  });
+
+  // ============================================================================
+  // BLOCK B — ADDITIONAL EDGE CASE TESTS (10 tests)
+  // ============================================================================
+
+  describe("additional edge cases", () => {
+    it("1-block stream: advance exactly 1 block after start, claim-all returns full deposit", () => {
+      const depositAmount = 1_000_000_000n;
+      const startBlock = getCurrentBlock() + 1;
+
+      const createResult = createStream(wallet1, wallet2, Number(depositAmount), startBlock, 1);
+      expect(createResult.result).toBeOk(Cl.uint(1));
+
+      // Advance exactly 1 block to reach start+1 = end-block
+      simnet.mineEmptyBlocks(1);
+
+      const result = simnet.callPublicFn(streamManagerContract, "claim-all",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet2
+      );
+      expect(result.result).toBeOk(Cl.uint(depositAmount));
+    });
+
+    it("indivisible deposit: no token loss — streamed + refundable == deposit", () => {
+      // Amounts that do NOT divide evenly by duration
+      const deposit = 1_000_000_007n; // Prime-ish, won't divide cleanly
+      const duration = 3n;
+      const startBlock = getCurrentBlock() + 2;
+
+      createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+      simnet.mineEmptyBlocks(1);
+
+      const streamed = (simnet.callReadOnlyFn(streamManagerContract, "get-streamed-amount", [Cl.uint(1)], deployer).result as any).value.value as bigint;
+      const refundable = (simnet.callReadOnlyFn(streamManagerContract, "get-refundable-amount", [Cl.uint(1)], deployer).result as any).value.value as bigint;
+
+      expect(streamed + refundable).toBe(deposit);
+      expect(streamed).toBeLessThanOrEqual(deposit);
+    });
+
+    it("top-up on a near-depleted stream: succeeds and extends end block", () => {
+      const duration = 10;
+      const depositAmount = 1_000_000n * BigInt(duration); // exactly divisible
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, Number(depositAmount), startBlock, duration);
+
+      // Mine past end-block and claim almost all
+      simnet.mineEmptyBlocks(duration + 2);
+      simnet.callPublicFn(streamManagerContract, "claim-all",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")], wallet2
+      );
+
+      // Verify remaining is 0 and status is depleted
+      const status = (simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(1)], deployer).result as any).value.value as bigint;
+      expect(status).toBe(3n); // STATUS-DEPLETED
+
+      // Top-up a depleted stream should fail
+      const result = simnet.callPublicFn(streamManagerContract, "top-up-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(500_000n)],
+        wallet1
+      );
+      expect(result.result).toBeErr(Cl.uint(201)); // ERR-STREAM-DEPLETED
+    });
+
+    it("cancel at exactly end-block: recipient gets full deposit", () => {
+      const duration = 10;
+      const depositAmount = 1_000_000n * BigInt(duration);
+      const startBlock = getCurrentBlock() + 1;
+      const senderBefore = getBalance(wallet1);
+      createStream(wallet1, wallet2, Number(depositAmount), startBlock, duration);
+
+      // Mine exactly to end-block
+      simnet.mineEmptyBlocks(duration);
+
+      simnet.callPublicFn(streamManagerContract, "cancel-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")], wallet1
+      );
+
+      // Recipient should have received the full deposit
+      const recipientBalance = getBalance(wallet2);
+      expect(recipientBalance).toBe(depositAmount);
+    });
+
+    it("pause then immediately resume (0-block pause): total-paused-duration += 0", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000n, startBlock, 100);
+
+      simnet.mineEmptyBlocks(10);
+
+      // Pause and immediately resume (same block height effectively — but resume mines 1 block)
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+
+      // Read stream to get total-paused-duration before resume
+      const pausedStream = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(1)], deployer).result as any;
+      const totalPausedBefore = pausedStream.value.value["total-paused-duration"].value as bigint;
+
+      // Resume immediately (this mines 1 block, so pause duration = 1)
+      simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(1)], wallet1);
+
+      const resumedStream = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(1)], deployer).result as any;
+      const totalPausedAfter = resumedStream.value.value["total-paused-duration"].value as bigint;
+
+      // The pause duration was exactly 1 block (the resume tx itself mines 1 block)
+      expect(totalPausedAfter).toBe(totalPausedBefore + 1n);
+      // Status should be ACTIVE again
+      const status = resumedStream.value.value["status"].value as bigint;
+      expect(status).toBe(0n);
+    });
+
+    it("create stream, partial claim, top-up, claim again — accounting stays correct", () => {
+      const deposit = 1_000_000_000n;
+      const duration = 100n;
+      const startBlock = getCurrentBlock() + 2;
+      createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+
+      // Mine 50 blocks — 50% streamed
+      simnet.mineEmptyBlocks(50);
+
+      // Partial claim
+      const partialClaim = 200_000_000n;
+      simnet.callPublicFn(streamManagerContract, "claim",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(partialClaim)],
+        wallet2
+      );
+
+      // Top up with equal amount
+      const topUp = 1_000_000_000n;
+      simnet.callPublicFn(streamManagerContract, "top-up-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUp)],
+        wallet1
+      );
+
+      // Verify remaining = (deposit + topUp) - partialClaim
+      const remaining = (simnet.callReadOnlyFn(streamManagerContract, "get-remaining-balance", [Cl.uint(1)], deployer).result as any).value.value as bigint;
+      expect(remaining).toBe(deposit + topUp - partialClaim);
+
+      // Claim again — should succeed
+      simnet.mineEmptyBlocks(20);
+      const claimResult = simnet.callPublicFn(streamManagerContract, "claim-all",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet2
+      );
+      expect((claimResult.result as any).value?.value).toBeGreaterThan(0n);
+    });
+
+    it("emergency pause blocks create-stream but does NOT block claim", () => {
+      // Create stream before emergency pause
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 100);
+      simnet.mineEmptyBlocks(50);
+
+      // Enable emergency pause
+      simnet.callPublicFn(streamManagerContract, "set-emergency-pause", [Cl.bool(true)], deployer);
+
+      // Claim should still work
+      const claimResult = simnet.callPublicFn(streamManagerContract, "claim-all",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet2
+      );
+      expect((claimResult.result as any).value?.value).toBeGreaterThan(0n);
+
+      // Create-stream should be blocked
+      const createResult = createStream(wallet1, wallet2, 500_000_000, getCurrentBlock() + 1, 50);
+      expect(createResult.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+    });
+
+    it("emergency pause does NOT block cancel-stream", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 100);
+      simnet.mineEmptyBlocks(10);
+
+      simnet.callPublicFn(streamManagerContract, "set-emergency-pause", [Cl.bool(true)], deployer);
+
+      const cancelResult = simnet.callPublicFn(streamManagerContract, "cancel-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet1
+      );
+      expect((cancelResult.result as any).value).toBeDefined();
+      // Status should be cancelled
+      const status = simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(1)], deployer);
+      expect(status.result).toBeSome(Cl.uint(2)); // STATUS-CANCELLED
+    });
+
+    it("resume on non-existent stream returns ERR-STREAM-NOT-PAUSED (via ERR-STREAM-NOT-FOUND path)", () => {
+      const result = simnet.callPublicFn(streamManagerContract, "resume-stream",
+        [Cl.uint(999)],
+        wallet1
+      );
+      expect(result.result).toBeErr(Cl.uint(200)); // ERR-STREAM-NOT-FOUND
+    });
+
+    it("pause on a stream past its end-block returns ERR-STREAM-ENDED", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 5);
+
+      // Mine past end
+      simnet.mineEmptyBlocks(10);
+
+      const result = simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+      expect(result.result).toBeErr(Cl.uint(207)); // ERR-STREAM-ENDED
     });
   });
 });

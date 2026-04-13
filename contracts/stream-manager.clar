@@ -220,6 +220,10 @@
     (asserts! (< (default-to u0 (map-get? sender-stream-count contract-caller)) MAX-STREAMS-PER-USER) ERR-MAX-STREAMS-REACHED)
     (asserts! (< (default-to u0 (map-get? recipient-stream-count recipient)) MAX-STREAMS-PER-USER) ERR-MAX-STREAMS-REACHED)
 
+    ;; Prevent zero rate-per-block: deposit * PRECISION must be >= duration-blocks
+    ;; Without this, tiny deposits over long durations produce rate = 0 causing silent math failures
+    (asserts! (>= (* deposit-amount PRECISION) duration-blocks) ERR-INVALID-DURATION)
+
     ;; Now calculate values and execute (safe after validation)
     (let (
       (sender contract-caller)
@@ -427,6 +431,10 @@
 
     ;; State checks
     (asserts! (is-eq status STATUS-PAUSED) ERR-STREAM-NOT-PAUSED)
+
+    ;; Cannot resume a stream whose end-block has already passed
+    ;; Prevents zombie ACTIVE state — recipient can still claim earned tokens via claim
+    (asserts! (< current-block (get end-block stream-data)) ERR-STREAM-ENDED)
 
     ;; Update stream state
     (map-set streams stream-id (merge stream-data {

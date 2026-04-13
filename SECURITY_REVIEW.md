@@ -1,8 +1,10 @@
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
+**Updated:** April 13, 2026 (community review findings incorporated)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
-**Reviewer:** Jethro Mbata (author) — community review open (see below)
+**Author review:** Jethro Mbata  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson  
 
 ---
 
@@ -37,19 +39,22 @@ Tokens are escrowed directly in `stream-manager`. The factory is a pure registry
 **Not possible.** Clarity's execution model forbids reentrancy at the language level. A contract cannot be re-entered mid-execution. No mitigations required.
 
 ### 2. Authorization model — `tx-sender` vs `contract-caller`
-All authorization checks use `contract-caller`, not `tx-sender`. This is the correct choice: if a malicious intermediary contract wraps a call to StackStream, `contract-caller` will be that intermediary, not the original signer. This prevents principal spoofing through contract forwarding.
+All authorization checks use `contract-caller`, not `tx-sender`. This is the correct choice: if a malicious intermediary contract wraps a call to StackStream, `contract-caller` will be that intermediary, not the original signer. This prevents principal spoofing through contract forwarding. Confirmed correct by all three community reviewers.
 
 ### 3. Integer overflow
-Clarity `uint` operations abort on overflow rather than wrapping silently. The most sensitive calculation is the rate: `(/ (* deposit-amount PRECISION) duration-blocks)` where `PRECISION = 1e12`. For a token with 8 decimal places and a supply of 21 million (Bitcoin-scale), the maximum product is approximately `2.1 × 10²⁷` — well within Clarity's `uint` ceiling of `2¹²⁸ − 1 ≈ 3.4 × 10³⁸`. Overflow is not a practical concern.
+Clarity `uint` operations abort on overflow rather than wrapping silently. The most sensitive calculation is the rate: `(/ (* deposit-amount PRECISION) duration-blocks)` where `PRECISION = 1e12`. For a token with 8 decimal places and a supply of 21 million (Bitcoin-scale), the maximum product is approximately `2.1 × 10²⁷` — well within Clarity's `uint` ceiling of `2¹²⁸ − 1 ≈ 3.4 × 10³⁸`. Overflow is not a practical concern. Confirmed by Akanmoh Johnson.
 
 ### 4. Token substitution
-Every function that accepts a `<sip-010-trait>` parameter verifies `(is-eq token-principal (contract-of token))` against the stream's stored token principal. A caller cannot substitute a different token contract after stream creation.
+Every function that accepts a `<sip-010-trait>` parameter verifies `(is-eq token-principal (contract-of token))` against the stream's stored token principal. A caller cannot substitute a different token contract after stream creation. Confirmed correct by Akanmoh Johnson.
 
 ### 5. Stream ID safety
 The stream nonce is monotonically increasing and never reused. Each new stream ID is `nonce + 1`, and the nonce is only updated after the stream is fully written to the map.
 
 ### 6. Precision and rounding
-Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / duration`. Claimable amounts are calculated as `elapsed * rate / 1e12`. This eliminates rounding drift in practice. An additional guard clamps streamed amounts to never exceed `deposit-amount`, handling any edge-case rounding upward.
+Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / duration`. Claimable amounts are calculated as `elapsed * rate / 1e12`. An additional guard clamps streamed amounts to never exceed `deposit-amount`. See Finding L-1 for known rounding dust behaviour.
+
+### 7. `stacks-block-height` usage
+The contracts correctly use `stacks-block-height` throughout — the Clarity 3 replacement for the deprecated `block-height` keyword. Using `block-height` post-Nakamoto would return tenure-height semantics and break all time-based calculations. Confirmed correct by Akanmoh Johnson.
 
 ---
 
@@ -72,12 +77,11 @@ Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / dur
 | `recipient != (as-contract tx-sender)` | Contract cannot be set as its own recipient |
 | `sender-stream-count < 100` | DoS limit: max 100 streams per sender |
 | `recipient-stream-count < 100` | DoS limit: max 100 streams per recipient |
+| `deposit * PRECISION >= duration-blocks` | **Added post-review:** prevents zero rate-per-block (Sobilo34) |
 
-**Token handling:** `contract-call? token transfer` moves tokens from the caller to `(as-contract tx-sender)` (the contract's own principal) immediately. If this transfer fails, the entire transaction reverts — no partial state is written.
+**Token handling:** `contract-call? token transfer` moves tokens from the caller to `(as-contract tx-sender)` immediately. If this transfer fails, the entire transaction reverts — no partial state is written. Confirmed correct by Akanmoh Johnson.
 
-**State written only after successful transfer:** Stream data, sender/recipient indexes, and nonce are all updated after the `try!` on the token transfer. This is the correct ordering.
-
-**Finding:** None. Logic is correct.
+**Known limitation (L-1):** When `deposit-amount` is not perfectly divisible by `duration-blocks`, integer division truncates the rate, leaving a sub-satoshi dust amount permanently locked unless the sender calls `cancel-stream` after the stream elapses. See Finding L-1.
 
 ---
 
@@ -95,13 +99,11 @@ Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / dur
 | `claim-amount > 0` | Prevents zero-amount transfers |
 | `token-principal == contract-of token` | Token substitution prevention |
 
-**Pause interaction:** A paused stream can be claimed. `calculate-effective-elapsed` freezes elapsed time at `paused-at-block` when the stream is paused. This means the recipient can claim what was earned up to the pause point even while the sender has paused the stream. This is the correct and fair behavior.
+**Authorization ordering (Marvy247):** The community review noted that the authorization assertion executes after the `let` block computes elapsed time and claimable values. In Clarity, `let` bindings are eagerly evaluated, so the auth check runs after calculations. This is a gas efficiency concern only — no funds are at risk since no state is written and no transfers occur before the auth check in the function body. Clarifying comments added.
 
-**Partial claims:** The `amount` parameter is honored if less than `claimable`. If `amount > claimable`, the actual claimable balance is used. This prevents requesting more than available.
+**Pause interaction:** A paused stream can be claimed. `calculate-effective-elapsed` freezes elapsed time at `paused-at-block`, so the recipient claims only what accrued before the pause. Confirmed correct and fair by Akanmoh Johnson.
 
 **Depletion:** When `new-withdrawn == deposit`, the stream status is set to `STATUS-DEPLETED` atomically.
-
-**Finding:** None. Logic is correct.
 
 ---
 
@@ -126,13 +128,11 @@ Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / dur
 |---|---|
 | `caller == sender` | Authorization |
 | `status == ACTIVE` | Can only pause active streams |
-| `status != CANCELLED` | Redundant with above — acceptable defense-in-depth |
-| `status != DEPLETED` | Redundant with above |
+| `status != CANCELLED` | Redundant — confirmed by Akanmoh Johnson (see L-3) |
+| `status != DEPLETED` | Redundant — confirmed by Akanmoh Johnson (see L-3) |
 | `current-block < end-block` | Cannot pause an already-ended stream |
 
-**State written:** `status = PAUSED`, `paused-at-block = current-block`.
-
-**Finding:** The CANCELLED and DEPLETED checks are redundant given the `status == ACTIVE` assertion above them. Not a security issue — they add no risk — but they are logically unnecessary. Noted for code clarity; no action required before mainnet.
+**Finding L-3 (confirmed):** The CANCELLED and DEPLETED checks are unreachable given the `status == ACTIVE` assertion. No security impact. Deferred to v1.1 cleanup.
 
 ---
 
@@ -147,12 +147,11 @@ Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / dur
 |---|---|
 | `caller == sender` | Authorization |
 | `status == PAUSED` | Can only resume paused streams |
+| `current-block < end-block` | **Added post-review:** prevents resuming after stream has ended (Marvy247) |
 
-**Pause duration accounting:** `pause-duration = current-block - paused-at-block`. This is added to `total-paused-duration`, which is subtracted from elapsed time in all balance calculations. Across multiple pause/resume cycles, the cumulative paused duration is correctly tracked.
+**Fix applied (Marvy247):** Without the end-block guard, a sender could resume a paused stream after its natural end time, leaving it in STATUS-ACTIVE indefinitely with no further accrual — a zombie state. The fix correctly rejects the resume with `ERR-STREAM-ENDED`. The recipient can still claim all earned tokens via `claim`, which is unaffected.
 
-**Note:** There is no check that `current-block >= paused-at-block`. In practice this is guaranteed because block height is monotonically increasing, but Clarity would abort on underflow if this were violated rather than produce a wrong result.
-
-**Finding:** None. Pause accounting is correct across N cycles.
+**Pause duration accounting:** `pause-duration = current-block - paused-at-block`. This is added to `total-paused-duration`, which is subtracted from elapsed time in all balance calculations. Verified correct across N cycles by Akanmoh Johnson's arithmetic analysis.
 
 ---
 
@@ -170,19 +169,14 @@ Streaming rates are stored with 12-digit precision: `rate = deposit * 1e12 / dur
 | `status != DEPLETED` | Cannot cancel a fully-paid stream |
 | `token-principal == contract-of token` | Token substitution prevention |
 
-**Fund accounting:**
+**Fund accounting — verified by Akanmoh Johnson:**
 ```
-recipient-amount = streamed - withdrawn   (what recipient earned but hasn't claimed)
-sender-refund    = deposit  - streamed    (unstreamed portion)
+recipient-amount = streamed - withdrawn   (earned but unclaimed)
+sender-refund    = deposit  - streamed    (unstreamed)
+total outgoing   = deposit  - withdrawn   (equals escrow balance) ✓
 ```
 
-Invariant check: `recipient-amount + sender-refund = deposit - withdrawn`. This equals the total tokens held in escrow for this stream at cancel time. The accounting is correct.
-
-**Zero-amount transfers:** Both `recipient-amount` and `sender-refund` are conditionally transferred only if `> 0`. This prevents unnecessary zero-value token calls.
-
-**Important UX note:** After cancellation, the recipient cannot call `claim` (ERR-STREAM-CANCELLED). Their earned amount is automatically sent by the cancellation transaction itself. Recipients do not need to take action.
-
-**Finding:** None. Accounting is correct and conservation holds.
+Conservation holds on every exit path. Zero-amount transfers are conditionally skipped.
 
 ---
 
@@ -201,13 +195,11 @@ Invariant check: `recipient-amount + sender-refund = deposit - withdrawn`. This 
 | `status != CANCELLED` | Cannot top up cancelled stream |
 | `status != DEPLETED` | Cannot top up depleted stream |
 
-**Rate preservation:** Additional blocks = `amount * PRECISION / rate`. Since rate was calculated as `deposit * PRECISION / duration`, this correctly computes how many blocks the new amount extends the stream. The streaming rate remains constant.
+**Authorization ordering (Marvy247):** Same pattern as `claim` — auth check runs after `let` bindings due to Clarity semantics. Gas concern only, no security impact. Clarifying comments added.
 
-**Division safety:** `rate` cannot be zero because `create-stream` requires `deposit > 0` and `duration > 0`, making `rate = deposit * PRECISION / duration >= 1`.
+**Rate preservation — verified by Akanmoh Johnson:** `additional_blocks = top_up * PRECISION / rate`. Since `rate = deposit * PRECISION / duration`, this correctly extends the end block while keeping rate constant. The rounding dust limitation from Finding L-1 also applies to the extended portion.
 
-**Note:** Top-up is allowed on PAUSED streams. The extension is applied to `end-block`, which will take effect when the stream resumes. This is correct behavior.
-
-**Finding:** None.
+**Division safety:** `rate` cannot be zero — `create-stream` now enforces `deposit * PRECISION >= duration` ensuring `rate >= 1`.
 
 ---
 
@@ -215,55 +207,71 @@ Invariant check: `recipient-amount + sender-refund = deposit - withdrawn`. This 
 
 **Purpose:** Circuit breaker — stops new stream creation without affecting existing streams.
 
-**Authorization:** Only `CONTRACT-OWNER` (set to `tx-sender` at deploy time = deployer address).
+**Authorization:** Only `CONTRACT-OWNER` (set to `tx-sender` at deploy time).
 
-**Scope:** Blocks `create-stream` only. Existing streams continue to accrue. Recipients can still claim. Senders can still cancel. This is the correct narrow scope — an emergency pause should stop new exposure, not freeze user funds.
+**Scope:** Blocks `create-stream` only. Existing streams continue to accrue, recipients can claim, senders can cancel. Confirmed correct scope by Akanmoh Johnson.
 
-**Centralization note:** `CONTRACT-OWNER` is a single key. This is an accepted tradeoff for v1. If the deployer key is compromised, the attacker can prevent new streams but cannot access escrowed funds (the emergency pause function has no fund-withdrawal capability).
-
-**Finding:** The emergency pause is appropriately scoped. Deployer key security is the operator's responsibility.
+**Finding I-2 (confirmed):** `CONTRACT-OWNER` is a constant — non-transferable and cannot be upgraded to multisig. Accepted for v1. If the deployer key is compromised, the attacker can toggle the pause but cannot access escrowed funds. The use of `contract-caller` (not `tx-sender`) means a phishing contract cannot invoke this function on the owner's behalf. Noted for v2 multisig upgrade.
 
 ---
 
 ## Public Function Analysis — `stream-factory.clar`
 
 ### `register-dao`
-Validates non-empty name, uniqueness of both the principal and the name string, then writes to two maps (forward and reverse lookup). No funds involved. No security concerns.
+Validates non-empty name, uniqueness of principal and name string, writes to forward and reverse lookup maps. No funds involved. No security concerns.
 
 ### `update-dao-name`
-Caller must be a registered DAO admin. Validates new name is non-empty and not taken. Atomically removes old name mapping and writes new one. Correct.
+Caller must be a registered DAO admin. Validates new name non-empty and not taken. Atomically removes old name mapping and writes new one. Correct.
 
 ### `deactivate-dao`
-Soft-delete only. Sets `is-active: false`. Name mapping remains (preventing name reuse by others after deactivation). No funds involved. No security concerns.
+Soft-delete only. Sets `is-active: false`. Name mapping remains, preventing name reuse after deactivation. No funds involved.
 
 ### `track-stream`
-Calls `stream-manager.get-stream` to verify the stream exists and that `contract-caller` is the stream's `sender`. This prevents a DAO from claiming credit for another team's streams. The `total-deposited` analytics field is updated from on-chain data, not user input. Correct.
+Verifies stream exists and `contract-caller` is the stream's sender before updating analytics. Prevents a DAO from claiming credit for another team's streams. See Finding I-1 for analytics staleness after top-up.
 
 ---
 
 ## Findings Summary
 
-| Severity | Count | Description |
-|---|---|---|
-| Critical | 0 | — |
-| High | 0 | — |
-| Medium | 0 | — |
-| Low | 1 | Redundant status checks in `pause-stream` (lines 386–387) — no security impact |
-| Informational | 1 | `CONTRACT-OWNER` is a single key — accepted tradeoff for v1 |
+### Pre-community-review (self-audit)
+| ID | Severity | Function | Description | Status |
+|---|---|---|---|---|
+| L-3 | Low | `pause-stream` | Redundant status checks — unreachable code | Acknowledged, deferred |
+| I-2 | Informational | `set-emergency-pause` | Single non-transferable `CONTRACT-OWNER` key | Accepted for v1 |
 
-**No vulnerabilities found.** The contracts are considered ready for mainnet deployment subject to the checklist below.
+### Community review findings
+| ID | Severity | Function | Reviewer | Description | Status |
+|---|---|---|---|---|---|
+| L-4 | Low | `resume-stream` | Marvy247 | Resume allowed after end-block — zombie ACTIVE state | **Fixed** |
+| L-5 | Low | `claim` | Marvy247 | Auth check runs after `let` calculations — gas concern only | Documented |
+| L-6 | Low | `top-up-stream` | Marvy247 | Same auth ordering pattern as `claim` | Documented |
+| L-7 | Low | `create-stream` | Sobilo34 | Zero rate-per-block possible with tiny deposit + huge duration | **Fixed** |
+| L-1 | Low | `create-stream` | Akanmoh Johnson | Rounding dust permanently locked when deposit % duration ≠ 0 | Documented — recover via `cancel-stream` |
+| L-2 | Low | `create-stream` | Akanmoh Johnson | 100-stream cap is lifetime per principal, not concurrent | Documented — v2 improvement |
+| I-1 | Informational | `track-stream` | Akanmoh Johnson | DAO `total-deposited` stale after top-up | Accepted — analytics only |
+
+### Totals
+| Severity | Count | Fixed | Documented/Deferred |
+|---|---|---|---|
+| Critical | 0 | — | — |
+| High | 0 | — | — |
+| Medium | 0 | — | — |
+| Low | 7 | 2 (L-4, L-7) | 5 |
+| Informational | 3 | — | 3 |
+
+**No critical, high, or medium vulnerabilities found.** Two low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
 
 ---
 
 ## Mainnet Deployment Checklist
 
 ### Pre-deployment
-- [ ] All 103 tests passing on Clarinet simnet: `npm test`
+- [ ] All tests passing on Clarinet simnet: `npm test`
 - [ ] Contracts compile without warnings: `clarinet check`
-- [ ] `CONTRACT-OWNER` key stored securely (hardware wallet or multisig recommended)
-- [ ] Emergency pause procedure documented: who triggers it, under what conditions
+- [ ] `CONTRACT-OWNER` key stored securely (hardware wallet recommended)
+- [ ] Emergency pause procedure documented
 - [ ] Frontend environment variables updated for mainnet contract addresses
-- [ ] Post-condition mode confirmed as `allow` for `create-stream` and `top-up-stream` (tokens leave wallet), `deny` for claim/cancel (tokens come to wallet)
+- [ ] Post-condition mode confirmed: `allow` for `create-stream` and `top-up-stream`, `deny` for claim/cancel
 
 ### Deployment order
 1. Deploy `sip-010-trait.clar`
@@ -274,21 +282,40 @@ Calls `stream-manager.get-stream` to verify the stream exists and that `contract
 6. Smoke-test: create one stream, claim partial, pause, resume, cancel
 
 ### Post-deployment verification
-- [ ] `get-stream-nonce` returns `u0` (clean state)
+- [ ] `get-stream-nonce` returns `u0`
 - [ ] `is-emergency-paused` returns `false`
 - [ ] `get-dao-count` returns `u0`
-- [ ] Create a small test stream with a non-critical amount and verify all state transitions
-- [ ] Verify frontend correctly reads mainnet contract state (not testnet)
+- [ ] Create a small test stream and verify all state transitions
+- [ ] Verify frontend reads mainnet contract state correctly
 
 ---
 
 ## Community Review
 
-This review was conducted by the contract author. Independent review is requested before mainnet launch.
-
 **GitHub Issue:** https://github.com/jayteemoney/stackstream/issues/1  
 **Review period:** April 12 – April 15, 2026 (60-hour window)  
-**Scope:** Authorization logic, arithmetic safety, state transition correctness, token handling  
-**Contact:** Open a comment on the GitHub issue or DM `@dev_jayteee` on X
+**Contact:** `@dev_jayteee` on X
 
-Reviewers who identify valid findings will be credited in the v1.0.0 release notes.
+### Reviewer 1 — Marvy247
+**Date:** April 13, 2026  
+**Method:** Pull request — `security/community-review-fixes` branch  
+**Findings:** L-4 (resume past end-block — **fixed**), L-5 (auth ordering in `claim` — documented), L-6 (auth ordering in `top-up-stream` — documented)  
+**Verdict:** No critical or high issues. Two defensive improvements applied.
+
+### Reviewer 2 — Sobilo34
+**Date:** April 12, 2026  
+**Method:** Pull request — commit `72ce254`  
+**Findings:** L-7 (zero rate-per-block — **fixed**). Added a test case confirming the fix.  
+**Verdict:** Single edge-case finding, correctly identified and patched.
+
+### Reviewer 3 — Akanmoh Johnson
+**Date:** April 13, 2026  
+**Method:** Line-by-line review posted on GitHub Issue #1  
+**Scope:** Full review of both contracts against Clarity v3 / Epoch 3.0 best practices  
+**Findings:** L-1 (rounding dust), L-2 (lifetime stream cap), L-3 confirmed, I-1 (factory analytics), I-2 confirmed  
+**Positive confirmations:** `contract-caller` authorization model, `stacks-block-height` usage, token substitution prevention, `try!` on all transfers, state-after-transfer ordering, arithmetic overflow safety, streamed amount clamp, emergency pause scoping, state machine correctness  
+**Verdict:** "StackStream's contracts demonstrate strong security engineering for a v1 Clarity protocol. The two new findings are both Low severity and neither blocks mainnet launch."
+
+---
+
+All findings from the community review have been reviewed, addressed where applicable, and documented. The contracts are considered ready for mainnet deployment.

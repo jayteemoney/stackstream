@@ -4,7 +4,7 @@
 **Updated:** April 13, 2026 (community review findings incorporated)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0  
 
 ---
 

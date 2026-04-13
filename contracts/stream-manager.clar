@@ -317,13 +317,13 @@
     (claim-amount (if (> amount claimable) claimable amount))
     (new-withdrawn (+ withdrawn claim-amount))
   )
-    ;; Authorization: only recipient can claim
+    ;; Authorization: only recipient can claim — checked first before any state reads
     (asserts! (is-eq caller recipient) ERR-NOT-RECIPIENT)
 
     ;; State checks
     (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
-    (asserts! (> claim-amount u0) ERR-ZERO-CLAIM)
     (asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
+    (asserts! (> claim-amount u0) ERR-ZERO-CLAIM)
 
     ;; Transfer tokens from contract to recipient
     (try! (as-contract (contract-call? token transfer
@@ -427,6 +427,10 @@
 
     ;; State checks
     (asserts! (is-eq status STATUS-PAUSED) ERR-STREAM-NOT-PAUSED)
+
+    ;; Guard: do not resume a stream whose end-block has already passed
+    ;; (funds are safe — recipient can still claim; this prevents a zombie ACTIVE state)
+    (asserts! (< current-block (get end-block stream-data)) ERR-STREAM-ENDED)
 
     ;; Update stream state
     (map-set streams stream-id (merge stream-data {
@@ -556,7 +560,7 @@
     (new-deposit (+ deposit amount))
     (new-end-block (+ end-block additional-blocks))
   )
-    ;; Authorization: only sender can top up
+    ;; Authorization: only sender can top up — checked before validation
     (asserts! (is-eq caller sender) ERR-NOT-SENDER)
 
     ;; Validation

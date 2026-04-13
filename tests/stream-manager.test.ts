@@ -127,6 +127,21 @@ describe("StackStream - Stream Manager Contract", () => {
       expect(result.result).toBeErr(Cl.uint(301)); // ERR-INVALID-DURATION
     });
 
+    it("should fail when duration exceeds deposit * PRECISION (zero rate-per-block)", () => {
+      const startBlock = getCurrentBlock() + 1;
+      // 1 * PRECISION / (PRECISION + 1) rounds down to 0 — must be rejected
+      const precision = 1_000_000_000_000n;
+      const result = createStream(
+        wallet1,
+        wallet2,
+        1,
+        startBlock,
+        Number(precision + 1n)
+      );
+
+      expect(result.result).toBeErr(Cl.uint(301)); // ERR-INVALID-DURATION
+    });
+
     it("should fail with start block in the past", () => {
       // Mine some blocks first so we have room for a past block
       simnet.mineEmptyBlocks(5);

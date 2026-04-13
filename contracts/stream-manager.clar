@@ -212,6 +212,9 @@
     (asserts! (not (var-get emergency-paused)) ERR-NOT-AUTHORIZED)
     (asserts! (> deposit-amount u0) ERR-INVALID-AMOUNT)
     (asserts! (> duration-blocks u0) ERR-INVALID-DURATION)
+    ;; Integer rate = (deposit * PRECISION) / duration must be >= 1, otherwise
+    ;; rate-per-block is 0 (no accrual) and top-up-stream divides by zero.
+    (asserts! (>= (* deposit-amount PRECISION) duration-blocks) ERR-INVALID-DURATION)
     (asserts! (>= start-block stacks-block-height) ERR-INVALID-START-TIME)
     (asserts! (not (is-eq recipient contract-caller)) ERR-INVALID-RECIPIENT)
     (asserts! (not (is-eq recipient (as-contract tx-sender))) ERR-INVALID-RECIPIENT)

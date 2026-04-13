@@ -201,6 +201,12 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 
 **Division safety:** `rate` cannot be zero — `create-stream` now enforces `deposit * PRECISION >= duration` ensuring `rate >= 1`.
 
+**Fix applied (Godbrand0 — L-8):** When `amount × PRECISION < rate-per-block`, integer division truncates `additional-blocks` to zero. The sender's tokens transfer to escrow but `end-block` is unchanged — the topped-up tokens silently exceed the stream's claimable ceiling and become permanently unreachable by the recipient (recoverable only by sender via `cancel-stream`). Fixed by adding a guard before the token transfer:
+```clarity
+(asserts! (>= (* amount PRECISION) rate) ERR-INVALID-AMOUNT)
+```
+This mirrors the zero-rate guard added in `create-stream` and rejects any top-up too small to extend the stream by at least 1 block.
+
 ---
 
 ### 8. `set-emergency-pause`
@@ -210,6 +216,8 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 **Authorization:** Only `CONTRACT-OWNER` (set to `tx-sender` at deploy time).
 
 **Scope:** Blocks `create-stream` only. Existing streams continue to accrue, recipients can claim, senders can cancel. Confirmed correct scope by Akanmoh Johnson.
+
+**Design rationale re: claim pausing (Ali6nXI):** A community reviewer asked whether a true emergency should also pause claims. The answer is no — by design. Pausing claims would hold existing user funds hostage during an incident, which is a worse outcome than the original emergency. The philosophy: an emergency pause stops new capital from entering while guaranteeing all existing participants can always exit. For v2, a graduated pause model could be considered, but is out of scope for v1.
 
 **Finding I-2 (confirmed):** `CONTRACT-OWNER` is a constant — non-transferable and cannot be upgraded to multisig. Accepted for v1. If the deployer key is compromised, the attacker can toggle the pause but cannot access escrowed funds. The use of `contract-caller` (not `tx-sender`) means a phishing contract cannot invoke this function on the owner's behalf. Noted for v2 multisig upgrade.
 
@@ -248,7 +256,9 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | L-7 | Low | `create-stream` | Sobilo34 | Zero rate-per-block possible with tiny deposit + huge duration | **Fixed** |
 | L-1 | Low | `create-stream` | Akanmoh Johnson | Rounding dust permanently locked when deposit % duration ≠ 0 | Documented — recover via `cancel-stream` |
 | L-2 | Low | `create-stream` | Akanmoh Johnson | 100-stream cap is lifetime per principal, not concurrent | Documented — v2 improvement |
+| L-8 | Low | `top-up-stream` | Godbrand0 | Zero-extension top-up: tokens locked in escrow when amount too small to extend stream by 1 block | **Fixed** |
 | I-1 | Informational | `track-stream` | Akanmoh Johnson | DAO `total-deposited` stale after top-up | Accepted — analytics only |
+| I-3 | Informational | `set-emergency-pause` | Ali6nXI | Design question: should claims also pause in emergencies? | Documented — intentional design, see rationale |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
@@ -256,10 +266,10 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | Critical | 0 | — | — |
 | High | 0 | — | — |
 | Medium | 0 | — | — |
-| Low | 7 | 2 (L-4, L-7) | 5 |
-| Informational | 3 | — | 3 |
+| Low | 8 | 3 (L-4, L-7, L-8) | 5 |
+| Informational | 4 | — | 4 |
 
-**No critical, high, or medium vulnerabilities found.** Two low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
+**No critical, high, or medium vulnerabilities found.** Three low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
 
 ---
 
@@ -315,6 +325,18 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Findings:** L-1 (rounding dust), L-2 (lifetime stream cap), L-3 confirmed, I-1 (factory analytics), I-2 confirmed  
 **Positive confirmations:** `contract-caller` authorization model, `stacks-block-height` usage, token substitution prevention, `try!` on all transfers, state-after-transfer ordering, arithmetic overflow safety, streamed amount clamp, emergency pause scoping, state machine correctness  
 **Verdict:** "StackStream's contracts demonstrate strong security engineering for a v1 Clarity protocol. The two new findings are both Low severity and neither blocks mainnet launch."
+
+### Reviewer 4 — Ali6nXI
+**Date:** April 13, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** I-3 — design question on emergency pause scope (claims vs creation only)  
+**Verdict:** Design rationale documented. Intentional scoping confirmed — emergency pause correctly stops new exposure without freezing existing user funds.
+
+### Reviewer 5 — Godbrand0
+**Date:** April 13, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** L-8 — novel finding in `top-up-stream`: zero-extension top-up silently locks tokens in escrow when `amount × PRECISION < rate-per-block`. Direct analogue of the zero-rate guard in `create-stream`. **Fixed** before mainnet.  
+**Verdict:** Valid novel finding. Fix applied and verified.
 
 ---
 

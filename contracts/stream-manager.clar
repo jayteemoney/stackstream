@@ -571,6 +571,11 @@
     (asserts! (> amount u0) ERR-INVALID-AMOUNT)
     (asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
 
+    ;; Prevent zero-extension top-ups: amount * PRECISION must be >= rate-per-block
+    ;; Without this, amounts too small to extend the stream by 1 block are silently accepted —
+    ;; tokens transfer to escrow but end-block is unchanged, making them unreachable by recipient
+    (asserts! (>= (* amount PRECISION) rate) ERR-INVALID-AMOUNT)
+
     ;; State checks: can't top up cancelled or depleted streams
     (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
     (asserts! (not (is-eq status STATUS-DEPLETED)) ERR-STREAM-DEPLETED)

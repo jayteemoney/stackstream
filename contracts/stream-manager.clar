@@ -433,7 +433,7 @@
     (asserts! (is-eq status STATUS-PAUSED) ERR-STREAM-NOT-PAUSED)
 
     ;; Cannot resume a stream whose end-block has already passed
-    ;; Prevents zombie ACTIVE state — recipient can still claim earned tokens via claim
+    ;; Prevents zombie ACTIVE state. Recipient can still claim earned tokens via claim
     (asserts! (< current-block (get end-block stream-data)) ERR-STREAM-ENDED)
 
     ;; Update stream state
@@ -572,7 +572,7 @@
     (asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
 
     ;; Prevent zero-extension top-ups: amount * PRECISION must be >= rate-per-block
-    ;; Without this, amounts too small to extend the stream by 1 block are silently accepted —
+    ;; Without this, amounts too small to extend the stream by 1 block are silently accepted:
     ;; tokens transfer to escrow but end-block is unchanged, making them unreachable by recipient
     (asserts! (>= (* amount PRECISION) rate) ERR-INVALID-AMOUNT)
 

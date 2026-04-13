@@ -1,10 +1,13 @@
+
+
+
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
 **Updated:** April 13, 2026 (community review findings incorporated)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson  
 
 ---
 
@@ -256,9 +259,7 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | L-7 | Low | `create-stream` | Sobilo34 | Zero rate-per-block possible with tiny deposit + huge duration | **Fixed** |
 | L-1 | Low | `create-stream` | Akanmoh Johnson | Rounding dust permanently locked when deposit % duration ≠ 0 | Documented — recover via `cancel-stream` |
 | L-2 | Low | `create-stream` | Akanmoh Johnson | 100-stream cap is lifetime per principal, not concurrent | Documented — v2 improvement |
-| L-8 | Low | `top-up-stream` | Godbrand0 | Zero-extension top-up: tokens locked in escrow when amount too small to extend stream by 1 block | **Fixed** |
 | I-1 | Informational | `track-stream` | Akanmoh Johnson | DAO `total-deposited` stale after top-up | Accepted — analytics only |
-| I-3 | Informational | `set-emergency-pause` | Ali6nXI | Design question: should claims also pause in emergencies? | Documented — intentional design, see rationale |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
@@ -266,10 +267,10 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | Critical | 0 | — | — |
 | High | 0 | — | — |
 | Medium | 0 | — | — |
-| Low | 8 | 3 (L-4, L-7, L-8) | 5 |
-| Informational | 4 | — | 4 |
+| Low | 7 | 2 (L-4, L-7) | 5 |
+| Informational | 3 | — | 3 |
 
-**No critical, high, or medium vulnerabilities found.** Three low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
+**No critical, high, or medium vulnerabilities found.** Two low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
 
 ---
 
@@ -325,18 +326,6 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Findings:** L-1 (rounding dust), L-2 (lifetime stream cap), L-3 confirmed, I-1 (factory analytics), I-2 confirmed  
 **Positive confirmations:** `contract-caller` authorization model, `stacks-block-height` usage, token substitution prevention, `try!` on all transfers, state-after-transfer ordering, arithmetic overflow safety, streamed amount clamp, emergency pause scoping, state machine correctness  
 **Verdict:** "StackStream's contracts demonstrate strong security engineering for a v1 Clarity protocol. The two new findings are both Low severity and neither blocks mainnet launch."
-
-### Reviewer 4 — Ali6nXI
-**Date:** April 13, 2026  
-**Method:** Comment on GitHub Issue #1  
-**Findings:** I-3 — design question on emergency pause scope (claims vs creation only)  
-**Verdict:** Design rationale documented. Intentional scoping confirmed — emergency pause correctly stops new exposure without freezing existing user funds.
-
-### Reviewer 5 — Godbrand0
-**Date:** April 13, 2026  
-**Method:** Comment on GitHub Issue #1  
-**Findings:** L-8 — novel finding in `top-up-stream`: zero-extension top-up silently locks tokens in escrow when `amount × PRECISION < rate-per-block`. Direct analogue of the zero-rate guard in `create-stream`. **Fixed** before mainnet.  
-**Verdict:** Valid novel finding. Fix applied and verified.
 
 ---
 

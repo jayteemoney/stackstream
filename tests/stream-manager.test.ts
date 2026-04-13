@@ -1525,9 +1525,10 @@ describe("StackStream - Stream Manager Contract", () => {
       const status = (simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(1)], deployer).result as any).value.value as bigint;
       expect(status).toBe(3n); // STATUS-DEPLETED
 
-      // Top-up a depleted stream should fail
+      // Top-up a depleted stream should fail with ERR-STREAM-DEPLETED
+      // Amount must be >= rate (1_000_000) to pass the zero-extension guard first
       const result = simnet.callPublicFn(streamManagerContract, "top-up-stream",
-        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(500_000n)],
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(1_000_000n)],
         wallet1
       );
       expect(result.result).toBeErr(Cl.uint(201)); // ERR-STREAM-DEPLETED

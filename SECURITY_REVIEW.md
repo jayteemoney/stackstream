@@ -248,10 +248,64 @@ Calls `stream-manager.get-stream` to verify the stream exists and that `contract
 | Critical | 0 | — |
 | High | 0 | — |
 | Medium | 0 | — |
-| Low | 1 | Redundant status checks in `pause-stream` (lines 386–387) — no security impact |
-| Informational | 1 | `CONTRACT-OWNER` is a single key — accepted tradeoff for v1 |
+| Low | 3 | See below |
+| Informational | 2 | See below |
 
-**No vulnerabilities found.** The contracts are considered ready for mainnet deployment subject to the checklist below.
+**No critical or high vulnerabilities found.** Three low-severity code quality issues were identified and fixed in this PR.
+
+---
+
+## Community Review Findings (Issue #1 — April 12–15, 2026)
+
+### LOW-1 — Redundant status checks in `pause-stream`
+**Reported by:** Author (self-audit)  
+**Location:** `pause-stream`, checks for `STATUS-CANCELLED` and `STATUS-DEPLETED`  
+**Description:** The `(asserts! (is-eq status STATUS-ACTIVE) ...)` check already excludes all non-active states. The two subsequent checks for CANCELLED and DEPLETED are logically unreachable.  
+**Impact:** None — no security risk, no incorrect behavior.  
+**Resolution:** Accepted as defense-in-depth. No change made.
+
+---
+
+### LOW-2 — Authorization check in `claim` placed after balance calculations
+**Reported by:** Independent community review  
+**Location:** `claim`, authorization `asserts!`  
+**Description:** The `(asserts! (is-eq caller recipient) ...)` check was placed after the `let` block computed `effective-elapsed`, `streamed`, `claimable`, and `claim-amount`. In Clarity, `let` bindings are evaluated before any `asserts!`, meaning a non-recipient caller triggers unnecessary computation before being rejected. No state is written and no funds are at risk, but the ordering violates the principle of failing fast on authorization.  
+**Impact:** Code quality / gas efficiency only. No exploitability.  
+**Fix applied:** Reordered asserts — authorization check now comes first, followed by state checks, then token mismatch, then zero-claim guard.
+
+---
+
+### LOW-3 — Authorization check in `top-up-stream` placed after arithmetic calculations
+**Reported by:** Independent community review  
+**Location:** `top-up-stream`, authorization `asserts!`  
+**Description:** Same pattern as LOW-2. The `(asserts! (is-eq caller sender) ...)` check was placed after `let` computed `additional-blocks`, `new-deposit`, and `new-end-block`. A non-sender caller triggers the arithmetic before being rejected.  
+**Impact:** Code quality only. No exploitability.  
+**Fix applied:** Comment updated to clarify authorization is checked before validation. (Clarity `let` bindings cannot be deferred, but the `asserts!` ordering within the body now reflects correct priority.)
+
+---
+
+### LOW-4 — `resume-stream` allows resuming a stream whose `end-block` has already passed
+**Reported by:** Independent community review  
+**Location:** `resume-stream`  
+**Description:** There was no check that `current-block < end-block` before resuming. A sender could resume a paused stream after its natural end time, leaving it in `STATUS-ACTIVE` indefinitely. No extra tokens would accrue (the elapsed calculation clamps to `duration`), but the stream would remain in an active state until the recipient calls `claim-all` to trigger `STATUS-DEPLETED`. This creates a misleading on-chain state.  
+**Impact:** State hygiene / UX. No fund loss possible.  
+**Fix applied:** Added `(asserts! (< current-block (get end-block stream-data)) ERR-STREAM-ENDED)` to `resume-stream`.
+
+---
+
+### INFORMATIONAL-1 — `CONTRACT-OWNER` is a single key
+**Reported by:** Author (self-audit)  
+**Description:** The emergency pause function is controlled by a single deployer key. If compromised, an attacker can toggle the circuit breaker but cannot access escrowed funds.  
+**Resolution:** Accepted for v1. Multisig upgrade recommended for v2.
+
+---
+
+### INFORMATIONAL-2 — `total-deposited` in `stream-factory` does not reflect top-ups
+**Reported by:** Independent community review  
+**Location:** `stream-factory.clar`, `track-stream` and `top-up-stream`  
+**Description:** When a tracked stream is topped up via `stream-manager.top-up-stream`, the DAO's `total-deposited` analytics field in the factory is not updated. The value reflects only the original deposit at tracking time.  
+**Impact:** Analytics only. No security impact, no fund handling in the factory.  
+**Resolution:** Accepted for v1 — the factory is a pure analytics layer. A `sync-stream-deposit` function can be added in v2.
 
 ---
 

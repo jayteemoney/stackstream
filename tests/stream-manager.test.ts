@@ -1806,4 +1806,103 @@ describe("StackStream - Stream Manager Contract", () => {
       expect(result.result).toBeErr(Cl.uint(302)); // ERR-INVALID-START-TIME
     });
   });
+
+  // ============================================================================
+  // BLOCK D — Zachyo REVIEW FINDINGS (5 tests)
+  // ============================================================================
+
+  describe("transfer-ownership (M-2 fix — Zachyo)", () => {
+    it("should allow owner to transfer ownership", () => {
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "transfer-ownership",
+        [Cl.principal(wallet1)],
+        deployer
+      );
+
+      expect(result.result).toBeOk(Cl.bool(true));
+
+      // New owner should be wallet1
+      const owner = simnet.callReadOnlyFn(
+        streamManagerContract,
+        "get-contract-owner",
+        [],
+        deployer
+      );
+      expect(owner.result).toBePrincipal(wallet1);
+    });
+
+    it("should allow new owner to use admin functions after transfer", () => {
+      // Transfer to wallet1
+      simnet.callPublicFn(
+        streamManagerContract,
+        "transfer-ownership",
+        [Cl.principal(wallet1)],
+        deployer
+      );
+
+      // wallet1 (new owner) can now set emergency pause
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "set-emergency-pause",
+        [Cl.bool(true)],
+        wallet1
+      );
+      expect(result.result).toBeOk(Cl.bool(true));
+    });
+
+    it("should reject transfer from non-owner", () => {
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "transfer-ownership",
+        [Cl.principal(wallet3)],
+        wallet1 // wallet1 is not the owner
+      );
+
+      expect(result.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+    });
+
+    it("previous owner loses admin access after transfer", () => {
+      // Transfer to wallet1
+      simnet.callPublicFn(
+        streamManagerContract,
+        "transfer-ownership",
+        [Cl.principal(wallet1)],
+        deployer
+      );
+
+      // Deployer should no longer be able to set emergency pause
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "set-emergency-pause",
+        [Cl.bool(true)],
+        deployer
+      );
+      expect(result.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
+    });
+  });
+
+  describe("top-up-stream end-block guard (L-10 fix — Zachyo)", () => {
+    it("should reject top-up on a paused stream whose end-block has passed", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 10);
+
+      // Mine to midpoint and pause
+      simnet.mineEmptyBlocks(6);
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+
+      // Mine past end-block
+      simnet.mineEmptyBlocks(15);
+
+      // Sender tries to top up to extend end-block and escape expire-stream
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "top-up-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(1_000_000_000)],
+        wallet1
+      );
+
+      expect(result.result).toBeErr(Cl.uint(207)); // ERR-STREAM-ENDED
+    });
+  });
 });

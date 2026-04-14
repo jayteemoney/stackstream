@@ -4,10 +4,10 @@
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
-**Updated:** April 13, 2026 (dannyy2000 review incorporated — M-1 fixed)  
+**Updated:** April 14, 2026 (Zachyo review incorporated — M-2 and L-10 fixed)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000, Zachyo  
 
 ---
 
@@ -184,6 +184,8 @@ total outgoing   = deposit  - withdrawn   (equals escrow balance) ✓
 
 Conservation holds on every exit path. Zero-amount transfers are conditionally skipped.
 
+**Trust assumption documented (Zachyo — L-11):** `cancel-stream` is callable by the sender at any time, including while the stream is STATUS-PAUSED. This is correct by design — the sender can always reclaim unstreamed tokens. However, it means streams are a revocable commitment: a sender can pause immediately after creation and cancel, recovering nearly the full deposit. Recipients must trust the sender not to pause-cancel arbitrarily. There is no minimum lock-in period or non-cancellable flag in v1. This is not a bug — it is a documented trust model. Recipients who require stronger guarantees should agree off-chain on stream parameters before funds are deposited. A non-cancellable flag is a v2 consideration.
+
 ---
 
 ### 7. `expire-stream` *(new — added post-review)*
@@ -219,6 +221,7 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 | `token-principal == contract-of token` | Token substitution prevention |
 | `status != CANCELLED` | Cannot top up cancelled stream |
 | `status != DEPLETED` | Cannot top up depleted stream |
+| `stacks-block-height < end-block` | **Added post-review:** prevents topping up an expired stream (Zachyo) |
 
 **Authorization ordering (Marvy247):** Same pattern as `claim` — auth check runs after `let` bindings due to Clarity semantics. Gas concern only, no security impact. Clarifying comments added.
 
@@ -232,19 +235,27 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 ```
 This mirrors the zero-rate guard added in `create-stream` and rejects any top-up too small to extend the stream by at least 1 block.
 
+**Fix applied (Zachyo — L-10):** `top-up-stream` did not check whether the stream's window had already closed. This allowed a sender to top up a paused-and-expired stream, extending `end-block` into the future and making `resume-stream` callable again — bypassing `expire-stream`'s permissionless settlement path. Fixed by adding:
+```clarity
+(asserts! (< stacks-block-height end-block) ERR-STREAM-ENDED)
+```
+Pausing a not-yet-expired stream and then topping it up remains valid (sender is adding funds, recipient benefits). Only the expired case is now blocked.
+
 ---
 
 ### 8. `set-emergency-pause`
 
 **Purpose:** Circuit breaker — stops new stream creation without affecting existing streams.
 
-**Authorization:** Only `CONTRACT-OWNER` (set to `tx-sender` at deploy time).
+**Authorization:** Only `contract-owner` (stored as a `define-data-var`, initialized to deployer at deploy time).
 
 **Scope:** Blocks `create-stream` only. Existing streams continue to accrue, recipients can claim, senders can cancel. Confirmed correct scope by Akanmoh Johnson.
 
 **Design rationale re: claim pausing (Ali6nXI):** A community reviewer asked whether a true emergency should also pause claims. The answer is no — by design. Pausing claims would hold existing user funds hostage during an incident, which is a worse outcome than the original emergency. The philosophy: an emergency pause stops new capital from entering while guaranteeing all existing participants can always exit. For v2, a graduated pause model could be considered, but is out of scope for v1.
 
-**Finding I-2 (confirmed):** `CONTRACT-OWNER` is a constant — non-transferable and cannot be upgraded to multisig. Accepted for v1. If the deployer key is compromised, the attacker can toggle the pause but cannot access escrowed funds. The use of `contract-caller` (not `tx-sender`) means a phishing contract cannot invoke this function on the owner's behalf. Noted for v2 multisig upgrade.
+**Finding I-2 (superseded by M-2 fix):** Previously `CONTRACT-OWNER` was a `define-constant` — non-transferable and non-rotatable without redeployment. Zachyo (M-2) identified two additional problems: (1) if the contract is redeployed by a different address, `CONTRACT-OWNER` silently changes to that new deployer; (2) there was no on-chain way to identify the current owner without reading the constant. Fixed: `contract-owner` is now a `define-data-var` initialized to `tx-sender` at deploy time, with a `transfer-ownership` function guarded by the current owner and a `get-contract-owner` read-only query. Key rotation is now possible without redeployment. Multisig upgrade still deferred to v2 (the new owner can be set to a multisig principal via `transfer-ownership`).
+
+**`transfer-ownership` function:** Only the current owner can call this. Emits an `ownership-transferred` event with previous and new owner. The previous owner immediately loses all admin access.
 
 ---
 
@@ -285,17 +296,20 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | L-8 | Low | `top-up-stream` | Godbrand0 | Zero-extension top-up: tokens trapped if amount too small to extend by 1 block | **Fixed** |
 | M-1 | Medium | `pause-stream` / general | dannyy2000 | Paused stream past end-block — unearned portion permanently locked, no permissionless recovery | **Fixed** — new `expire-stream` function |
 | L-9 | Low | `pause-stream` | dannyy2000 | Pre-start pause overcounts pause duration, shortening recipient's effective window | **Fixed** — start-block guard added |
+| M-2 | Medium | `set-emergency-pause` | Zachyo | `CONTRACT-OWNER` was a constant — silent change on redeploy, no key rotation possible | **Fixed** — converted to `define-data-var` + `transfer-ownership` |
+| L-10 | Low | `top-up-stream` | Zachyo | Top-up on paused-and-expired stream extends end-block, bypassing `expire-stream` | **Fixed** — end-block guard added |
+| L-11 | Low | `cancel-stream` | Zachyo | Streams are a revocable commitment — sender can pause-cancel at any time | Documented — design decision, not a bug |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
 |---|---|---|---|
 | Critical | 0 | — | — |
 | High | 0 | — | — |
-| Medium | 1 | 1 (M-1) | 0 |
-| Low | 9 | 4 (L-4, L-7, L-8, L-9) | 5 |
+| Medium | 2 | 2 (M-1, M-2) | 0 |
+| Low | 11 | 5 (L-4, L-7, L-8, L-9, L-10) | 6 |
 | Informational | 3 | — | 3 |
 
-**No critical or high vulnerabilities found.** One medium (M-1) and three additional low-severity findings fixed. All fund-safety issues resolved before mainnet.
+**No critical or high vulnerabilities found.** Both medium findings fixed. All fund-safety issues resolved before mainnet.
 
 ---
 
@@ -370,8 +384,16 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Method:** Comment on GitHub Issue #1  
 **Scope:** Full review of `pause-stream`, `resume-stream`, `cancel-stream`, and general fund-safety design  
 **Findings:** M-1 (paused-stream stuck-funds — **fixed via new `expire-stream` function**), L-9 (pre-start pause overcounting — **fixed**)  
-**Design impact:** M-1 is the highest-severity finding of the review. It identified a systemic gap where the L-4 fix (correct in isolation) created a new stuck-funds path with no recovery option. The fix adds a permissionless `expire-stream` function — any party can trigger settlement once `end-block` has passed and the stream is still paused. L-9 closes a window where pre-start pause time is incorrectly counted against the recipient's streaming window.  
+**Design impact:** M-1 is the highest-severity finding of the first wave of reviews. It identified a systemic gap where the L-4 fix (correct in isolation) created a new stuck-funds path with no recovery option. The fix adds a permissionless `expire-stream` function — any party can trigger settlement once `end-block` has passed and the stream is still paused. L-9 closes a window where pre-start pause time is incorrectly counted against the recipient's streaming window.  
 **Verdict:** Two genuine improvements, both fixed. "The expire-stream addition is the right architectural response — minimal surface area, no new trust assumptions, and it closes the gap completely."
+
+### Reviewer 7 — Zachyo
+**Date:** April 14, 2026  
+**Method:** Independent review of both contracts  
+**Scope:** Full review of `stream-manager.clar` and `stream-factory.clar`  
+**Findings:** M-2 (`CONTRACT-OWNER` as constant — silent redeploy risk, no key rotation — **fixed**), L-10 (top-up on expired paused stream bypasses `expire-stream` — **fixed**), L-11 (`cancel-stream` revocability trust assumption — documented)  
+**Design impact:** M-2 closes an operational risk that would have been hard to discover post-mainnet: if a deployment script ever ran under a different key, ownership would silently shift. Converting to `define-data-var` + `transfer-ownership` also unblocks a v2 multisig migration path without redeployment. L-10 closes the last known interaction between `top-up-stream` and `expire-stream`.  
+**Verdict:** "Completed an independent review of stream-manager.clar and stream-factory.clar. No critical or high findings. One medium and two low findings."
 
 ---
 

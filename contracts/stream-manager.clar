@@ -14,8 +14,9 @@
 ;; CONSTANTS
 ;; ============================================================================
 
-;; Contract owner for emergency functions
-(define-constant CONTRACT-OWNER tx-sender)
+;; Contract owner for emergency functions. Stored as a data-var to allow key rotation
+;; without redeployment. Initialized to tx-sender (deployer) at deploy time.
+(define-data-var contract-owner principal tx-sender)
 
 ;; Precision multiplier for rate calculations (1e12)
 ;; This provides sufficient precision for tokens with up to 18 decimals
@@ -677,6 +678,11 @@
     (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
     (asserts! (not (is-eq status STATUS-DEPLETED)) ERR-STREAM-DEPLETED)
 
+    ;; Cannot top up a stream whose window has already closed.
+    ;; Without this guard, a sender could top up a paused-and-expired stream to extend
+    ;; its end-block into the future, making it resumable again and bypassing expire-stream.
+    (asserts! (< stacks-block-height end-block) ERR-STREAM-ENDED)
+
     ;; Transfer additional tokens to contract
     (try! (contract-call? token transfer
       amount
@@ -835,7 +841,7 @@
 ;; Does NOT affect existing streams (they can still be claimed/cancelled)
 (define-public (set-emergency-pause (paused bool))
   (begin
-    (asserts! (is-eq contract-caller CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (is-eq contract-caller (var-get contract-owner)) ERR-NOT-AUTHORIZED)
     (var-set emergency-paused paused)
     (print {
       event: "emergency-pause-set",
@@ -843,4 +849,24 @@
     })
     (ok true)
   )
+)
+
+;; Transfer contract ownership to a new principal
+;; Enables key rotation without redeployment. Only the current owner can call this.
+(define-public (transfer-ownership (new-owner principal))
+  (begin
+    (asserts! (is-eq contract-caller (var-get contract-owner)) ERR-NOT-AUTHORIZED)
+    (var-set contract-owner new-owner)
+    (print {
+      event: "ownership-transferred",
+      previous-owner: contract-caller,
+      new-owner: new-owner
+    })
+    (ok true)
+  )
+)
+
+;; Read current contract owner
+(define-read-only (get-contract-owner)
+  (var-get contract-owner)
 )

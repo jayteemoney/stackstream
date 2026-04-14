@@ -9,7 +9,14 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildCreateStreamTx } from "@/lib/stacks";
-import { MOCK_TOKEN_CONTRACT, DURATION_UNITS, type DurationUnit } from "@/lib/constants";
+import {
+  SUPPORTED_TOKENS,
+  DEFAULT_TOKEN,
+  DURATION_UNITS,
+  EXPLORER_BASE,
+  type DurationUnit,
+  type TokenConfig,
+} from "@/lib/constants";
 import { formatTokenAmount, blocksToTimeString } from "@/lib/utils";
 import { toast } from "sonner";
 import { Zap, ArrowRight, Info, Loader2, CheckCircle2 } from "lucide-react";
@@ -24,6 +31,7 @@ export default function CreateStreamPage() {
   const [durationValue, setDurationValue] = useState("30");
   const [durationUnit, setDurationUnit] = useState<DurationUnit>("days");
   const [memo, setMemo] = useState("");
+  const [selectedToken, setSelectedToken] = useState<TokenConfig>(DEFAULT_TOKEN);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   if (!isConnected) {
@@ -38,7 +46,9 @@ export default function CreateStreamPage() {
 
   const unitConfig = DURATION_UNITS.find((u) => u.value === durationUnit)!;
   const durationBlocks = Math.max(1, Math.round(parseFloat(durationValue || "0") * unitConfig.blocksPerUnit));
-  const amountRaw = Math.round(parseFloat(amount || "0") * 1e8);
+  // Use the selected token's decimals for raw unit conversion
+  const tokenMultiplier = Math.pow(10, selectedToken.decimals);
+  const amountRaw = Math.round(parseFloat(amount || "0") * tokenMultiplier);
   const ratePerBlock = durationBlocks > 0 ? amountRaw / durationBlocks : 0;
 
   function validate(): boolean {
@@ -58,7 +68,7 @@ export default function CreateStreamPage() {
 
     // Fetch the latest block height right before submitting to avoid stale data.
     // Add a buffer of +3 blocks so the start-block is still in the future
-    // when the tx is mined (blocks are ~10 min on testnet).
+    // when the tx is mined (blocks are ~10 min on mainnet).
     let latestBlock = blockHeight;
     try {
       const { getCurrentBlockHeight } = await import("@/lib/stacks");
@@ -70,7 +80,7 @@ export default function CreateStreamPage() {
 
     const txOptions = buildCreateStreamTx({
       recipient,
-      tokenContract: MOCK_TOKEN_CONTRACT,
+      tokenContract: selectedToken.contractId,
       depositAmount: BigInt(amountRaw),
       startBlock: latestBlock + 3,
       durationBlocks,
@@ -82,7 +92,6 @@ export default function CreateStreamPage() {
 
     if (result?.confirmed) {
       toast.success("Stream created and confirmed on-chain!");
-      // Reset form
       setRecipient("");
       setAmount("");
       setDurationValue("30");
@@ -114,16 +123,42 @@ export default function CreateStreamPage() {
             disabled={isSubmitting}
           />
 
+          {/* Token selector */}
+          {SUPPORTED_TOKENS.length > 1 && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-zinc-300">Token</label>
+              <select
+                value={selectedToken.contractId}
+                onChange={(e) => {
+                  const token = SUPPORTED_TOKENS.find((t) => t.contractId === e.target.value);
+                  if (token) {
+                    setSelectedToken(token);
+                    setAmount(""); // reset amount when token changes (different decimals)
+                  }
+                }}
+                disabled={isSubmitting}
+                className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50 disabled:opacity-50"
+              >
+                {SUPPORTED_TOKENS.map((t) => (
+                  <option key={t.contractId} value={t.contractId}>
+                    {t.symbol} — {t.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-zinc-600">{selectedToken.description}</p>
+            </div>
+          )}
+
           <Input
-            label="Total Amount (msBTC)"
+            label={`Total Amount (${selectedToken.symbol})`}
             type="number"
-            step="0.00000001"
+            step={`${1 / tokenMultiplier}`}
             min="0"
             placeholder="1.0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             error={errors.amount}
-            hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units` : undefined}
+            hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units (${selectedToken.decimals} decimals)` : undefined}
             disabled={isSubmitting}
           />
 
@@ -179,7 +214,7 @@ export default function CreateStreamPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                 <div>
                   <p className="text-zinc-500 text-xs">Rate per block</p>
-                  <p className="text-zinc-200 font-mono">{formatTokenAmount(ratePerBlock)} msBTC</p>
+                  <p className="text-zinc-200 font-mono">{formatTokenAmount(ratePerBlock)} {selectedToken.symbol}</p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Start block</p>
@@ -191,7 +226,7 @@ export default function CreateStreamPage() {
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Token</p>
-                  <p className="text-zinc-200">Mock sBTC (msBTC)</p>
+                  <p className="text-zinc-200">{selectedToken.name} ({selectedToken.symbol})</p>
                 </div>
               </div>
             </div>
@@ -209,7 +244,7 @@ export default function CreateStreamPage() {
                 This may take a few minutes.
               </p>
               <a
-                href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
+                href={`${EXPLORER_BASE}/txid/${txId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-brand-400 underline"
@@ -231,7 +266,7 @@ export default function CreateStreamPage() {
                 <a href="/dashboard/streams" className="text-brand-400 underline">Manage Streams</a> page.
               </p>
               <a
-                href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
+                href={`${EXPLORER_BASE}/txid/${txId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-brand-400 underline"

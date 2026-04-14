@@ -80,16 +80,96 @@ export type DurationUnit = (typeof DURATION_UNITS)[number]["value"];
 /** Maximum streams per user (from contract) */
 export const MAX_STREAMS_PER_USER = 100;
 
-/** Token info for supported tokens */
-export const SUPPORTED_TOKENS = [
+// ============================================================================
+// Token Configuration
+// ============================================================================
+
+/** Shape of every token entry used throughout the UI */
+export interface TokenConfig {
+  symbol: string;
+  name: string;
+  decimals: number;
+  contractId: string;
+  /** Fungible token name inside the contract — used for post-conditions */
+  ftName: string;
+  icon: string;
+  description: string;
+}
+
+/**
+ * Real mainnet SIP-010 tokens supported by StackStream.
+ *
+ * Contract IDs reflect Stacks mainnet as of Epoch 3.0 / Q1 2026.
+ * Verify addresses on Stacks Explorer before deploying if significant time
+ * has passed since this file was last updated.
+ *
+ * Adding a new token: append an entry here and supply an icon in /public/.
+ * The protocol itself is permissionless — any SIP-010 token can be streamed;
+ * this list controls what the frontend surfaces in the token selector.
+ */
+const MAINNET_TOKENS: readonly TokenConfig[] = [
+  {
+    symbol: "sBTC",
+    name: "Stacks BTC",
+    decimals: 8,
+    contractId: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-sbtc",
+    ftName: "sbtc",
+    icon: "/bitcoin.svg",
+    description: "Native Bitcoin on Stacks — the flagship streaming token",
+  },
+  {
+    symbol: "USDA",
+    name: "USDA",
+    decimals: 6,
+    contractId: "SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token",
+    ftName: "usda",
+    icon: "/usda.svg",
+    description: "Arkadiko USD stablecoin — ideal for stable payroll streams",
+  },
+  {
+    symbol: "ALEX",
+    name: "ALEX",
+    decimals: 8,
+    contractId: "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex",
+    ftName: "token-alex",
+    icon: "/alex.svg",
+    description: "ALEX DeFi protocol token",
+  },
+  {
+    symbol: "xBTC",
+    name: "Wrapped Bitcoin",
+    decimals: 8,
+    contractId: "SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin",
+    ftName: "wrapped-bitcoin",
+    icon: "/bitcoin.svg",
+    description: "Tokenized Bitcoin on Stacks",
+  },
+];
+
+/** Testnet tokens — mock only, faucet available */
+const TESTNET_TOKENS: readonly TokenConfig[] = [
   {
     symbol: "msBTC",
     name: "Mock sBTC",
     decimals: 8,
     contractId: MOCK_TOKEN_CONTRACT,
+    ftName: "mock-sbtc",
     icon: "/bitcoin.svg",
+    description: "Testnet mock token with public faucet",
   },
-] as const;
+];
+
+/**
+ * Network-aware supported token list.
+ * Mainnet: 4 real SIP-010 tokens (sBTC, USDA, ALEX, xBTC).
+ * Testnet: 1 mock token with faucet for development.
+ */
+export const SUPPORTED_TOKENS: readonly TokenConfig[] = IS_MAINNET
+  ? MAINNET_TOKENS
+  : TESTNET_TOKENS;
+
+/** Default token for the create stream form (first in list) */
+export const DEFAULT_TOKEN = SUPPORTED_TOKENS[0];
 
 /** Polling interval for balance updates (ms) */
 export const BALANCE_POLL_INTERVAL = 15_000;

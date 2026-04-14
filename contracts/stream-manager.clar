@@ -657,10 +657,6 @@
     (deposit (get deposit-amount stream-data))
     (end-block (get end-block stream-data))
     (rate (get rate-per-block stream-data))
-    ;; Calculate additional blocks: amount / (rate / PRECISION) = amount * PRECISION / rate
-    (additional-blocks (/ (* amount PRECISION) rate))
-    (new-deposit (+ deposit amount))
-    (new-end-block (+ end-block additional-blocks))
   )
     ;; Authorization: only sender can top up
     (asserts! (is-eq caller sender) ERR-NOT-SENDER)
@@ -668,6 +664,10 @@
     ;; Validation
     (asserts! (> amount u0) ERR-INVALID-AMOUNT)
     (asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
+
+    ;; Defensive: rate-per-block is guaranteed >= 1 by create-stream's zero-rate guard (L-7).
+    ;; Placed here explicitly so this function is self-contained and safe at any call site.
+    (asserts! (> rate u0) ERR-INVALID-DURATION)
 
     ;; Prevent zero-extension top-ups: amount * PRECISION must be >= rate-per-block
     ;; Without this, amounts too small to extend the stream by 1 block are silently accepted:
@@ -682,6 +682,15 @@
     ;; Without this guard, a sender could top up a paused-and-expired stream to extend
     ;; its end-block into the future, making it resumable again and bypassing expire-stream.
     (asserts! (< stacks-block-height end-block) ERR-STREAM-ENDED)
+
+    ;; All validations passed. Calculate extension amounts.
+    (let (
+      ;; Calculate additional blocks: amount / (rate / PRECISION) = amount * PRECISION / rate
+      ;; rate > 0 is asserted above, so division is safe.
+      (additional-blocks (/ (* amount PRECISION) rate))
+      (new-deposit (+ deposit amount))
+      (new-end-block (+ end-block additional-blocks))
+    )
 
     ;; Transfer additional tokens to contract
     (try! (contract-call? token transfer
@@ -708,6 +717,7 @@
     })
 
     (ok true)
+    ) ;; end inner let (additional-blocks, new-deposit, new-end-block)
   )
 )
 

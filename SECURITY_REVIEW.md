@@ -4,10 +4,10 @@
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
-**Updated:** April 14, 2026 (Zachyo review incorporated — M-2 and L-10 fixed)  
+**Updated:** April 14, 2026 (IdokoMarcelina review incorporated — L-12 defensive hardening)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000, Zachyo  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000, Zachyo, IdokoMarcelina  
 
 ---
 
@@ -85,6 +85,8 @@ The contracts correctly use `stacks-block-height` throughout — the Clarity 3 r
 **Token handling:** `contract-call? token transfer` moves tokens from the caller to `(as-contract tx-sender)` immediately. If this transfer fails, the entire transaction reverts — no partial state is written. Confirmed correct by Akanmoh Johnson.
 
 **Known limitation (L-1):** When `deposit-amount` is not perfectly divisible by `duration-blocks`, integer division truncates the rate, leaving a sub-satoshi dust amount permanently locked unless the sender calls `cancel-stream` after the stream elapses. See Finding L-1.
+
+**Token trust model documented (IdokoMarcelina — I-3):** Any SIP-010 compliant token is accepted — there is no allowlist. This is a deliberate design choice for a permissionless protocol. Clarity's trait system guarantees the SIP-010 interface at the language level (all required functions must exist and return the correct types). Clarity's no-reentrancy model eliminates the primary dangerous-token attack vector present in EVM contracts. Residual risks that are documented and accepted: (1) a token whose `transfer` always returns `(ok true)` but moves no funds — the stream would exist but never pay the recipient; (2) fee-on-transfer tokens — the contract would receive less than `deposit-amount`, making the escrow underfunded. Parties streaming unusual tokens should verify token behavior off-chain. A token allowlist is a v2 governance consideration for any DAO-controlled deployment.
 
 ---
 
@@ -219,6 +221,7 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 | `caller == sender` | Authorization |
 | `amount > 0` | Prevents zero top-up |
 | `token-principal == contract-of token` | Token substitution prevention |
+| `rate-per-block > 0` | **Added post-review:** defensive guard before division (IdokoMarcelina) |
 | `status != CANCELLED` | Cannot top up cancelled stream |
 | `status != DEPLETED` | Cannot top up depleted stream |
 | `stacks-block-height < end-block` | **Added post-review:** prevents topping up an expired stream (Zachyo) |
@@ -228,6 +231,8 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 **Rate preservation — verified by Akanmoh Johnson:** `additional_blocks = top_up * PRECISION / rate`. Since `rate = deposit * PRECISION / duration`, this correctly extends the end block while keeping rate constant. The rounding dust limitation from Finding L-1 also applies to the extended portion.
 
 **Division safety:** `rate` cannot be zero — `create-stream` now enforces `deposit * PRECISION >= duration` ensuring `rate >= 1`.
+
+**Defensive hardening (IdokoMarcelina — L-12):** IdokoMarcelina flagged that `top-up-stream` performed `(/ (* amount PRECISION) rate)` without an explicit zero-rate guard, submitting this as a High severity finding. The finding is correct in identifying the absence of a local guard, but the severity is downgraded to Low: `rate` is initialized by `create-stream` and the L-7 fix (`deposit * PRECISION >= duration`) guarantees `rate >= 1` — it cannot be zero for any stream that exists in the map. The root issue is also structural: the division was previously in the `let` binding, meaning any assertion in the function body would run too late to prevent it. Fixed by restructuring `top-up-stream` into two nested `let` blocks — the outer let reads stream data and runs all assertions, then the inner let performs the division once `rate > 0` is confirmed. The guard `(asserts! (> rate u0) ERR-INVALID-DURATION)` is now defensive hardening that makes this function self-contained regardless of any upstream invariant.
 
 **Fix applied (Godbrand0 — L-8):** When `amount × PRECISION < rate-per-block`, integer division truncates `additional-blocks` to zero. The sender's tokens transfer to escrow but `end-block` is unchanged — the topped-up tokens silently exceed the stream's claimable ceiling and become permanently unreachable by the recipient (recoverable only by sender via `cancel-stream`). Fixed by adding a guard before the token transfer:
 ```clarity
@@ -299,6 +304,9 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | M-2 | Medium | `set-emergency-pause` | Zachyo | `CONTRACT-OWNER` was a constant — silent change on redeploy, no key rotation possible | **Fixed** — converted to `define-data-var` + `transfer-ownership` |
 | L-10 | Low | `top-up-stream` | Zachyo | Top-up on paused-and-expired stream extends end-block, bypassing `expire-stream` | **Fixed** — end-block guard added |
 | L-11 | Low | `cancel-stream` | Zachyo | Streams are a revocable commitment — sender can pause-cancel at any time | Documented — design decision, not a bug |
+| L-12 | Low | `top-up-stream` | IdokoMarcelina | No explicit rate > 0 guard before division (submitted as High — downgraded, rate=0 impossible given L-7) | **Fixed** — defensive guard added, function restructured into nested lets |
+| I-3 | Informational | `create-stream` | IdokoMarcelina | No token allowlist — any SIP-010 compliant contract accepted (submitted as Medium — downgraded) | Documented — permissionless design; Clarity trait system + no-reentrancy covers the primary risks |
+| I-4 | Informational | `pause-stream` | IdokoMarcelina | `ERR-STREAM-PAUSED` returned for unreachable cancelled/depleted branches | Duplicate of L-3 — confirmed unreachable dead code, deferred to v1.1 cleanup |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
@@ -306,8 +314,8 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | Critical | 0 | — | — |
 | High | 0 | — | — |
 | Medium | 2 | 2 (M-1, M-2) | 0 |
-| Low | 11 | 5 (L-4, L-7, L-8, L-9, L-10) | 6 |
-| Informational | 3 | — | 3 |
+| Low | 12 | 6 (L-4, L-7, L-8, L-9, L-10, L-12) | 6 |
+| Informational | 5 | — | 5 |
 
 **No critical or high vulnerabilities found.** Both medium findings fixed. All fund-safety issues resolved before mainnet.
 
@@ -394,6 +402,13 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Findings:** M-2 (`CONTRACT-OWNER` as constant — silent redeploy risk, no key rotation — **fixed**), L-10 (top-up on expired paused stream bypasses `expire-stream` — **fixed**), L-11 (`cancel-stream` revocability trust assumption — documented)  
 **Design impact:** M-2 closes an operational risk that would have been hard to discover post-mainnet: if a deployment script ever ran under a different key, ownership would silently shift. Converting to `define-data-var` + `transfer-ownership` also unblocks a v2 multisig migration path without redeployment. L-10 closes the last known interaction between `top-up-stream` and `expire-stream`.  
 **Verdict:** "Completed an independent review of stream-manager.clar and stream-factory.clar. No critical or high findings. One medium and two low findings."
+
+### Reviewer 8 — IdokoMarcelina
+**Date:** April 14, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** L-12 (no explicit rate > 0 guard before division in `top-up-stream` — submitted as High, downgraded to Low, **fixed**), I-3 (no token allowlist — submitted as Medium, downgraded to Informational, documented), I-4 (error reuse in `pause-stream` — duplicate of existing L-3)  
+**Severity reassessments:** The High on `top-up-stream` is correct in identifying the structural issue (division in a let binding with no local guard) but overstates the severity — `rate = 0` is impossible given the L-7 fix in `create-stream`. The Medium on `create-stream` token acceptance is a documented trust model in permissionless DeFi; Clarity's trait system and reentrancy prevention eliminate the most serious malicious-token scenarios. The structural refactoring of `top-up-stream` into nested lets (prompted by this review) is a genuine improvement regardless of severity.  
+**Verdict:** Three substantive observations. One code improvement applied. Two appropriately reclassified and documented.
 
 ---
 

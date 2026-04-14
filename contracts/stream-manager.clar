@@ -46,6 +46,7 @@
 (define-constant ERR-STREAM-PAUSED (err u203))
 (define-constant ERR-STREAM-NOT-PAUSED (err u204))
 (define-constant ERR-STREAM-ENDED (err u207))
+(define-constant ERR-STREAM-NOT-EXPIRED (err u208))
 
 ;; Validation errors (u300-u399)
 (define-constant ERR-INVALID-AMOUNT (err u300))
@@ -389,6 +390,11 @@
     (asserts! (is-eq status STATUS-ACTIVE) ERR-STREAM-PAUSED)
     (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
     (asserts! (not (is-eq status STATUS-DEPLETED)) ERR-STREAM-DEPLETED)
+    ;; Stream must have started. Pausing pre-start overcounts pause duration:
+    ;; Pre-start pause time is added to total-paused-duration even though no tokens
+    ;; were accruing, which shortens the effective window and locks those tokens.
+    (asserts! (>= current-block (get start-block stream-data)) ERR-INVALID-START-TIME)
+
     (asserts! (< current-block (get end-block stream-data)) ERR-STREAM-ENDED)
 
     ;; Update stream state
@@ -524,6 +530,97 @@
       event: "stream-cancelled",
       stream-id: stream-id,
       sender: sender,
+      recipient: recipient,
+      recipient-amount: recipient-amount,
+      sender-refund: sender-refund
+    })
+
+    (ok { recipient-amount: recipient-amount, sender-refund: sender-refund })
+  )
+)
+
+;; ============================================================================
+;; PUBLIC FUNCTIONS - STREAM EXPIRY
+;; ============================================================================
+
+;; Expire a paused stream once its end-block has passed
+;;
+;; Callable by anyone once stacks-block-height >= end-block and status == STATUS-PAUSED.
+;; Settles identically to cancel-stream: earned tokens go to the recipient,
+;; unearned remainder refunded to the sender.
+;;
+;; This resolves the stuck-funds scenario created by the L-4 fix: resume-stream correctly
+;; rejects resumes past end-block (preventing zombie ACTIVE state), but that means a sender
+;; who pauses and goes silent permanently locks the unearned portion. cancel-stream is
+;; sender-only, resume-stream is blocked, and no admin escape hatch exists.
+;; expire-stream is the permissionless recovery path for this case.
+;;
+;; @param stream-id - ID of the stream to expire
+;; @param token - SIP-010 token contract (must match stream's token)
+;; @returns Tuple with recipient-amount and sender-refund
+(define-public (expire-stream
+    (stream-id uint)
+    (token <sip-010-trait>)
+  )
+  (let (
+    (stream-data (unwrap! (map-get? streams stream-id) ERR-STREAM-NOT-FOUND))
+    (sender (get sender stream-data))
+    (recipient (get recipient stream-data))
+    (status (get status stream-data))
+    (token-principal (get token stream-data))
+    (deposit (get deposit-amount stream-data))
+    (withdrawn (get withdrawn-amount stream-data))
+    (start-block (get start-block stream-data))
+    (end-block (get end-block stream-data))
+    (rate (get rate-per-block stream-data))
+    (paused-at (get paused-at-block stream-data))
+    (total-paused (get total-paused-duration stream-data))
+
+    ;; Effective elapsed is frozen at paused-at-block for STATUS-PAUSED streams
+    (effective-elapsed (calculate-effective-elapsed start-block end-block status paused-at total-paused))
+    (streamed (calculate-streamed-amount-internal deposit rate effective-elapsed))
+    (recipient-amount (if (> streamed withdrawn) (- streamed withdrawn) u0))
+    (sender-refund (- deposit streamed))
+  )
+    ;; No sender authorization required. Permissionless once conditions are met
+
+    ;; Stream must be paused. Active/depleted/cancelled streams have other recovery paths
+    (asserts! (is-eq status STATUS-PAUSED) ERR-STREAM-NOT-PAUSED)
+
+    ;; End-block must have passed. The streaming window is closed, sender can no longer resume
+    (asserts! (>= stacks-block-height end-block) ERR-STREAM-NOT-EXPIRED)
+
+    ;; Token substitution prevention
+    (asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
+
+    ;; Transfer earned amount to recipient (if any)
+    (if (> recipient-amount u0)
+      (try! (as-contract (contract-call? token transfer
+        recipient-amount
+        tx-sender
+        recipient
+        none)))
+      true)
+
+    ;; Transfer unearned refund to sender (if any)
+    (if (> sender-refund u0)
+      (try! (as-contract (contract-call? token transfer
+        sender-refund
+        tx-sender
+        sender
+        none)))
+      true)
+
+    ;; Mark as cancelled. Same terminal state as cancel-stream
+    (map-set streams stream-id (merge stream-data {
+      status: STATUS-CANCELLED,
+      withdrawn-amount: streamed
+    }))
+
+    (print {
+      event: "stream-expired",
+      stream-id: stream-id,
+      triggered-by: contract-caller,
       recipient: recipient,
       recipient-amount: recipient-amount,
       sender-refund: sender-refund

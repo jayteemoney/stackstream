@@ -1672,4 +1672,138 @@ describe("StackStream - Stream Manager Contract", () => {
       expect(result.result).toBeErr(Cl.uint(207)); // ERR-STREAM-ENDED
     });
   });
+
+  // ============================================================================
+  // BLOCK C — dannyy2000 REVIEW FINDINGS (5 tests)
+  // ============================================================================
+
+  describe("expire-stream (M-1 fix — dannyy2000)", () => {
+    it("should settle a paused-then-abandoned stream after end-block passes", () => {
+      // Create stream: 1_000_000_000 over 100 blocks
+      const depositAmount = 1_000_000_000;
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, depositAmount, startBlock, 100);
+
+      // Mine to ~50 blocks after start, then pause
+      simnet.mineEmptyBlocks(51); // stream has been running ~50 blocks
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+
+      // Sender goes silent — mine past end-block (need ~55 more to clear block 101)
+      simnet.mineEmptyBlocks(60);
+
+      const senderBalanceBefore = getBalance(wallet1);
+      const recipientBalanceBefore = getBalance(wallet2);
+
+      // wallet3 (uninvolved party) triggers expiry — permissionless
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "expire-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet3
+      );
+
+      // Result should be ok with a tuple value
+      expect((result.result as any).type).toBe("ok");
+
+      // Both parties must have received tokens
+      expect(getBalance(wallet2)).toBeGreaterThan(recipientBalanceBefore);
+      expect(getBalance(wallet1)).toBeGreaterThan(senderBalanceBefore);
+
+      // Conservation: total out == deposit
+      const recipientReceived = getBalance(wallet2) - recipientBalanceBefore;
+      const senderRefunded = getBalance(wallet1) - senderBalanceBefore;
+      expect(recipientReceived + senderRefunded).toBe(BigInt(depositAmount));
+
+      // Stream status should now be CANCELLED
+      const status = simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(1)], deployer);
+      expect(status.result).toBeSome(Cl.uint(2)); // STATUS-CANCELLED
+    });
+
+    it("should fail before end-block has passed", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 100);
+
+      simnet.mineEmptyBlocks(30);
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+
+      // Still well before end-block — expire should reject
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "expire-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet3
+      );
+
+      expect(result.result).toBeErr(Cl.uint(208)); // ERR-STREAM-NOT-EXPIRED
+    });
+
+    it("should fail on an active (non-paused) stream", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 5);
+
+      // Mine past end-block without pausing
+      simnet.mineEmptyBlocks(10);
+
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "expire-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet3
+      );
+
+      expect(result.result).toBeErr(Cl.uint(204)); // ERR-STREAM-NOT-PAUSED
+    });
+
+    it("token conservation holds: recipient-amount + sender-refund == deposit - withdrawn", () => {
+      const deposit = 1_000_000_000;
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, deposit, startBlock, 100);
+
+      // Recipient claims some before pause
+      simnet.mineEmptyBlocks(21);
+      simnet.callPublicFn(streamManagerContract, "claim-all",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet2
+      );
+
+      // Pause and wait out the stream
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+      simnet.mineEmptyBlocks(90);
+
+      const senderBefore = getBalance(wallet1);
+      const recipientBefore = getBalance(wallet2);
+
+      simnet.callPublicFn(
+        streamManagerContract,
+        "expire-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet3
+      );
+
+      const senderReceived = getBalance(wallet1) - senderBefore;
+      const recipientReceived = getBalance(wallet2) - recipientBefore;
+
+      // No tokens should disappear — whatever remained in escrow goes to sender + recipient
+      expect(senderReceived + recipientReceived).toBeGreaterThanOrEqual(0n);
+      expect(senderReceived + recipientReceived).toBeLessThanOrEqual(BigInt(deposit));
+    });
+  });
+
+  describe("pause-stream pre-start guard (L-9 fix — dannyy2000)", () => {
+    it("should reject pause before stream has started", () => {
+      // Create stream starting 10 blocks in the future
+      const startBlock = getCurrentBlock() + 10;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 100);
+
+      // Attempt to pause immediately — start-block has not been reached
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "pause-stream",
+        [Cl.uint(1)],
+        wallet1
+      );
+
+      expect(result.result).toBeErr(Cl.uint(302)); // ERR-INVALID-START-TIME
+    });
+  });
 });

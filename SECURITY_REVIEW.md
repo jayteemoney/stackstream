@@ -4,10 +4,10 @@
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
-**Updated:** April 13, 2026 (community review findings incorporated)  
+**Updated:** April 13, 2026 (dannyy2000 review incorporated — M-1 fixed)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000  
 
 ---
 
@@ -133,9 +133,12 @@ The contracts correctly use `stacks-block-height` throughout — the Clarity 3 r
 | `status == ACTIVE` | Can only pause active streams |
 | `status != CANCELLED` | Redundant — confirmed by Akanmoh Johnson (see L-3) |
 | `status != DEPLETED` | Redundant — confirmed by Akanmoh Johnson (see L-3) |
+| `current-block >= start-block` | **Added post-review:** prevents pausing before stream starts (dannyy2000) |
 | `current-block < end-block` | Cannot pause an already-ended stream |
 
 **Finding L-3 (confirmed):** The CANCELLED and DEPLETED checks are unreachable given the `status == ACTIVE` assertion. No security impact. Deferred to v1.1 cleanup.
+
+**Fix applied (dannyy2000 — L-9):** Without the start-block guard, a sender could pause a stream before `start-block` is reached. When they later resume, the full wall-clock pause duration — including pre-start time when nothing was accruing — is added to `total-paused-duration`. This overcounts the pause, shortening the recipient's effective streaming window. Example: stream starts at block 200, sender pauses at block 190, resumes at block 260 — 10 pre-start blocks are counted as pause time, permanently reducing recipient's claimable window by 10 blocks. Fix: `(asserts! (>= current-block start-block) ERR-INVALID-START-TIME)` before the pause is recorded.
 
 ---
 
@@ -183,7 +186,26 @@ Conservation holds on every exit path. Zero-amount transfers are conditionally s
 
 ---
 
-### 7. `top-up-stream`
+### 7. `expire-stream` *(new — added post-review)*
+
+**Purpose:** Permissionless settlement of a paused stream after its end-block has passed.
+
+**Authorization:** None — callable by anyone once conditions are met.
+
+**Checks:**
+| Check | Protection |
+|---|---|
+| `status == PAUSED` | Only resolves stuck paused streams; active/depleted/cancelled have other paths |
+| `stacks-block-height >= end-block` | Streaming window must be closed — sender can no longer resume |
+| `token-principal == contract-of token` | Token substitution prevention |
+
+**Fund accounting:** Identical to `cancel-stream` — earned tokens to recipient, unearned remainder back to sender. Conservation holds on all exit paths.
+
+**Design rationale (M-1 fix):** See Finding M-1. The L-4 fix correctly blocks `resume-stream` past end-block to prevent zombie ACTIVE state, but this created a new stuck-funds path: a sender who pauses and then goes silent locks the unearned portion permanently — `cancel-stream` is sender-only, `resume-stream` is now blocked, and no admin override exists. `expire-stream` is the minimal recovery function that resolves this without granting any party new powers over a live stream.
+
+---
+
+### 8. `top-up-stream`
 
 **Purpose:** Add more tokens to an existing stream, extending its duration at the same rate.
 
@@ -260,17 +282,20 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | L-1 | Low | `create-stream` | Akanmoh Johnson | Rounding dust permanently locked when deposit % duration ≠ 0 | Documented — recover via `cancel-stream` |
 | L-2 | Low | `create-stream` | Akanmoh Johnson | 100-stream cap is lifetime per principal, not concurrent | Documented — v2 improvement |
 | I-1 | Informational | `track-stream` | Akanmoh Johnson | DAO `total-deposited` stale after top-up | Accepted — analytics only |
+| L-8 | Low | `top-up-stream` | Godbrand0 | Zero-extension top-up: tokens trapped if amount too small to extend by 1 block | **Fixed** |
+| M-1 | Medium | `pause-stream` / general | dannyy2000 | Paused stream past end-block — unearned portion permanently locked, no permissionless recovery | **Fixed** — new `expire-stream` function |
+| L-9 | Low | `pause-stream` | dannyy2000 | Pre-start pause overcounts pause duration, shortening recipient's effective window | **Fixed** — start-block guard added |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
 |---|---|---|---|
 | Critical | 0 | — | — |
 | High | 0 | — | — |
-| Medium | 0 | — | — |
-| Low | 7 | 2 (L-4, L-7) | 5 |
+| Medium | 1 | 1 (M-1) | 0 |
+| Low | 9 | 4 (L-4, L-7, L-8, L-9) | 5 |
 | Informational | 3 | — | 3 |
 
-**No critical, high, or medium vulnerabilities found.** Two low-severity findings fixed before mainnet. Remaining findings are documented limitations with no fund-safety impact.
+**No critical or high vulnerabilities found.** One medium (M-1) and three additional low-severity findings fixed. All fund-safety issues resolved before mainnet.
 
 ---
 
@@ -326,6 +351,27 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Findings:** L-1 (rounding dust), L-2 (lifetime stream cap), L-3 confirmed, I-1 (factory analytics), I-2 confirmed  
 **Positive confirmations:** `contract-caller` authorization model, `stacks-block-height` usage, token substitution prevention, `try!` on all transfers, state-after-transfer ordering, arithmetic overflow safety, streamed amount clamp, emergency pause scoping, state machine correctness  
 **Verdict:** "StackStream's contracts demonstrate strong security engineering for a v1 Clarity protocol. The two new findings are both Low severity and neither blocks mainnet launch."
+
+### Reviewer 4 — Ali6nXI
+**Date:** April 13, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** Design question on `set-emergency-pause` scope — should claims be pausable during emergencies?  
+**Design rationale documented:** Emergency pause intentionally blocks only `create-stream`. Pausing claims during an incident would hold existing user funds hostage — a worse outcome than the emergency itself. The philosophy: stop new capital entering, guarantee existing participants can always exit.  
+**Verdict:** No security issue raised. Design rationale documented in review.
+
+### Reviewer 5 — Godbrand0
+**Date:** April 13, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** L-8 (zero-extension top-up — **fixed**): amounts too small to extend the stream by 1 block are silently accepted, trapping tokens in escrow unreachable by the recipient.  
+**Verdict:** Real edge case, correctly identified. One-line guard added before token transfer.
+
+### Reviewer 6 — dannyy2000
+**Date:** April 13, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Scope:** Full review of `pause-stream`, `resume-stream`, `cancel-stream`, and general fund-safety design  
+**Findings:** M-1 (paused-stream stuck-funds — **fixed via new `expire-stream` function**), L-9 (pre-start pause overcounting — **fixed**)  
+**Design impact:** M-1 is the highest-severity finding of the review. It identified a systemic gap where the L-4 fix (correct in isolation) created a new stuck-funds path with no recovery option. The fix adds a permissionless `expire-stream` function — any party can trigger settlement once `end-block` has passed and the stream is still paused. L-9 closes a window where pre-start pause time is incorrectly counted against the recipient's streaming window.  
+**Verdict:** Two genuine improvements, both fixed. "The expire-stream addition is the right architectural response — minimal surface area, no new trust assumptions, and it closes the gap completely."
 
 ---
 

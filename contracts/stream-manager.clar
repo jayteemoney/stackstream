@@ -31,6 +31,11 @@
 ;; Maximum streams per user (DoS prevention)
 (define-constant MAX-STREAMS-PER-USER u100)
 
+;; Maximum uint value used in claim-all to request the full claimable balance.
+;; Defining it as a constant avoids a magic number in claim-all and makes the
+;; intent explicit. Value is 2^128 - 1, the maximum Clarity uint.
+(define-constant MAX-CLAIM-AMOUNT u340282366920938463463374607431768211455)
+
 ;; ============================================================================
 ;; ERROR CODES
 ;; ============================================================================
@@ -69,6 +74,9 @@
 
 ;; Emergency pause flag (circuit breaker)
 (define-data-var emergency-paused bool false)
+
+;; Pending owner for two-step ownership transfer (none until propose-ownership is called)
+(define-data-var pending-owner (optional principal) none)
 
 ;; Primary stream storage
 (define-map streams
@@ -345,11 +353,13 @@
       status: (if (is-eq new-withdrawn deposit) STATUS-DEPLETED status)
     }))
 
-    ;; Emit event
+    ;; Emit event. requested-amount vs amount lets off-chain indexers detect clamping.
+    ;; Jayy4rl L-14: when amount < requested, the claim was silently reduced to available balance.
     (print {
       event: "tokens-claimed",
       stream-id: stream-id,
       recipient: recipient,
+      requested-amount: amount,
       amount: claim-amount,
       total-withdrawn: new-withdrawn,
       remaining: (- deposit new-withdrawn)
@@ -364,8 +374,8 @@
     (stream-id uint)
     (token <sip-010-trait>)
   )
-  ;; Use max uint to claim all available
-  (claim stream-id token u340282366920938463463374607431768211455)
+  ;; Pass MAX-CLAIM-AMOUNT so the internal min() in claim returns the full claimable balance.
+  (claim stream-id token MAX-CLAIM-AMOUNT)
 )
 
 ;; ============================================================================
@@ -387,10 +397,9 @@
     ;; Authorization: only sender can pause
     (asserts! (is-eq caller sender) ERR-NOT-SENDER)
 
-    ;; State checks
+    ;; State checks: STATUS-ACTIVE check is sufficient; cancelled/depleted are unreachable
+    ;; after the active check. Jayy4rl L-15: removed two redundant asserts.
     (asserts! (is-eq status STATUS-ACTIVE) ERR-STREAM-PAUSED)
-    (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
-    (asserts! (not (is-eq status STATUS-DEPLETED)) ERR-STREAM-DEPLETED)
     ;; Stream must have started. Pausing pre-start overcounts pause duration:
     ;; Pre-start pause time is added to total-paused-duration even though no tokens
     ;; were accruing, which shortens the effective window and locks those tokens.
@@ -861,17 +870,28 @@
   )
 )
 
-;; Transfer contract ownership to a new principal
-;; Enables key rotation without redeployment. Only the current owner can call this.
-(define-public (transfer-ownership (new-owner principal))
+;; Step 1 of two-step ownership transfer: current owner nominates a new owner.
+;; The nominated address must call accept-ownership to complete the transfer.
+;; This prevents permanent loss of control due to a typo or wrong address.
+(define-public (propose-ownership (new-owner principal))
   (begin
     (asserts! (is-eq contract-caller (var-get contract-owner)) ERR-NOT-AUTHORIZED)
-    (var-set contract-owner new-owner)
-    (print {
-      event: "ownership-transferred",
-      previous-owner: contract-caller,
-      new-owner: new-owner
-    })
+    (var-set pending-owner (some new-owner))
+    (print { event: "ownership-proposed", proposed-owner: new-owner })
+    (ok true)
+  )
+)
+
+;; Step 2 of two-step ownership transfer: nominated address accepts and becomes owner.
+;; Only the exact address set by propose-ownership can call this.
+(define-public (accept-ownership)
+  (let (
+    (proposed (unwrap! (var-get pending-owner) ERR-NOT-AUTHORIZED))
+  )
+    (asserts! (is-eq contract-caller proposed) ERR-NOT-AUTHORIZED)
+    (var-set contract-owner proposed)
+    (var-set pending-owner none)
+    (print { event: "ownership-accepted", new-owner: proposed })
     (ok true)
   )
 )
@@ -879,4 +899,9 @@
 ;; Read current contract owner
 (define-read-only (get-contract-owner)
   (var-get contract-owner)
+)
+
+;; Read pending owner (none if no transfer is in progress)
+(define-read-only (get-pending-owner)
+  (var-get pending-owner)
 )

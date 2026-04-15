@@ -15,7 +15,9 @@ Before using StackStream, you need:
 
 1. **A Stacks wallet** — [Leather](https://leather.io/) or [Xverse](https://www.xverse.app/)
 2. **STX for transaction fees** — A small amount of STX to pay gas fees
-3. **SIP-010 tokens** — The tokens you want to stream (e.g., msBTC on testnet)
+3. **SIP-010 tokens** — The tokens you want to stream
+
+**Mainnet tokens supported:** sBTC, USDA, ALEX, xBTC. Any SIP-010 compliant token is accepted by the protocol; the frontend token selector surfaces the most common options.
 
 ### Getting Testnet Tokens
 
@@ -59,8 +61,9 @@ The dashboard home (`/dashboard`) shows:
 1. Navigate to **Dashboard > Create Stream** (or click **New Stream**)
 2. Fill in the form:
    - **Recipient Address** — The Stacks address that will receive tokens
-   - **Total Amount** — Amount of msBTC to stream (e.g., `0.5` for 0.5 msBTC)
-   - **Duration** — How many days the stream should last
+   - **Token** — Select the SIP-010 token to stream (sBTC, USDA, ALEX, xBTC on mainnet; msBTC on testnet)
+   - **Total Amount** — Amount to stream in the token's display unit (e.g., `0.5` for 0.5 sBTC)
+   - **Duration** — How long the stream should last (minutes, hours, days, or months)
    - **Memo** (optional) — A note attached to the stream (e.g., "January salary")
 3. Review the **Stream Preview** showing:
    - Rate per block (how many tokens accrue each ~10 min block)
@@ -92,6 +95,8 @@ Each stream card shows the recipient, deposited amount, progress bar, and status
 
 While paused, no new tokens accrue. Already-accrued tokens remain claimable by the recipient.
 
+> **Note:** A stream can only be paused after it has started (i.e., the current block must be at or past the stream's start block). Pausing before the start block is rejected to prevent accounting errors in the total paused duration.
+
 #### Resume a Stream
 
 1. Find the paused stream
@@ -107,9 +112,42 @@ Streaming resumes from where it left off. The total paused duration is tracked s
 
 Cancellation is permanent. Unstreamed tokens are refunded to the sender. The recipient can still claim any already-accrued tokens.
 
+> **Trust note:** The sender can cancel at any time while the stream is active or paused. This means streams are a revocable commitment — recipients should be aware that unstreamed tokens can be reclaimed by the sender. Accrued and claimable tokens are always safe regardless of cancellation.
+
 #### Top Up a Stream
 
 Top-up adds tokens to an existing stream, extending its duration at the same rate per block. This is done through the protocol's `top-up-stream` function.
+
+> **Note:** Top-up is only possible while the stream's end block is still in the future. A stream that has already expired (whether active or paused) cannot be topped up — create a new stream instead.
+
+#### Settle an Expired Paused Stream
+
+If a stream was paused and its end block passed while it was still paused, the stream is in a stuck state: it can't be resumed (end block has passed) and can't be topped up (also blocked after end block). In this case, anyone — including a third party — can call `expire-stream` to settle it:
+
+- The recipient receives all tokens that accrued up to the end block
+- The sender is refunded the remaining unstreamed tokens
+- The stream is marked Cancelled
+
+This is a permissionless action: no sender or recipient authorization is required. It exists to ensure funds are never permanently locked.
+
+### Protocol Administration (Contract Owner Only)
+
+These functions are available only to the current contract owner (the address that deployed or was transferred ownership of the `stream-manager` contract).
+
+#### Emergency Pause
+
+The contract owner can pause all stream activity protocol-wide via `set-emergency-pause`. This is a last-resort measure for critical bugs. Individual streams are unaffected in terms of their state — once the emergency pause is lifted, streams resume normally.
+
+#### Transfer Ownership (Two-Step)
+
+The contract owner can rotate control to a new address using a safe two-step process:
+
+```
+Step 1 (current owner): propose-ownership(new-owner: principal)
+Step 2 (new owner):     accept-ownership()
+```
+
+The ownership transfer only completes when the nominated address calls `accept-ownership`. This prevents permanent loss of admin control from a typo or wrong address. Use `get-contract-owner` to read the current owner and `get-pending-owner` to see a pending nomination.
 
 ### Analytics
 
@@ -190,7 +228,7 @@ Tokens accrue linearly: `rate_per_block × elapsed_blocks = accrued_amount`
 
 ### Precision Math
 
-The protocol uses 12-digit precision (PRECISION = 10^12) for rate calculations to minimize rounding errors. Token amounts use 8 decimal places (matching sBTC). Due to integer math, streams with non-evenly-divisible amounts may have a rounding difference of ~1 micro-token.
+The protocol uses 12-digit precision (PRECISION = 10^12) for rate calculations to minimize rounding errors. Token amounts are passed as raw integer units — the number of decimal places depends on the token (sBTC and ALEX use 8, USDA uses 6). The frontend converts your display amount to raw units automatically. Due to integer math, streams with non-evenly-divisible amounts may have a rounding difference of ~1 smallest unit.
 
 ### Post-Conditions
 
@@ -256,7 +294,7 @@ These are the error codes from the StackStream smart contracts with explanations
 | u101 | ERR-NOT-SENDER | Only the stream sender can perform this action (pause, resume, cancel, top-up) |
 | u102 | ERR-NOT-RECIPIENT | Only the stream recipient can perform this action (claim) |
 
-### Stream State Errors (u200–u207)
+### Stream State Errors (u200–u208)
 
 | Code | Name | Meaning |
 |------|------|---------|
@@ -264,8 +302,9 @@ These are the error codes from the StackStream smart contracts with explanations
 | u201 | ERR-STREAM-DEPLETED | The stream has already been fully paid out |
 | u202 | ERR-STREAM-CANCELLED | The stream has been cancelled and can't be modified |
 | u203 | ERR-STREAM-PAUSED | The stream is paused; resume it before claiming |
-| u204 | ERR-STREAM-NOT-PAUSED | Can't resume a stream that isn't paused |
-| u207 | ERR-STREAM-ENDED | The stream's duration has ended |
+| u204 | ERR-STREAM-NOT-PAUSED | Can't resume or expire a stream that isn't paused |
+| u207 | ERR-STREAM-ENDED | The stream's duration has ended (e.g., top-up rejected on expired stream) |
+| u208 | ERR-STREAM-NOT-EXPIRED | Can't expire a stream whose end block hasn't passed yet |
 
 ### Validation Errors (u300–u305)
 
@@ -273,7 +312,7 @@ These are the error codes from the StackStream smart contracts with explanations
 |------|------|---------|
 | u300 | ERR-INVALID-AMOUNT | Amount must be greater than zero |
 | u301 | ERR-INVALID-DURATION | Duration must be at least 1 block |
-| u302 | ERR-INVALID-START-TIME | Start block must be current block or later |
+| u302 | ERR-INVALID-START-TIME | Start block must be current block or later; also returned if you try to pause a stream before its start block |
 | u303 | ERR-INVALID-RECIPIENT | Recipient can't be the same as sender |
 | u304 | ERR-ZERO-CLAIM | Nothing to claim — no tokens have accrued yet |
 | u305 | ERR-MAX-STREAMS-REACHED | A user can have at most 100 streams (as sender or recipient) |
@@ -319,7 +358,7 @@ A: If the stream is paused, progress halts. Also, Stacks blocks take ~10 minutes
 A: Get testnet STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet). For msBTC test tokens, use the mock token faucet function in the deployed contracts.
 
 **Q: Can I stream any SIP-010 token?**
-A: The protocol supports any SIP-010 compliant token. On testnet, msBTC (mock sBTC) is the default token available.
+A: Yes — the protocol is permissionless and accepts any SIP-010 compliant token. On mainnet, the frontend surfaces sBTC, USDA, ALEX, and xBTC as the default options. On testnet, msBTC (mock sBTC with a public faucet) is used for development. Additional tokens can be streamed by calling the contracts directly, or by adding them to the frontend token list.
 
 **Q: What's the minimum stream duration?**
 A: 1 block (~10 minutes). Practically, streams are most useful over longer periods — days, weeks, or months.

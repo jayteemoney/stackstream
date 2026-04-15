@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildTopUpStreamTx, type StreamData } from "@/lib/stacks";
 import { useWalletStore } from "@/stores/wallet-store";
+import { SUPPORTED_TOKENS, DEFAULT_TOKEN } from "@/lib/constants";
 import { formatTokenAmount } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowUpCircle } from "lucide-react";
@@ -31,7 +32,9 @@ export function TopUpDialog({
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
 
-  const amountRaw = Math.round(parseFloat(amount || "0") * 1e8);
+  const tokenConfig = SUPPORTED_TOKENS.find((t) => t.contractId === stream.token) ?? DEFAULT_TOKEN;
+  const tokenMultiplier = Math.pow(10, tokenConfig.decimals);
+  const amountRaw = Math.round(parseFloat(amount || "0") * tokenMultiplier);
 
   function validate(): boolean {
     if (!amount || parseFloat(amount) <= 0) {
@@ -49,6 +52,7 @@ export function TopUpDialog({
     const txOptions = buildTopUpStreamTx({
       streamId,
       tokenContract: stream.token,
+      ftName: tokenConfig.ftName,
       amount: BigInt(amountRaw),
       senderAddress: address,
     });
@@ -79,16 +83,16 @@ export function TopUpDialog({
             Top Up Stream #{streamId}
           </h2>
           <p className="text-xs text-zinc-500">
-            Current deposit: {formatTokenAmount(stream.depositAmount)} msBTC
+            Current deposit: {formatTokenAmount(stream.depositAmount)} {tokenConfig.symbol}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Amount (msBTC)"
+          label={`Amount (${tokenConfig.symbol})`}
           type="number"
-          step="0.00000001"
+          step={`${1 / tokenMultiplier}`}
           min="0"
           placeholder="0.5"
           value={amount}

@@ -4,10 +4,10 @@
 # StackStream Security Review
 **Version:** v1.0.0-rc1  
 **Date:** April 12, 2026  
-**Updated:** April 14, 2026 (IdokoMarcelina review incorporated — L-12 defensive hardening)  
+**Updated:** April 15, 2026 (Jayy4rl full-contract review — L-14 claim event, L-15 redundant asserts)  
 **Contracts reviewed:** `stream-manager.clar`, `stream-factory.clar`  
 **Author review:** Jethro Mbata  
-**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000, Zachyo, IdokoMarcelina  
+**Community reviewers:** Marvy247, Sobilo34, Akanmoh Johnson, Ali6nXI, Godbrand0, dannyy2000, Zachyo, IdokoMarcelina, Ryjen1, Jayy4rl  
 
 ---
 
@@ -307,6 +307,25 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | L-12 | Low | `top-up-stream` | IdokoMarcelina | No explicit rate > 0 guard before division (submitted as High — downgraded, rate=0 impossible given L-7) | **Fixed** — defensive guard added, function restructured into nested lets |
 | I-3 | Informational | `create-stream` | IdokoMarcelina | No token allowlist — any SIP-010 compliant contract accepted (submitted as Medium — downgraded) | Documented — permissionless design; Clarity trait system + no-reentrancy covers the primary risks |
 | I-4 | Informational | `pause-stream` | IdokoMarcelina | `ERR-STREAM-PAUSED` returned for unreachable cancelled/depleted branches | Duplicate of L-3 — confirmed unreachable dead code, deferred to v1.1 cleanup |
+| I-5 | Informational | `claim-all` | Ryjen1 | Max uint hardcoded as magic number; reduces readability and ties maintainers to magic value | **Fixed** — defined as `MAX-CLAIM-AMOUNT` constant |
+| L-13 | Low | `transfer-ownership` | Ryjen1 | One-step ownership transfer — a typo causes permanent loss of admin control with no recovery | **Fixed** — replaced with two-step `propose-ownership` + `accept-ownership` pattern |
+| I-6 | Informational | All functions | Ryjen1 | Print events have no version/schema field — future upgrades could silently break off-chain indexers | Acknowledged — event versioning planned for v1.1.0 alongside OpenClaw indexer work (M3) |
+| I-7 | Informational | `create-stream` | Jayy4rl | Rate guard `deposit * PRECISION >= duration` correctly enforces rate >= 1 | Confirmed correct — no change needed |
+| I-8 | Informational | All functions | Jayy4rl | `contract-caller` used throughout for authorization (vs `tx-sender`) | Confirmed correct — documented in code comments; `contract-caller` captures the actual calling principal |
+| L-14 | Low | `claim` | Jayy4rl | Claim amount silently clamped to available balance with no event signal for off-chain tooling | **Fixed** — added `requested-amount` field to `tokens-claimed` event |
+| I-9 | Informational | `claim` | Jayy4rl | Token conservation verified: claimable <= streamed <= deposit; withdrawn updated atomically | Confirmed correct |
+| L-15 | Low | `pause-stream` | Jayy4rl | Two asserts after `STATUS-ACTIVE` check are unreachable — cancelled/depleted cannot be ACTIVE | **Fixed** — removed redundant asserts |
+| I-10 | Informational | `resume-stream` | Jayy4rl | End-block check correctly prevents resuming expired streams | Confirmed correct |
+| I-11 | Informational | `cancel-stream` | Jayy4rl | Token conservation math verified: (streamed - withdrawn) + (deposit - streamed) = deposit - withdrawn | Confirmed correct |
+| I-12 | Informational | `expire-stream` | Jayy4rl | Three preconditions (paused + block >= end + token match) correctly gate permissionless expiry | Confirmed correct |
+| I-13 | Informational | `top-up-stream` | Jayy4rl | Zero-extension guard correctly prevents silent no-op top-ups | Confirmed correct |
+| I-14 | Informational | `calculate-effective-elapsed` | Jayy4rl | Pause duration accumulation handles active/paused/accumulated cases; no overflow risk | Confirmed correct |
+| I-15 | Informational | `calculate-streamed-amount-internal` | Jayy4rl | High-precision math verified; clamped to deposit prevents rounding artifacts | Confirmed correct |
+| I-16 | Informational | `set-emergency-pause` | Jayy4rl | Circuit breaker correctly scoped: blocks new streams, leaves existing claims/cancels unaffected | Confirmed correct |
+| I-17 | Informational | `register-dao` (factory) | Jayy4rl | Self-registration via `contract-caller` is correct for permissionless DAO creation | Confirmed correct |
+| I-18 | Informational | `track-stream` (factory) | Jayy4rl | Cross-contract re-verification of caller == stream.sender prevents tracking another's stream | Confirmed correct |
+| I-19 | Informational | `track-stream` (factory) | Jayy4rl | `ERR-ALREADY-TRACKED` guard prevents double-tracking (submitted as Low; guard confirmed present) | Confirmed correct — guard exists |
+| I-20 | Informational | `update-dao-name` (factory) | Jayy4rl | Name collision detection and old-name cleanup confirmed correct | Confirmed correct |
 
 ### Totals
 | Severity | Count | Fixed | Documented/Deferred |
@@ -314,8 +333,8 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 | Critical | 0 | — | — |
 | High | 0 | — | — |
 | Medium | 2 | 2 (M-1, M-2) | 0 |
-| Low | 12 | 6 (L-4, L-7, L-8, L-9, L-10, L-12) | 6 |
-| Informational | 5 | — | 5 |
+| Low | 15 | 9 (L-4, L-7, L-8, L-9, L-10, L-12, L-13, L-14, L-15) | 6 |
+| Informational | 20 | 1 (I-5) | 19 |
 
 **No critical or high vulnerabilities found.** Both medium findings fixed. All fund-safety issues resolved before mainnet.
 
@@ -409,6 +428,21 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 **Findings:** L-12 (no explicit rate > 0 guard before division in `top-up-stream` — submitted as High, downgraded to Low, **fixed**), I-3 (no token allowlist — submitted as Medium, downgraded to Informational, documented), I-4 (error reuse in `pause-stream` — duplicate of existing L-3)  
 **Severity reassessments:** The High on `top-up-stream` is correct in identifying the structural issue (division in a let binding with no local guard) but overstates the severity — `rate = 0` is impossible given the L-7 fix in `create-stream`. The Medium on `create-stream` token acceptance is a documented trust model in permissionless DeFi; Clarity's trait system and reentrancy prevention eliminate the most serious malicious-token scenarios. The structural refactoring of `top-up-stream` into nested lets (prompted by this review) is a genuine improvement regardless of severity.  
 **Verdict:** Three substantive observations. One code improvement applied. Two appropriately reclassified and documented.
+
+### Reviewer 9 — Ryjen1
+**Date:** April 15, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Findings:** I-5 (`claim-all` magic number — **fixed**, constant extracted), L-13 (`transfer-ownership` one-step vulnerability — **fixed**, two-step pattern implemented), I-6 (print events lack version field — acknowledged, deferred to v1.1.0)  
+**Design impact:** L-13 is a meaningful safety improvement. The previous one-step `transfer-ownership` (added in response to Zachyo's M-2 finding) closed the silent-redeploy risk but introduced a new one: a single mistyped address would permanently lock the deployer out of `set-emergency-pause` with no recovery. The two-step `propose-ownership` + `accept-ownership` pattern eliminates this risk. `pending-owner` data-var holds the nominated address until the nominee accepts; if the wrong address was proposed, the current owner can simply propose again to overwrite it.  
+**Verdict:** Three well-scoped findings. Two improvements applied. One acknowledged with a clear migration path.
+
+### Reviewer 10 — Jayy4rl
+**Date:** April 15, 2026  
+**Method:** Comment on GitHub Issue #1  
+**Scope:** Full review of all 8 public functions in `stream-manager.clar` and all 4 functions in `stream-factory.clar` — the most thorough single-reviewer coverage of the codebase.  
+**Findings:** L-14 (claim event lacks requested-amount — **fixed**), L-15 (two redundant asserts in pause-stream — **fixed**), 14 confirmatory Informational findings (I-7 through I-20) verifying correct design across rate guards, authorization model, token conservation, pause math, expiry preconditions, precision arithmetic, factory cross-contract safety, and DAO name registry.  
+**Design validation:** The review independently confirmed correctness of: the `contract-caller` authorization model, token conservation across all exit paths (claim/cancel/expire), `calculate-effective-elapsed` overflow safety, `calculate-streamed-amount-internal` precision, the circuit breaker scope, and `track-stream` re-verification guard. No critical, high, or medium findings.  
+**Verdict:** "The authorization model, token conservation, arithmetic safety, and state transitions are solid. The contract demonstrates excellent defensive programming."
 
 ---
 

@@ -81,6 +81,7 @@ export default function CreateStreamPage() {
     const txOptions = buildCreateStreamTx({
       recipient,
       tokenContract: selectedToken.contractId,
+      ftName: selectedToken.ftName,
       depositAmount: BigInt(amountRaw),
       startBlock: latestBlock + 3,
       durationBlocks,

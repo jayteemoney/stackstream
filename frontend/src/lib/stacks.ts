@@ -220,6 +220,8 @@ export async function isRegisteredDao(admin: string): Promise<boolean> {
 export function buildCreateStreamTx(params: {
   recipient: string;
   tokenContract: string;
+  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  ftName: string;
   depositAmount: bigint;
   startBlock: number;
   durationBlocks: number;
@@ -247,7 +249,7 @@ export function buildCreateStreamTx(params: {
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.depositAmount)
-        .ft(`${tokenAddr}.${tokenName}`, "mock-sbtc"),
+        .ft(`${tokenAddr}.${tokenName}`, params.ftName),
     ],
     network: getNetwork(),
   };
@@ -340,6 +342,8 @@ export function buildCancelStreamTx(params: {
 export function buildTopUpStreamTx(params: {
   streamId: number;
   tokenContract: string;
+  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  ftName: string;
   amount: bigint;
   senderAddress: string;
 }) {
@@ -359,7 +363,7 @@ export function buildTopUpStreamTx(params: {
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.amount)
-        .ft(`${tokenAddr}.${tokenName}`, "mock-sbtc"),
+        .ft(`${tokenAddr}.${tokenName}`, params.ftName),
     ],
     network: getNetwork(),
   };
@@ -409,7 +413,9 @@ export async function getCurrentBlockHeight(): Promise<number> {
 
 export async function getTokenBalance(
   address: string,
-  tokenContract: string
+  tokenContract: string,
+  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  ftName: string
 ): Promise<bigint> {
   if (!address) return 0n;
   const res = await fetch(
@@ -419,7 +425,7 @@ export async function getTokenBalance(
   if (!res.ok) return 0n;
   const data = await res.json();
   const ftBalances = data.fungible_tokens || {};
-  const key = `${tokenContract}::mock-sbtc`;
+  const key = `${tokenContract}::${ftName}`;
   return BigInt(ftBalances[key]?.balance ?? "0");
 }
 
@@ -437,6 +443,7 @@ const CLARITY_ERROR_MESSAGES: Record<string, string> = {
   "u203": "Stream is paused",
   "u204": "Stream is not paused",
   "u207": "Stream has already ended",
+  "u208": "Stream has not expired yet",
   "u300": "Invalid amount",
   "u301": "Invalid duration",
   "u302": "Start block is in the past",

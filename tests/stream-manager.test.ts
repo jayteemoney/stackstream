@@ -1811,37 +1811,56 @@ describe("StackStream - Stream Manager Contract", () => {
   // BLOCK D — Zachyo REVIEW FINDINGS (5 tests)
   // ============================================================================
 
-  describe("transfer-ownership (M-2 fix — Zachyo)", () => {
-    it("should allow owner to transfer ownership", () => {
-      const result = simnet.callPublicFn(
+  // Updated for two-step ownership (L-13 fix — Ryjen1): transfer-ownership
+  // replaced by propose-ownership + accept-ownership to prevent permanent loss
+  // of control due to a typo or wrong address.
+  describe("two-step ownership transfer (L-13 fix — Ryjen1, M-2 base — Zachyo)", () => {
+    it("propose-ownership sets pending owner; owner unchanged until accepted", () => {
+      const proposeResult = simnet.callPublicFn(
         streamManagerContract,
-        "transfer-ownership",
+        "propose-ownership",
         [Cl.principal(wallet1)],
         deployer
       );
+      expect(proposeResult.result).toBeOk(Cl.bool(true));
 
-      expect(result.result).toBeOk(Cl.bool(true));
-
-      // New owner should be wallet1
+      // Owner is still deployer — not wallet1 yet
       const owner = simnet.callReadOnlyFn(
         streamManagerContract,
         "get-contract-owner",
         [],
         deployer
       );
-      expect(owner.result).toBePrincipal(wallet1);
+      expect(owner.result).toBePrincipal(deployer);
+
+      // Pending owner is wallet1
+      const pending = simnet.callReadOnlyFn(
+        streamManagerContract,
+        "get-pending-owner",
+        [],
+        deployer
+      );
+      expect(pending.result).toStrictEqual(Cl.some(Cl.principal(wallet1)));
     });
 
-    it("should allow new owner to use admin functions after transfer", () => {
-      // Transfer to wallet1
+    it("accept-ownership completes the transfer; new owner can use admin functions", () => {
+      // Step 1: propose
       simnet.callPublicFn(
         streamManagerContract,
-        "transfer-ownership",
+        "propose-ownership",
         [Cl.principal(wallet1)],
         deployer
       );
+      // Step 2: accept
+      const acceptResult = simnet.callPublicFn(
+        streamManagerContract,
+        "accept-ownership",
+        [],
+        wallet1
+      );
+      expect(acceptResult.result).toBeOk(Cl.bool(true));
 
-      // wallet1 (new owner) can now set emergency pause
+      // wallet1 is now owner and can set emergency pause
       const result = simnet.callPublicFn(
         streamManagerContract,
         "set-emergency-pause",
@@ -1851,24 +1870,29 @@ describe("StackStream - Stream Manager Contract", () => {
       expect(result.result).toBeOk(Cl.bool(true));
     });
 
-    it("should reject transfer from non-owner", () => {
+    it("should reject propose-ownership from non-owner", () => {
       const result = simnet.callPublicFn(
         streamManagerContract,
-        "transfer-ownership",
+        "propose-ownership",
         [Cl.principal(wallet3)],
         wallet1 // wallet1 is not the owner
       );
-
       expect(result.result).toBeErr(Cl.uint(100)); // ERR-NOT-AUTHORIZED
     });
 
-    it("previous owner loses admin access after transfer", () => {
-      // Transfer to wallet1
+    it("previous owner loses admin access after full two-step transfer", () => {
+      // Step 1 + 2
       simnet.callPublicFn(
         streamManagerContract,
-        "transfer-ownership",
+        "propose-ownership",
         [Cl.principal(wallet1)],
         deployer
+      );
+      simnet.callPublicFn(
+        streamManagerContract,
+        "accept-ownership",
+        [],
+        wallet1
       );
 
       // Deployer should no longer be able to set emergency pause

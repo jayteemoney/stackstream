@@ -57,19 +57,238 @@ Early access: https://forms.gle/xmpNJkjtWwV2gYCS7
 
 ---
 
-### X (Twitter)
+### X (Twitter) — Thread
 
-Over the next few weeks, I'm taking this to mainnet in public.
+**Slide 1**
+DAOs on Stacks still don't have a native way to pay contributors automatically.
 
-If you run a DAO or pay contributors in crypto, this is for you.
+I built it.
 
-Join early access:
-https://forms.gle/xmpNJkjtWwV2gYCS7
+It's called StackStream. ⚡🧵🚀
 
-@Stacks @StacksEndowment
+Right now, DAO payments look like:
+→ Multi-sig approvals
+→ Delays
+→ Lump-sum transfers
+It's slow, manual, and doesn't scale.
 
-please follow Stackstream X handle
-@stackstream0 🙏
+**Slide 2**
+On Ethereum, protocols like Sablier have already streamed billions.
+
+On Stacks?
+
+Nothing.
+
+StackStream changes that:
+→ Stream tokens block by block
+→ Contributors earn in real time
+→ Claim anytime
+→ No more manual payroll
+
+**Slide 3**
+What's already live:
+
+→ Smart contracts on testnet
+→ 60+ automated tests
+→ Full working app
+→ Wallet support (Leather + Xverse)
+Try it: https://stackstream.vercel.app
+Supported by the @StacksEndowment @Stacks ecosystem.
+
+---
+
+### X (Twitter) — Milestone 1 Progress Posts (Published)
+
+**Post 1 — D1.1 Test Suite Complete**
+*Link: https://x.com/dev_jayteee/status/2043285822410051700*
+
+One of StackStream M1 Deliverable 1 is complete.
+
+103 tests passing on Clarinet simnet up from 66.
+38 new tests including property-based fuzz tests that verify the streaming math holds for ANY valid input, not just hand-picked values.
+
+Here's what was tested & why: The original 66 tests covered the happy path.
+
+What was missing: tests that try to *break* the math.
+
+5 fuzz invariants, each running across 20-50 randomly generated stream configurations:
+
+→ Token conservation: streamed + remaining == deposit. Always.
+→ Claim bounds: you can never claim more than has accrued
+→ Pause math: no drift across N pause/resume cycles
+→ Top-up: rate unchanged, end-block extends correctly
+
+The precision math that makes this work:
+rate = deposit × 1e12 / duration_blocks
+This gives 12 digits of precision for streaming rates — no floating point, no rounding drift across the full stream duration.
+Clarity's uint means no overflow wrapping — it aborts instead.
+
+The fuzz tests prove conservation holds for any (deposit, duration) pair
+
+10 edge case tests that randomized inputs rarely hit:
+→ 1-block streams
+→ Deposits that don't divide evenly by duration
+→ Cancel before stream starts (full refund)
+→ Cancel at exactly end-block (recipient gets everything)
+→ 0-block pause/resume cycles
+→ Emergency pause: blocks creation, NOT claims or cancels
+
+103 passing. 12.75s on Clarinet simnet.
+
+Next: security review open for 60 hours (closes April 15), then mainnet deployment April 2026.
+
+GitHub: https://github.com/jayteemoney/stackstream
+Testnet: https://stackstream.vercel.app
+Review issue: https://github.com/jayteemoney/stackstream/issues/1
+
+---
+
+**Post 2 — Security Review Update**
+*Link: https://x.com/dev_jayteee/status/2044075664131702903*
+
+StackStream security review update 🔒
+
+8 devs have reviewed the contracts so far here's where we stand:
+
+→ 0 critical
+→ 0 high
+→ 2 medium (fixed)
+→ 6 low (addressed/documented)
+→ 5 informational
+
+113 tests passing on latest commit.
+
+We're getting closer to mainnet safely. Some key improvements from community review:
+
+→ expire-stream: recover funds from paused expired streams
+→ ownership transfer: rotate owner key without redeploy
+→ pause guard: fixes edge-case overcounting
+→ safer top-up validation
+
+Review is still OPEN 👇
+http://github.com/jayteemoney/stackstream/issues/1
+
+If you spot anything, drop it — every review makes this stronger.
+
+Built on @Stacks sponsored by @StacksEndowment 🚀🚀🔥
+
+---
+
+### Skool — Milestone 1 Progress Posts (Published)
+
+**Post 1 — D1.1 Test Suite Complete**
+*Link: https://www.skool.com/stackers/stackstream103-tests-passing-with-fuzz-invariants-stacks-endowment-grantee*
+
+StackStream: 103 Tests Passing with Fuzz Invariants (Stacks Endowment Grantee)
+
+Hi Stacks community,
+StackStream (Stacks Endowment grantee, mainnet April 2026) completed: Test suite expanded from 66 → 103 passing tests.
+
+Fuzz tests (20) — 5 invariants verified across random (deposit, duration) pairs:
+• Token conservation: streamed + remaining == deposit, always
+• Claim bounds: claimed ≤ accrued at call time
+• Pause accounting: no drift across N pause/resume cycles
+• Top-up: rate preserved, end-block extends proportionally
+
+Edge cases (10) — 1-block streams, indivisible deposits, cancel before/at end-block, emergency pause scope (blocks creation only, not claims)
+
+Factory tests (8) — name boundary validation, duplicate tracking guard, cross-DAO stream isolation
+
+Security review open now (60h window, closes April 15):
+https://github.com/jayteemoney/stackstream/issues/1
+Testnet: https://stackstream.vercel.app
+GitHub: https://github.com/jayteemoney/stackstream
+
+---
+
+**Post 2 — Security Review 48hr Update**
+*Link: https://www.skool.com/stackers/stackstream-security-review-48hr-update*
+
+We opened StackStream's contracts for public review 48hrs ago. So far, 8 developers have reviewed stream-manager.clar and stream-factory.clar.
+
+Status: 0 Critical | 0 High | 2 Medium (fixed) | 6 Low (addressed) | 5 Informational
+
+Key improvements from review:
+expire-stream → prevents stuck funds on paused expired streams
+transfer-ownership → enables safe key rotation
+pause guard → fixes pre-start accounting edge case
+safer top-up validation
+
+113 tests passing. Core logic holding strong.
+
+Review is still open, please feel free to take a look and contribute.
+github.com/jayteemoney/stackstream/issues/1
+
+---
+
+### LinkedIn — Milestone 1 Progress Posts (Published)
+
+**Post 1 — D1.1 Test Suite Complete**
+*Link: https://www.linkedin.com/posts/jethro-irmiya-a2153427b_stacks-defi-share-7447903048275738624-r3t9*
+
+Milestone update: StackStream's test suite now has 103 passing tests — up from 66 — as part of Deliverable 1.1 of our Stacks Endowment grant.
+
+The new tests aren't just more of the same. The key addition is property-based fuzz testing: instead of hand-picking inputs, the tests generate hundreds of random stream configurations and verify that core invariants hold for all of them.
+
+Five invariants now verified for any valid input:
+
+1. Token conservation — streamed + remaining always equals the original deposit. No tokens created, no tokens lost, at any point in the stream lifecycle.
+
+2. Claim bounds — a recipient can never extract more than has accrued at the time of the call.
+
+3. Pause accounting (single cycle) — pausing a stream freezes accrual exactly. Balance at resume equals balance at pause.
+
+4. Pause accounting (multi-cycle) — cumulative pause duration tracks correctly across N pause/resume cycles. Zero drift.
+
+5. Top-up correctness — adding funds to a stream preserves the streaming rate and extends the end block proportionally.
+
+These properties aren't obvious to verify by hand — that's the point of fuzz testing. The math either holds for all inputs or it doesn't.
+
+103 tests. 2 files. 12.75 seconds.
+
+Mainnet deployment: April 17, 2026.
+
+Security review is open for community feedback until April 15:
+https://github.com/jayteemoney/stackstream/issues/1
+
+Testnet app: https://stackstream.vercel.app/
+GitHub: https://github.com/jayteemoney/stackstream
+
+#Bitcoin #Stacks #DeFi #SmartContracts #BuildInPublic #DAO
+
+---
+
+**Post 2 — Security Review Progress Update**
+*Link: https://www.linkedin.com/posts/jethro-irmiya-a2153427b_security-review-stackstream-v100-rc1-share-7449844381865648128-33Pl*
+
+StackStream Security Review — Progress Update 🔒
+
+48 hours ago, I opened a public community review of StackStream's Clarity smart contracts as part of Milestone 1 under the Stacks Endowment grant.
+
+So far, 8 developers have reviewed the codebase.
+
+Current status:
+• 0 critical issues
+• 0 high severity
+• 2 medium — fixed before mainnet
+• 6 low — addressed or documented
+• 5 informational
+
+What matters most is not just the numbers, but what the process uncovered.
+
+Two meaningful fixes from the review:
+
+Added a permissionless recovery path for paused streams past their end-block (expire-stream)
+Reworked contract ownership into a rotatable model (transfer-ownership) for safer long-term operation
+
+This is exactly why open review matters. Every external perspective strengthens the protocol before real funds are involved.
+
+The review is still open.
+If you work with Clarity or smart contract security, I'd genuinely value your input.
+
+GitHub issue: github.com/jayteemoney/stackstream/issues/1
+
+Built on Stacks. Moving carefully toward mainnet.
 
 ---
 

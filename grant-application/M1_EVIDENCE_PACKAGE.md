@@ -126,10 +126,22 @@ Test Files  2 passed (2)
 
 ### Overview
 
-An open community review was run from April 12–15, 2026 (60+ hours). The review was announced on GitHub, posted in the Stacks Discord `#clarity-smart-contracts` channel, shared on X and LinkedIn, and directly requested from 9 engaged community members.
+An open community review was run from April 12–15, 2026 (60+ hours). The review was announced on GitHub, posted in the Stacks Discord `#clarity-smart-contracts` channel, published on X, LinkedIn, and Skool, and directly requested from 9 engaged community members.
 
 **Full document:** `SECURITY_REVIEW.md` in repository root  
 **Community review thread:** https://github.com/jayteemoney/stackstream/issues/1
+
+### Community Outreach Evidence
+
+| Platform | Post | Link |
+|---|---|---|
+| X (Twitter) | D1.1 test suite thread — 103 tests, fuzz invariants, review open | https://x.com/dev_jayteee/status/2043285822410051700 |
+| X (Twitter) | Security review mid-point update — 8 reviewers, findings status | https://x.com/dev_jayteee/status/2044075664131702903 |
+| LinkedIn | D1.1 milestone update — property-based testing explained | https://www.linkedin.com/posts/jethro-irmiya-a2153427b_stacks-defi-share-7447903048275738624-r3t9 |
+| LinkedIn | Security review progress — key fixes, review still open | https://www.linkedin.com/posts/jethro-irmiya-a2153427b_security-review-stackstream-v100-rc1-share-7449844381865648128-33Pl |
+| Skool | D1.1 fuzz invariants post — Stacks community announcement | https://www.skool.com/stackers/stackstream103-tests-passing-with-fuzz-invariants-stacks-endowment-grantee |
+| Skool | Security review 48hr update — findings and improvements | https://www.skool.com/stackers/stackstream-security-review-48hr-update |
+| Early Access Form | Community interest collection | https://forms.gle/xmpNJkjtWwV2gYCS7 |
 
 ### Scope
 

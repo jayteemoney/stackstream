@@ -110,7 +110,7 @@ export default function CreateStreamPage() {
       <Card>
         <CardTitle>Create Payment Stream</CardTitle>
         <CardDescription>
-          Set up a continuous token stream to a contributor. Funds will flow
+          Set up a continuous token stream to any Stacks address. Funds flow
           block-by-block and can be claimed at any time.
         </CardDescription>
 
@@ -199,7 +199,7 @@ export default function CreateStreamPage() {
 
           <Input
             label="Memo (optional)"
-            placeholder="Monthly contributor payment"
+            placeholder="Monthly payment"
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             hint="Max 256 characters. Stored on-chain."

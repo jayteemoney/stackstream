@@ -24,7 +24,7 @@ export default function AnalyticsPage() {
       <EmptyState
         icon={<BarChart3 className="h-12 w-12" />}
         title="Connect your wallet"
-        description="Connect a Stacks wallet to view treasury analytics."
+        description="Connect a Stacks wallet to view your stream analytics."
       />
     );
   }
@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
   );
   const burnRatePerDay = burnRatePerBlock * 144;
 
-  // Treasury utilization
+  // Funds utilization
   const utilization =
     totalDeposited > 0n
       ? (Number(totalWithdrawn) / Number(totalDeposited)) * 100

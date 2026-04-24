@@ -385,6 +385,24 @@ export function buildFaucetTx(params: {
   };
 }
 
+export function buildExpireStreamTx(params: {
+  streamId: number;
+  tokenContract: string;
+}) {
+  const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
+  return {
+    contractAddress: mgrAddr,
+    contractName: mgrName,
+    functionName: "expire-stream",
+    functionArgs: [
+      uintCV(params.streamId),
+      principalCV(params.tokenContract),
+    ],
+    postConditionMode: PostConditionMode.Allow,
+    network: getNetwork(),
+  };
+}
+
 export function buildRegisterDaoTx(name: string) {
   const [factAddr, factName] = splitContract(STREAM_FACTORY_CONTRACT);
   return {
@@ -452,10 +470,10 @@ const CLARITY_ERROR_MESSAGES: Record<string, string> = {
   "u305": "Maximum streams limit reached (100)",
   "u401": "Token contract mismatch",
   // Factory errors
-  "u501": "DAO not found",
-  "u502": "DAO already registered",
-  "u503": "Not the DAO admin",
-  "u504": "Invalid DAO name",
+  "u501": "Workspace not found",
+  "u502": "Workspace already registered",
+  "u503": "Not the workspace admin",
+  "u504": "Invalid workspace name",
   "u505": "Stream not found",
   "u506": "Stream already tracked",
 };

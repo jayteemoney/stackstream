@@ -59,7 +59,7 @@ export default function EarnPage() {
         <EmptyState
           icon={<Coins className="h-12 w-12" />}
           title="No income streams"
-          description="You don't have any payment streams yet. When a DAO creates a stream for you, it will appear here."
+          description="You don't have any payment streams yet. When someone creates a stream for your address, it will appear here."
         />
       ) : (
         <>

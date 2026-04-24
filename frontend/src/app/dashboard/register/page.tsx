@@ -23,14 +23,14 @@ export default function RegisterDaoPage() {
       <EmptyState
         icon={<Zap className="h-12 w-12" />}
         title="Connect your wallet"
-        description="Connect a Stacks wallet to register your DAO."
+        description="Connect a Stacks wallet to register your workspace."
       />
     );
   }
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = "Enter a DAO name";
+    if (!name.trim()) errs.name = "Enter a workspace name";
     if (name.length > 64) errs.name = "Name must be 64 characters or fewer";
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -43,7 +43,7 @@ export default function RegisterDaoPage() {
     const txOptions = buildRegisterDaoTx(name.trim());
     const result = await execute(txOptions);
     if (result?.confirmed) {
-      toast.success("DAO registered!");
+      toast.success("Workspace registered!");
       setName("");
     } else if (result && !result.confirmed) {
       toast.error(result.status === "timeout" ? "Transaction timed out" : `Registration failed: ${result.errorCode ?? result.status}`);
@@ -53,24 +53,25 @@ export default function RegisterDaoPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
-        <CardTitle>Register DAO</CardTitle>
+        <CardTitle>Register Workspace</CardTitle>
         <CardDescription>
-          Register your wallet as a DAO on StackStream. This enables stream
-          tracking and analytics for your organization.
+          Register your wallet as a workspace on StackStream. This enables stream
+          tracking and analytics for your team, organization, or personal account.
+          Works for DAOs, companies, collectives, freelancers, and individuals.
         </CardDescription>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <Input
-            label="DAO Name"
-            placeholder="My DAO"
+            label="Workspace Name"
+            placeholder="My Workspace"
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={errors.name}
-            hint="A unique name for your DAO (max 64 characters)"
+            hint="A unique name for your workspace (max 64 characters)"
           />
 
           <Button type="submit" size="lg" className="w-full" loading={isPending}>
-            Register DAO <ArrowRight className="h-4 w-4" />
+            Register Workspace <ArrowRight className="h-4 w-4" />
           </Button>
 
           {txId && (

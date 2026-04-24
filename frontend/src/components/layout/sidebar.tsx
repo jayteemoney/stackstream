@@ -22,7 +22,7 @@ const adminLinks = [
   { href: "/dashboard/create", label: "Create Stream", icon: PlusCircle },
   { href: "/dashboard/streams", label: "Manage Streams", icon: List },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/register", label: "Register DAO", icon: Building2 },
+  { href: "/dashboard/register", label: "Register Workspace", icon: Building2 },
 ];
 
 const earnLinks = [
@@ -76,7 +76,7 @@ export function Sidebar() {
           {/* Admin Section */}
           <div>
             <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-              DAO Admin
+              Sender
             </p>
             <ul className="space-y-0.5">
               {adminLinks.map((link) => {
@@ -107,7 +107,7 @@ export function Sidebar() {
           {/* Earn Section */}
           <div>
             <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-              Contributor
+              Recipient
             </p>
             <ul className="space-y-0.5">
               {earnLinks.map((link) => {

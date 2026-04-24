@@ -167,7 +167,7 @@ export function AssistantWidget() {
     { type: "stream", icon: Hash, label: "Stream", placeholder: "Stream ID (e.g. 1)" },
     { type: "sender", icon: User, label: "Sender", placeholder: "Sender address" },
     { type: "recipient", icon: User, label: "Recipient", placeholder: "Recipient address" },
-    { type: "dao", icon: Building2, label: "DAO", placeholder: "DAO admin address" },
+    { type: "dao", icon: Building2, label: "Workspace", placeholder: "Workspace admin address" },
     { type: "block", icon: Zap, label: "Block", placeholder: "No input needed" },
   ];
 
@@ -200,7 +200,7 @@ export function AssistantWidget() {
             </div>
             <div>
               <p className="text-sm font-semibold text-zinc-100">OpenClaw Assistant</p>
-              <p className="text-[10px] text-zinc-500">Query streams, DAOs, and blockchain state</p>
+              <p className="text-[10px] text-zinc-500">Query streams, workspaces, and blockchain state</p>
             </div>
           </div>
 

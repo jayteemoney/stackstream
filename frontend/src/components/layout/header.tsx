@@ -15,7 +15,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/create": "Create Stream",
   "/dashboard/streams": "Manage Streams",
   "/dashboard/analytics": "Analytics",
-  "/dashboard/register": "Register DAO",
+  "/dashboard/register": "Register Workspace",
   "/earn": "Earnings",
   "/earn/streams": "My Streams",
   "/earn/history": "Claim History",

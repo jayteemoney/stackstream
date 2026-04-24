@@ -54,9 +54,9 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-zinc-400 leading-relaxed"
         >
-          StackStream lets DAOs pay contributors in real-time. Funds flow
-          continuously on-chain, and workers can claim earnings at any moment.
-          Bitcoin-native. Built on Stacks.
+          StackStream lets teams, organizations, and individuals stream payments
+          in real time. Funds flow continuously on-chain — recipients watch earnings
+          accumulate and claim any moment. Multi-token. Built on Stacks.
         </motion.p>
 
         {/* CTAs */}
@@ -93,7 +93,7 @@ export function Hero() {
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
               </span>
               <span className="text-sm text-emerald-400 font-medium">Live Stream</span>
-              <span className="ml-auto hidden sm:inline text-xs text-zinc-600">StacksDAO &rarr; contributor.btc</span>
+              <span className="ml-auto hidden sm:inline text-xs text-zinc-600">sender.btc &rarr; recipient.btc</span>
             </div>
             <div className="font-mono text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold tabular-nums">
               <span className="text-zinc-100">1,234</span>

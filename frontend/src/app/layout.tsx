@@ -7,12 +7,12 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StackStream — Bitcoin-Native Payroll Streaming",
+  title: "StackStream — Real-Time Payment Streaming on Stacks",
   description:
-    "Real-time payment streaming protocol for DAOs on Stacks. Pay contributors block-by-block with sBTC.",
+    "Real-time payment streaming protocol on Stacks. Pay teams, contractors, grantees, or anyone — block-by-block in sBTC, USDA, ALEX, xBTC, or any SIP-010 token.",
   openGraph: {
     title: "StackStream",
-    description: "Real-time payment streaming for DAOs on Stacks",
+    description: "Real-time payment streaming on Stacks — for teams, organizations, and individuals. Multi-token support.",
     type: "website",
   },
 };

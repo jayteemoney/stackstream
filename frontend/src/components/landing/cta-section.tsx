@@ -19,8 +19,8 @@ export function CTASection() {
           Ready to stream?
         </h2>
         <p className="mt-4 text-zinc-400 max-w-md mx-auto">
-          Set up your first payment stream and start paying contributors
-          in real-time on Stacks testnet.
+          Set up your first payment stream and start sending funds in real time
+          on Stacks testnet.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/dashboard/create">

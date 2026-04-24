@@ -42,7 +42,7 @@ const footerLinks = [
       { label: "Dashboard", href: "/dashboard" },
       { label: "Earn", href: "/earn" },
       { label: "Create Stream", href: "/dashboard/create" },
-      { label: "Register DAO", href: "/dashboard/register" },
+      { label: "Register Workspace", href: "/dashboard/register" },
     ],
   },
   {
@@ -101,8 +101,9 @@ export function Footer() {
             </Link>
 
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs">
-              Bitcoin-native payroll streaming for DAOs. Pay contributors
-              block-by-block with sBTC on Stacks.
+              Real-time payment streaming on Stacks — for teams, organizations,
+              and individuals. Stream sBTC, USDA, ALEX, xBTC, or any SIP-010
+              token block-by-block.
             </p>
 
             {/* Social icons */}

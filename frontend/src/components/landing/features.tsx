@@ -15,7 +15,7 @@ const features = [
     icon: Zap,
     title: "Real-Time Streaming",
     description:
-      "Funds flow block-by-block on Stacks. Contributors watch earnings accumulate live and claim anytime.",
+      "Funds flow block-by-block on Stacks. Recipients watch earnings accumulate live and claim anytime.",
   },
   {
     icon: Shield,
@@ -27,25 +27,25 @@ const features = [
     icon: Clock,
     title: "Flexible Control",
     description:
-      "Pause, resume, cancel, or top-up streams as needed. Full lifecycle management for DAOs.",
+      "Pause, resume, cancel, or top-up streams as needed. Full lifecycle management for any workflow.",
   },
   {
     icon: BarChart3,
-    title: "Treasury Visibility",
+    title: "Full Visibility",
     description:
-      "Track burn rate, active streams, and total value locked. Real-time analytics for treasury health.",
+      "Track burn rate, active streams, and total value locked. Real-time analytics for your payment flows.",
   },
   {
     icon: Coins,
-    title: "Bitcoin-Native",
+    title: "Multi-Token",
     description:
-      "Built on Stacks with sBTC support. Settle payroll in Bitcoin without leaving the Stacks ecosystem.",
+      "Stream sBTC, USDA, ALEX, xBTC, or any SIP-010 token on Stacks. One protocol, every asset.",
   },
   {
     icon: Users,
-    title: "DAO-First Design",
+    title: "Built for Everyone",
     description:
-      "Register your DAO, create bulk streams, and manage all contributor payments from one dashboard.",
+      "Teams, organizations, DAOs, freelancers, and individuals. Register a workspace, create streams, and manage payments from one dashboard.",
   },
 ];
 
@@ -55,11 +55,11 @@ export function Features() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-zinc-100">
-            Payroll that never stops
+            Payments that never stop
           </h2>
           <p className="mt-3 text-zinc-500 max-w-lg mx-auto">
-            Everything DAOs need to pay contributors continuously, transparently,
-            and on their terms.
+            Everything you need to pay a team, a contractor, a grantee, or anyone —
+            continuously, transparently, and on your terms.
           </p>
         </div>
 

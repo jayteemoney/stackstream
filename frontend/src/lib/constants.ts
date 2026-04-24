@@ -50,7 +50,7 @@ export const STREAM_STATUS = {
 
 export const APP_NAME = "StackStream";
 export const APP_DESCRIPTION =
-  "Bitcoin-native payroll streaming for DAOs on Stacks";
+  "Real-time payment streaming on Stacks — for teams, organizations, and individuals. Stream sBTC, USDA, ALEX, xBTC, or any SIP-010 token.";
 
 /** Average Stacks block time in seconds */
 export const BLOCK_TIME_SECONDS = 600; // ~10 minutes

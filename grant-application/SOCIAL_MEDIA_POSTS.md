@@ -199,6 +199,7 @@ https://github.com/jayteemoney/stackstream/issues/1
 Testnet: https://stackstream.vercel.app
 GitHub: https://github.com/jayteemoney/stackstream
 
+
 ---
 
 **Post 2 — Security Review 48hr Update**
@@ -431,3 +432,89 @@ If you work with contributors or run a DAO on Stacks, get early access here:
 https://forms.gle/xmpNJkjtWwV2gYCS7
 
 App: https://stackstream.vercel.app/
+
+---
+
+## PRE-MILESTONE 2 POSTS (Already Published)
+
+---
+
+### X (Twitter) — Pre-Milestone 2
+
+*Link: https://x.com/stackstream0X/status/2046758132320219497*
+
+From testnet → mainnet.
+
+StackStream M1 is done:
+→ 113 tests
+→ 10 independent reviewers
+→ 0 critical / 0 high findings
+→ Release candidate live
+
+M2 (ending April):
+We deploy to mainnet and run the first live streams.
+
+Excited for what comes next on @Stacks with @StacksEndowment
+
+Looking for 2–3 DAOs on Stacks to use StackStream on mainnet.
+
+Early users will shape how this gets adopted.
+
+---
+
+### Skool — Pre-Milestone 2
+
+*Link: https://www.skool.com/stackers/stackstream-update-m1-done-mainnet-next-ending-april*
+
+StackStream Update: M1 Done → Mainnet Next (Ending April)🔥🚀
+
+Quick update for everyone following the build 👇
+
+Milestone 1 is complete, and it was all about making the protocol production-ready:
+- Test suite grew from 66 → 113 (including fuzz/property-based tests)
+- Open community security review (10 reviewers, 0 critical/high issues)
+- All medium findings fixed before release
+- v1.0.0-rc1 is now live on GitHub
+
+Now things get real.
+
+Milestone 2 is mainnet:
+- Deploy contracts on Stacks
+- Switch the app from testnet → mainnet
+- Run real streams with on-chain proof
+
+This is the transition from "cool testnet tool" → "actual financial primitive on Bitcoin."
+
+If you're building on Stacks or part of a DAO, this is the phase where you can plug in early and shape how it's used.
+
+Early access is open — happy to walk anyone through it.
+
+---
+
+### LinkedIn — Pre-Milestone 2
+
+*Link: https://www.linkedin.com/posts/jethro-irmiya-a2153427b_milestone-1-complete-milestone-2-is-where-share-7452527603434807296-iqiu*
+
+Milestone 1 complete. Milestone 2 is where StackStream becomes real.
+
+Over the past few weeks, I've been building StackStream in public under the Stacks Endowment — a protocol designed to replace manual, delayed contributor payments with real-time streaming on Bitcoin.
+
+Milestone 1 focused on production readiness:
+
+• Test suite expanded from 66 → 113 (including property-based fuzz testing)
+• 10-person open security review — 0 critical, 0 high findings
+• All medium issues resolved before release
+• v1.0.0-rc1 tagged and published
+
+Now the shift begins.
+
+Milestone 2:
+• Deploy to Stacks mainnet
+• Move the application from testnet to mainnet
+• Execute real, on-chain payment streams
+
+This is the point where StackStream transitions from a testnet prototype to a live financial primitive.
+
+If you run a DAO, manage contributors, or are exploring on-chain coordination, this is the moment to start paying attention.
+
+We're about to see what real-time payroll on Bitcoin actually looks like.

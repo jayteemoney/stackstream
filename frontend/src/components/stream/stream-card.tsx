@@ -14,7 +14,7 @@ import {
 import { STREAM_STATUS } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
 import type { StreamData } from "@/lib/stacks";
-import { Pause, Play, XCircle, ArrowUpCircle, Download } from "lucide-react";
+import { Pause, Play, XCircle, ArrowUpCircle, Download, TimerOff } from "lucide-react";
 
 interface StreamCardProps {
   id: number;
@@ -28,6 +28,8 @@ interface StreamCardProps {
   onCancel?: () => void;
   onTopUp?: () => void;
   onClaim?: () => void;
+  onClaimPartial?: () => void;
+  onExpire?: () => void;
   actionLoading?: boolean;
 }
 
@@ -42,6 +44,8 @@ export function StreamCard({
   onCancel,
   onTopUp,
   onClaim,
+  onClaimPartial,
+  onExpire,
   actionLoading,
 }: StreamCardProps) {
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
@@ -166,6 +170,11 @@ export function StreamCard({
                 <ArrowUpCircle className="h-3.5 w-3.5" /> Top Up
               </Button>
             )}
+            {isPaused && blockHeight > stream.endBlock && onExpire && (
+              <Button variant="danger" size="sm" onClick={onExpire} loading={actionLoading}>
+                <TimerOff className="h-3.5 w-3.5" /> Expire Stream
+              </Button>
+            )}
             {onCancel && (
               <Button variant="danger" size="sm" onClick={onCancel} className="ml-auto">
                 <XCircle className="h-3.5 w-3.5" /> Cancel
@@ -174,18 +183,32 @@ export function StreamCard({
           </>
         )}
 
-        {perspective === "recipient" && !isTerminal && onClaim && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onClaim}
-            loading={actionLoading}
-            disabled={claimable === 0n}
-            className="w-full"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Claim {claimable > 0n ? formatTokenAmount(claimable) : ""} msBTC
-          </Button>
+        {perspective === "recipient" && !isTerminal && (
+          <div className="flex gap-2 w-full">
+            {onClaim && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onClaim}
+                loading={actionLoading}
+                disabled={claimable === 0n}
+                className="flex-1"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Claim All
+              </Button>
+            )}
+            {onClaimPartial && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onClaimPartial}
+                disabled={claimable === 0n || actionLoading}
+              >
+                Partial
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Card>

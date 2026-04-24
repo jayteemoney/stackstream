@@ -12,6 +12,7 @@ import {
   buildPauseStreamTx,
   buildResumeStreamTx,
   buildCancelStreamTx,
+  buildExpireStreamTx,
 } from "@/lib/stacks";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
@@ -154,6 +155,20 @@ export default function ManageStreamsPage() {
                   refetch();
                 } else if (result && !result.confirmed) {
                   toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to cancel: ${result.errorCode ? result.errorCode : result.status}`);
+                }
+              }}
+              onExpire={async () => {
+                const result = await execute(
+                  buildExpireStreamTx({
+                    streamId: stream.id,
+                    tokenContract: stream.token,
+                  })
+                );
+                if (result?.confirmed) {
+                  toast.success("Stream expired and funds settled");
+                  refetch();
+                } else if (result && !result.confirmed) {
+                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to expire: ${result.errorCode ? result.errorCode : result.status}`);
                 }
               }}
             />

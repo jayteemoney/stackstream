@@ -1,0 +1,32 @@
+---
+id: 1
+name: Mainnet deployment
+network: mainnet
+stacks-node: "https://api.hiro.so"
+bitcoin-node: "https://api.hiro.so"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: sip-010-trait
+            expected-sender: SP1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 10260
+            path: contracts/traits/sip-010-trait.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: stream-manager
+            expected-sender: SP1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 311340
+            path: contracts/stream-manager.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: stream-factory
+            expected-sender: SP1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB
+            cost: 60810
+            path: contracts/stream-factory.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.0"

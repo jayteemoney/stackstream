@@ -43,6 +43,7 @@ export default function EarnPage() {
     (a, s) => a + s.ratePerBlock,
     0n
   );
+  const totalDepositAmount = streams.reduce((a, s) => a + s.depositAmount, 0n);
 
   return (
     <div className="space-y-6">
@@ -73,6 +74,7 @@ export default function EarnPage() {
               <RealtimeBalance
                 baseBalance={totalClaimable}
                 ratePerBlock={totalRatePerBlock}
+                depositAmount={totalDepositAmount}
                 isActive={activeStreams.length > 0}
                 size="lg"
               />

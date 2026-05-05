@@ -21,6 +21,8 @@ interface RealtimeBalanceProps {
   baseBalance: bigint;
   /** Rate per block from contract (with PRECISION multiplier) */
   ratePerBlock: bigint;
+  /** Total deposit — display is capped at this value */
+  depositAmount?: bigint;
   /** Is the stream actively accruing? */
   isActive: boolean;
   /** Size variant */
@@ -31,6 +33,7 @@ interface RealtimeBalanceProps {
 export function RealtimeBalance({
   baseBalance,
   ratePerBlock,
+  depositAmount,
   isActive,
   size = "lg",
   className,
@@ -57,9 +60,11 @@ export function RealtimeBalance({
       return;
     }
 
+    const cap = depositAmount !== undefined ? Number(depositAmount) : Infinity;
+
     function tick() {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      const interpolated = baseRef.current + ratePerSecond * elapsed;
+      const interpolated = Math.min(baseRef.current + ratePerSecond * elapsed, cap);
       setDisplayValue(interpolated);
       animationRef.current = requestAnimationFrame(tick);
     }

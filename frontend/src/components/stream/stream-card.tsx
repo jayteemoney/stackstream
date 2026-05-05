@@ -105,6 +105,7 @@ export function StreamCard({
           <RealtimeBalance
             baseBalance={claimable}
             ratePerBlock={stream.ratePerBlock}
+            depositAmount={stream.depositAmount}
             isActive={isActive}
             size="sm"
           />

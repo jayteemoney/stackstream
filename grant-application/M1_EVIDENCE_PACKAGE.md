@@ -305,7 +305,7 @@ Express.js service deployed on Railway. Provides AI-assisted stream querying and
 **D2.2:** Switch production frontend to mainnet (multi-token already implemented) — **READY**  
 **D2.3:** 5 end-to-end streams created and claimed on mainnet (tx hashes as evidence) — **PENDING deployment**
 
-Mainnet deployment plan committed at `deployments/default.mainnet-plan.yaml`. Deployer address: `SP1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB`. Frontend environment switch (Vercel env vars) is prepared and will be applied immediately post-deployment. Realtime claimable balance display bug fixed prior to mainnet launch (display was not capped at deposit amount).
+Mainnet deployment plan committed at `deployments/default.mainnet-plan.yaml`. Deployer address: `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79`. Frontend environment switch (Vercel env vars) is prepared and will be applied immediately post-deployment. Realtime claimable balance display bug fixed prior to mainnet launch (display was not capped at deposit amount).
 
 ---
 

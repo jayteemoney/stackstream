@@ -11,7 +11,7 @@ export const IS_MAINNET = NETWORK === "mainnet";
 // Contract deployer address
 export const CONTRACT_DEPLOYER =
   process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER ??
-  "ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB";
+  "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
 
 // Contract identifiers
 export const STREAM_MANAGER_CONTRACT = `${CONTRACT_DEPLOYER}.stream-manager`;

@@ -343,10 +343,10 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 ## Mainnet Deployment Checklist
 
 ### Pre-deployment
-- [ ] All tests passing on Clarinet simnet: `npm test`
-- [ ] Contracts compile without warnings: `clarinet check`
+- [x] All tests passing on Clarinet simnet: `npm test` — 113 tests passing (May 5, 2026)
+- [x] Contracts compile without warnings: `clarinet check` — clean
 - [ ] `CONTRACT-OWNER` key stored securely (hardware wallet recommended)
-- [ ] Emergency pause procedure documented
+- [x] Emergency pause procedure documented — covered in this file and USER_GUIDE.md
 - [ ] Frontend environment variables updated for mainnet contract addresses
 - [ ] Post-condition mode confirmed: `allow` for `create-stream` and `top-up-stream`, `deny` for claim/cancel
 

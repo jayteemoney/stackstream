@@ -103,11 +103,11 @@ A release candidate means the contracts are finalized and every step of the main
 
 **Release candidate checklist:**
 
-- [ ] All contract references updated for mainnet SIP-010 trait (`SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard`)
-- [ ] `Clarinet.toml` deployment plan updated with mainnet addresses
+- [x] All contract references updated for mainnet SIP-010 trait — deploying own copy under deployer address (permissionless, verified approach)
+- [x] `Clarinet.toml` deployment plan updated with mainnet addresses — `deployments/default.mainnet-plan.yaml` committed
 - [ ] Post-deployment validation script written (calls every read-only function to confirm deployment success)
-- [ ] Emergency-pause admin key management documented
-- [ ] GitHub tag `v1.0.0-rc1` created on the commit that includes the above
+- [x] Emergency-pause admin key management documented — two-step ownership transfer implemented and documented in SECURITY_REVIEW.md
+- [x] GitHub tag `v1.0.0-rc1` created on the commit that includes the above — tagged April 15, 2026
 
 **Success metric:** GitHub release tag `v1.0.0-rc1` exists with release notes describing the RC scope.
 

@@ -296,17 +296,16 @@ Express.js service deployed on Railway. Provides AI-assisted stream querying and
 
 ---
 
-## M2 Preview
+## M2 Status
 
-With M1 complete, M2 work begins immediately.
+**M2 Deadline: May 7, 2026 | Budget: $2,400**  
+**Current date: May 5, 2026 — Deployment in progress**
 
-**M2 Deadline: May 7, 2026 | Budget: $2,400**
+**D2.1:** Deploy stream-manager + stream-factory to Stacks mainnet — **IN PROGRESS**  
+**D2.2:** Switch production frontend to mainnet (multi-token already implemented) — **READY**  
+**D2.3:** 5 end-to-end streams created and claimed on mainnet (tx hashes as evidence) — **PENDING deployment**
 
-**D2.1:** Deploy stream-manager + stream-factory to Stacks mainnet  
-**D2.2:** Switch production frontend to mainnet (multi-token already implemented)  
-**D2.3:** 5 end-to-end streams created and claimed on mainnet (tx hashes as evidence)
-
-The contracts are ready. The deployment plan exists. The only remaining step is end-to-end testing on Clarinet Devnet before committing real STX to mainnet deployment.
+Mainnet deployment plan committed at `deployments/default.mainnet-plan.yaml`. Deployer address: `SP1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB`. Frontend environment switch (Vercel env vars) is prepared and will be applied immediately post-deployment. Realtime claimable balance display bug fixed prior to mainnet launch (display was not capped at deposit amount).
 
 ---
 

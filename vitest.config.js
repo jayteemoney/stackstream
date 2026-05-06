@@ -22,6 +22,7 @@ import { vitestSetupFilePath, getClarinetVitestsArgv } from "@hirosystems/clarin
 export default defineConfig({
   test: {
     environment: "clarinet", // use vitest-environment-clarinet
+    testTimeout: 60000, // 60s per test — fuzz tests with 50 iterations need headroom on CI
     pool: "forks",
     poolOptions: {
       threads: { singleThread: true },

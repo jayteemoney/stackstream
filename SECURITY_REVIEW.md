@@ -22,14 +22,24 @@ Both contracts are written in Clarity v3 on Stacks (Epoch 3.0). Clarity's design
 ## Contract Architecture
 
 ```
-stream-manager.clar  (736 lines)
-  8 public functions — core streaming logic, escrow, access control
-  12 read-only functions — balance queries, stream data
-  1 admin function — emergency circuit breaker
+stream-manager.clar  (907 lines)
+  11 public functions — create-stream, claim, claim-all, pause-stream,
+                        resume-stream, cancel-stream, expire-stream,
+                        top-up-stream, set-emergency-pause,
+                        propose-ownership, accept-ownership
+  14 read-only functions — get-stream, get-stream-status, get-streamed-amount,
+                           get-claimable-balance, get-remaining-balance,
+                           get-refundable-amount, get-sender-streams,
+                           get-recipient-streams, get-sender-stream-count,
+                           get-recipient-stream-count, get-stream-nonce,
+                           is-emergency-paused, get-contract-owner,
+                           get-pending-owner
 
 stream-factory.clar  (218 lines)
-  4 public functions — DAO registry, stream tracking
-  4 read-only functions — registry queries
+  4 public functions — register-dao, update-dao-name, deactivate-dao,
+                       track-stream
+  5 read-only functions — get-dao, get-dao-by-name, get-dao-count,
+                          is-registered-dao, is-stream-tracked
 ```
 
 Tokens are escrowed directly in `stream-manager`. The factory is a pure registry — it holds no funds and has no privileged access to stream-manager.
@@ -439,7 +449,7 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 ### Reviewer 10 — Jayy4rl
 **Date:** April 15, 2026  
 **Method:** Comment on GitHub Issue #1  
-**Scope:** Full review of all 8 public functions in `stream-manager.clar` and all 4 functions in `stream-factory.clar` — the most thorough single-reviewer coverage of the codebase.  
+**Scope:** Full review of all 11 public functions in `stream-manager.clar` and all 4 public functions in `stream-factory.clar` — the most thorough single-reviewer coverage of the codebase.  
 **Findings:** L-14 (claim event lacks requested-amount — **fixed**), L-15 (two redundant asserts in pause-stream — **fixed**), 14 confirmatory Informational findings (I-7 through I-20) verifying correct design across rate guards, authorization model, token conservation, pause math, expiry preconditions, precision arithmetic, factory cross-contract safety, and DAO name registry.  
 **Design validation:** The review independently confirmed correctness of: the `contract-caller` authorization model, token conservation across all exit paths (claim/cancel/expire), `calculate-effective-elapsed` overflow safety, `calculate-streamed-amount-internal` precision, the circuit breaker scope, and `track-stream` re-verification guard. No critical, high, or medium findings.  
 **Verdict:** "The authorization model, token conservation, arithmetic safety, and state transitions are solid. The contract demonstrates excellent defensive programming."

@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import { Cl, ClarityValue } from "@stacks/transactions";
+import seedrandom from "seedrandom";
 
 // Test accounts provided by Clarinet simnet
 const accounts = simnet.getAccounts();
@@ -62,12 +63,18 @@ function createStream(
 }
 
 // ============================================================================
-// PROPERTY TEST HELPER
+// PROPERTY TEST HELPERS
 // ============================================================================
 
-function generateRandomStream(min = 100_000_000n, max = 1_000_000_000n) {
-  const deposit = BigInt(Math.floor(Math.random() * Number(max - min))) + min;
-  const duration = BigInt(Math.floor(Math.random() * 9999) + 1);
+const FUZZ_ITERATIONS = 50;
+
+function generateRandomStream(
+  min = 100_000_000n,
+  max = 1_000_000_000n,
+  rng: () => number = Math.random
+) {
+  const deposit = BigInt(Math.floor(rng() * Number(max - min))) + min;
+  const duration = BigInt(Math.floor(rng() * 9999) + 1);
   return { deposit, duration };
 }
 
@@ -1038,11 +1045,18 @@ describe("StackStream - Stream Manager Contract", () => {
   // ============================================================================
 
   describe("property-based / fuzz tests", () => {
+    const FUZZ_SEED = process.env.FUZZ_SEED ?? Math.random().toString(36).slice(2);
+    const rng = seedrandom(FUZZ_SEED);
+
+    beforeAll(() => {
+      console.log(`[fuzz] seed=${FUZZ_SEED}  re-run with: FUZZ_SEED=${FUZZ_SEED} npm test`);
+    });
+
     // --- Invariant 1: Token Conservation ---
 
     it("invariant: streamed + refundable == deposit at ~25% elapsed", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream();
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(100_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1059,8 +1073,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: streamed + refundable == deposit at ~50% elapsed", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream();
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(100_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1077,8 +1091,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: streamed + refundable == deposit at ~75% elapsed", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream();
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(100_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1095,8 +1109,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: streamed == deposit and refundable == 0 after stream ends", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream();
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(100_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1116,8 +1130,8 @@ describe("StackStream - Stream Manager Contract", () => {
     // --- Invariant 2: Claim Bounds ---
 
     it("invariant: claimed amount never exceeds deposit and claim-all leaves zero claimable", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream();
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(100_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1139,9 +1153,9 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: claim-all on fully elapsed stream returns exactly remaining deposit", () => {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
         // Use evenly divisible amounts to avoid precision dust
-        const duration = BigInt(Math.floor(Math.random() * 100) + 10);
+        const duration = BigInt(Math.floor(rng() * 100) + 10);
         const deposit = duration * 1_000_000n; // always divisible
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
@@ -1157,8 +1171,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: partial claim — claimed == requested when requested < claimable", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1181,8 +1195,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: sequential partial claims — sum never exceeds deposit", () => {
-      for (let i = 0; i < 5; i++) {
-        const duration = BigInt(Math.floor(Math.random() * 200) + 50);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const duration = BigInt(Math.floor(rng() * 200) + 50);
         const deposit = duration * 1_000_000n;
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
@@ -1209,8 +1223,8 @@ describe("StackStream - Stream Manager Contract", () => {
     // --- Invariant 3: Pause Gap Accounting (single cycle) ---
 
     it("invariant: claimable balance does not increase while stream is paused", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1236,8 +1250,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: streamed amount frozen during pause — same before and after waiting", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1257,8 +1271,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: balance at resume equals balance at pause (no accrual during pause)", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1268,7 +1282,7 @@ describe("StackStream - Stream Manager Contract", () => {
 
         const claimableAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
 
-        const pauseDuration = Math.floor(Math.random() * 15) + 5;
+        const pauseDuration = Math.floor(rng() * 15) + 5;
         simnet.mineEmptyBlocks(pauseDuration);
 
         simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
@@ -1340,8 +1354,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: multi-cycle pause — token conservation holds throughout", () => {
-      for (let i = 0; i < 3; i++) {
-        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      for (let i = 0; i < 20; i++) {
+        const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1380,8 +1394,8 @@ describe("StackStream - Stream Manager Contract", () => {
     // --- Invariant 5: Top-up Rate Preservation ---
 
     it("invariant: rate-per-block unchanged after top-up", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1403,8 +1417,8 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: new deposit equals original deposit plus top-up amount", () => {
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;
@@ -1424,8 +1438,8 @@ describe("StackStream - Stream Manager Contract", () => {
 
     it("invariant: new end-block == old end-block + (top-up * PRECISION / rate)", () => {
       const PRECISION = 1_000_000_000_000n;
-      for (let i = 0; i < 5; i++) {
-        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      for (let i = 0; i < FUZZ_ITERATIONS; i++) {
+        const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
         const streamId = (createResult.result as any).value.value as bigint;

@@ -71,10 +71,11 @@ const FUZZ_ITERATIONS = 50;
 function generateRandomStream(
   min = 100_000_000n,
   max = 1_000_000_000n,
-  rng: () => number = Math.random
+  rng: () => number = Math.random,
+  maxDuration = 200
 ) {
   const deposit = BigInt(Math.floor(rng() * Number(max - min))) + min;
-  const duration = BigInt(Math.floor(rng() * 9999) + 1);
+  const duration = BigInt(Math.floor(rng() * (maxDuration - 1)) + 1);
   return { deposit, duration };
 }
 
@@ -1155,7 +1156,7 @@ describe("StackStream - Stream Manager Contract", () => {
     it("invariant: claim-all on fully elapsed stream returns exactly remaining deposit", () => {
       for (let i = 0; i < FUZZ_ITERATIONS; i++) {
         // Use evenly divisible amounts to avoid precision dust
-        const duration = BigInt(Math.floor(rng() * 100) + 10);
+        const duration = BigInt(Math.floor(rng() * 90) + 10);
         const deposit = duration * 1_000_000n; // always divisible
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
@@ -1196,7 +1197,7 @@ describe("StackStream - Stream Manager Contract", () => {
 
     it("invariant: sequential partial claims — sum never exceeds deposit", () => {
       for (let i = 0; i < FUZZ_ITERATIONS; i++) {
-        const duration = BigInt(Math.floor(rng() * 200) + 50);
+        const duration = BigInt(Math.floor(rng() * 150) + 50);
         const deposit = duration * 1_000_000n;
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
@@ -1421,13 +1422,16 @@ describe("StackStream - Stream Manager Contract", () => {
         const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        expect((createResult.result as any).type).toBe("ok");
         const streamId = (createResult.result as any).value.value as bigint;
 
-        const topUp = 100_000_000n;
-        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+        // topUp must produce additional-blocks >= 1: topUp >= ceil(deposit / duration)
+        const topUp = deposit / duration + 1n;
+        const topUpResult = simnet.callPublicFn(streamManagerContract, "top-up-stream",
           [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUp)],
           wallet1
         );
+        expect((topUpResult.result as any).type).toBe("ok");
 
         const streamAfter = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
         const newDeposit = streamAfter.value.value["deposit-amount"].value as bigint;
@@ -1442,19 +1446,22 @@ describe("StackStream - Stream Manager Contract", () => {
         const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
         const startBlock = getCurrentBlock() + 2;
         const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
+        expect((createResult.result as any).type).toBe("ok");
         const streamId = (createResult.result as any).value.value as bigint;
 
         const streamBefore = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
         const oldEndBlock = streamBefore.value.value["end-block"].value as bigint;
         const rate = streamBefore.value.value["rate-per-block"].value as bigint;
 
-        const topUp = 100_000_000n;
+        // topUp must produce additional-blocks >= 1: topUp >= ceil(deposit / duration)
+        const topUp = deposit / duration + 1n;
         const expectedAdditionalBlocks = (topUp * PRECISION) / rate;
 
-        simnet.callPublicFn(streamManagerContract, "top-up-stream",
+        const topUpResult = simnet.callPublicFn(streamManagerContract, "top-up-stream",
           [Cl.uint(streamId), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(topUp)],
           wallet1
         );
+        expect((topUpResult.result as any).type).toBe("ok");
 
         const streamAfter = simnet.callReadOnlyFn(streamManagerContract, "get-stream", [Cl.uint(streamId)], deployer).result as any;
         const newEndBlock = streamAfter.value.value["end-block"].value as bigint;

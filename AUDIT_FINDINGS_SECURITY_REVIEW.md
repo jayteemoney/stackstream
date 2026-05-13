@@ -1356,3 +1356,306 @@ No griefing possible - deterministic settlement.
 **No vulnerabilities found!**
 
 ---
+
+
+### top-up-stream (Lines 619-691)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed - MULTIPLE FIXES VERIFIED
+
+#### Purpose: Extend Stream Duration While Preserving Rate
+
+**The Goal:**
+```
+Original: 1000 tokens over 100 blocks = 10 tokens/block
+Top-up:   +500 tokens
+Result:   1500 tokens over 150 blocks = 10 tokens/block (same rate!)
+```
+
+#### Authorization (Line 672)
+✅ **Sender-only:** Only sender can top up  
+✅ **Uses `contract-caller`:** Correct
+
+#### Validation (Lines 675-677)
+✅ **Line 675:** `amount > 0` - prevents zero top-up  
+✅ **Line 676:** Token substitution prevention
+
+#### 🔥 L-12 FIX: Rate > 0 Guard (Lines 679-680)
+
+**Original Issue (IdokoMarcelina):**
+> "No explicit rate > 0 guard before division"
+
+**The Fix:**
+```clarity
+(asserts! (> rate u0) ERR-INVALID-DURATION)
+```
+
+**Why this matters:**
+- Division by zero would crash the transaction
+- But rate is guaranteed >= 1 by create-stream's L-7 fix
+- This is **defensive hardening** - makes function self-contained
+
+**Verification:**
+- ✅ Guard is present (line 680)
+- ✅ Prevents division by zero
+- ✅ Makes function safe at any call site
+- ✅ Even if upstream invariants change
+
+**Verdict:** ✅ **L-12 FIX IS CORRECT!**
+
+#### 🔥 L-8 FIX: Zero-Extension Guard (Lines 682-685)
+
+**Original Issue (Godbrand0):**
+> "Amounts too small to extend by 1 block are silently accepted, tokens trapped"
+
+**The Problem:**
+```
+rate = 1000 tokens/block
+top-up = 500 tokens
+additional-blocks = 500 / 1000 = 0 (integer division!)
+end-block unchanged
+Tokens in escrow but unreachable! ❌
+```
+
+**The Fix:**
+```clarity
+(asserts! (>= (* amount PRECISION) rate) ERR-INVALID-AMOUNT)
+```
+
+**Why this works:**
+```
+amount * PRECISION >= rate
+amount * 1e12 >= rate
+amount >= rate / 1e12
+
+This ensures additional-blocks >= 1
+```
+
+**Verification:**
+- ✅ Guard is present (line 684)
+- ✅ Prevents zero-extension
+- ✅ Mirrors create-stream's zero-rate guard
+- ✅ Rejects top-ups too small to extend by 1 block
+
+**Test Case:**
+```
+rate = 1000 * 1e12 (1000 tokens/block with precision)
+top-up = 500 tokens
+
+Check: 500 * 1e12 >= 1000 * 1e12?
+       500e12 >= 1000e12?
+       NO! Rejected ✅
+
+Minimum valid top-up = 1000 tokens (extends by 1 block)
+```
+
+**Verdict:** ✅ **L-8 FIX IS CORRECT!**
+
+#### State Checks (Lines 687-688)
+✅ **Line 687:** Cannot top up cancelled stream  
+✅ **Line 688:** Cannot top up depleted stream
+
+**Question:** Can you top up a PAUSED stream?
+- **Answer:** YES! No check for STATUS-PAUSED
+- **Is this correct?** YES! Sender should be able to add funds even if paused
+- **Effect:** Extends end-block, giving more time after resume
+
+**Verdict:** ✅ **Paused top-up is intentional and correct!**
+
+#### 🔥 L-10 FIX: End-Block Guard (Lines 690-694)
+
+**Original Issue (Zachyo):**
+> "Top-up on paused-and-expired stream extends end-block, bypassing expire-stream"
+
+**The Problem:**
+```
+Stream: blocks 100-200
+Paused at block 180
+Current block: 250 (past end)
+Sender tops up → end-block extends to 300
+Now sender can resume! (bypasses expire-stream)
+```
+
+**The Fix:**
+```clarity
+(asserts! (< stacks-block-height end-block) ERR-STREAM-ENDED)
+```
+
+**Why this matters:**
+- expire-stream is for stuck funds recovery
+- If sender can top-up past end, they can "unstick" it themselves
+- This would bypass the permissionless settlement
+- Recipients would be at sender's mercy again
+
+**Verification:**
+- ✅ Guard is present (line 694)
+- ✅ Prevents topping up expired streams
+- ✅ Preserves expire-stream's purpose
+- ✅ Topping up not-yet-expired paused streams still works
+
+**Test Cases:**
+```
+Case 1: Active stream, not expired
+- current < end-block
+- Can top up ✅
+
+Case 2: Paused stream, not expired
+- current < end-block
+- Can top up ✅
+
+Case 3: Paused stream, expired
+- current >= end-block
+- Cannot top up ✅ (L-10 fix)
+- Must use expire-stream instead
+
+Case 4: Active stream, expired
+- current >= end-block
+- Cannot top up ✅
+- Sender should cancel instead
+```
+
+**Verdict:** ✅ **L-10 FIX IS CORRECT!**
+
+#### Rate Preservation Math (Lines 696-702)
+
+**The Calculation:**
+```clarity
+additional-blocks = (amount * PRECISION) / rate
+new-deposit = deposit + amount
+new-end-block = end-block + additional-blocks
+```
+
+**Verification:**
+```
+Original rate = deposit * PRECISION / duration
+New rate = new-deposit * PRECISION / new-duration
+         = (deposit + amount) * PRECISION / (duration + additional-blocks)
+
+Substitute additional-blocks = amount * PRECISION / rate:
+New rate = (deposit + amount) * PRECISION / (duration + (amount * PRECISION / rate))
+
+Substitute rate = deposit * PRECISION / duration:
+New rate = (deposit + amount) * PRECISION / (duration + (amount * PRECISION / (deposit * PRECISION / duration)))
+         = (deposit + amount) * PRECISION / (duration + (amount * duration / deposit))
+         = (deposit + amount) * PRECISION / ((duration * deposit + amount * duration) / deposit)
+         = (deposit + amount) * PRECISION * deposit / (duration * (deposit + amount))
+         = deposit * PRECISION / duration
+         = original rate ✅
+```
+
+**Verdict:** ✅ **RATE PRESERVATION IS MATHEMATICALLY PERFECT!**
+
+#### Token Transfer (Lines 705-710)
+✅ **Line 705:** Uses `try!` - reverts if transfer fails  
+✅ **Line 706:** Amount is the top-up amount  
+✅ **Line 707:** From caller (sender)  
+✅ **Line 708:** To contract escrow  
+✅ **Transfer happens BEFORE state update** - correct!
+
+#### State Update (Lines 713-716)
+✅ **Line 714:** `deposit-amount` increased  
+✅ **Line 715:** `end-block` extended
+
+**Note:** `rate-per-block` is NOT updated (it's derived, not stored... wait, it IS stored!)
+
+**Question:** Should rate-per-block be updated?
+- **Answer:** NO! Rate stays the same (that's the point!)
+- **Verification:** Let me check if rate is used elsewhere...
+- **Result:** Rate is only used in calculations, not for validation
+- **Verdict:** ✅ **Correct - rate doesn't need updating**
+
+#### Event Emission (Lines 719+)
+✅ Includes all relevant data  
+✅ Shows additional-amount and additional-blocks  
+✅ Shows new totals
+
+---
+
+## 🔍 Deep Dive: Top-Up Edge Cases
+
+### Edge Case 1: Top up by exact rate amount
+```
+rate = 1000 * 1e12
+top-up = 1000 tokens
+
+additional-blocks = 1000 * 1e12 / (1000 * 1e12) = 1
+Extends by exactly 1 block ✅
+```
+
+### Edge Case 2: Top up by double the deposit
+```
+deposit = 1000, duration = 100, rate = 10 * 1e12
+top-up = 2000
+
+additional-blocks = 2000 * 1e12 / (10 * 1e12) = 200
+new-deposit = 3000
+new-duration = 300
+new-rate = 3000 * 1e12 / 300 = 10 * 1e12 ✅
+Rate preserved!
+```
+
+### Edge Case 3: Top up paused stream (not expired)
+```
+Stream: blocks 100-200
+Paused at block 150
+Current block: 160
+Top-up: 500 tokens
+
+Can top up? YES (160 < 200)
+Effect: end-block extends to 250
+After resume: more time to stream ✅
+```
+
+### Edge Case 4: Try to top up expired stream
+```
+Stream: blocks 100-200
+Current block: 250
+Top-up: 500 tokens
+
+Can top up? NO (250 >= 200)
+Error: ERR-STREAM-ENDED ✅
+Must use expire-stream or cancel instead
+```
+
+### Edge Case 5: Multiple top-ups
+```
+Original: 1000 tokens, 100 blocks, rate = 10
+Top-up 1: +500 tokens → 1500 tokens, 150 blocks, rate = 10 ✅
+Top-up 2: +300 tokens → 1800 tokens, 180 blocks, rate = 10 ✅
+Rate preserved through multiple top-ups!
+```
+
+**All edge cases pass!** ✅
+
+---
+
+## Security Assessment: top-up-stream
+
+**Overall:** ✅ **SECURE**
+
+**Community Fixes Verified:**
+- ✅ **L-8 (Godbrand0):** Zero-extension prevented
+- ✅ **L-10 (Zachyo):** Expired stream top-up blocked
+- ✅ **L-12 (IdokoMarcelina):** Rate > 0 guard added
+
+**Rate Preservation:** ✅ **MATHEMATICALLY PERFECT**
+- Algebraic proof verified
+- Multiple top-ups work correctly
+- Rate never changes
+
+**Authorization:** ✅ **CORRECT**
+- Sender-only
+
+**State Management:** ✅ **CORRECT**
+- Can top up ACTIVE or PAUSED (not expired)
+- Cannot top up CANCELLED or DEPLETED
+- Cannot top up expired streams
+
+**Transfer Logic:** ✅ **ATOMIC**
+- Uses try!
+- Transfer before state update
+- No partial state
+
+**No vulnerabilities found!**
+
+---

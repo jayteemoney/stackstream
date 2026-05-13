@@ -1096,3 +1096,263 @@ Total distributed = recipient-amount + sender-refund
 **No vulnerabilities found!**
 
 ---
+
+
+### expire-stream (Lines 545-607)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed - M-1 FIX VERIFICATION
+
+#### Purpose: Permissionless Stuck-Funds Recovery
+
+**The Problem (M-1):**
+```
+1. Sender pauses stream at block 180
+2. Stream end-block is 200
+3. Current block reaches 250 (past end)
+4. Sender goes silent (doesn't resume or cancel)
+5. resume-stream blocked (L-4 fix prevents zombie state)
+6. cancel-stream blocked (sender-only)
+7. Funds stuck forever! ❌
+```
+
+**The Solution (expire-stream):**
+```
+Anyone can call expire-stream when:
+- Stream is PAUSED
+- Current block >= end-block
+- Settles like cancel: recipient gets earned, sender gets refund
+```
+
+#### Authorization
+✅ **PERMISSIONLESS!** No authorization check  
+✅ **This is intentional** - anyone can trigger settlement  
+✅ **Line 597:** Comment explicitly states "No sender authorization required"
+
+**Why permissionless?**
+- Sender is unresponsive (that's the problem!)
+- Recipient needs their earned tokens
+- Sender should get their refund too
+- No trust needed - math is deterministic
+
+**Is this safe?**
+- ✅ Can only be called on PAUSED streams
+- ✅ Can only be called after end-block
+- ✅ Distribution is deterministic (same as cancel)
+- ✅ No way to grief either party
+
+**Verdict:** ✅ **Permissionless design is correct!**
+
+#### Preconditions (Lines 600-605)
+
+**Line 600: Must be PAUSED**
+```clarity
+(asserts! (is-eq status STATUS-PAUSED) ERR-STREAM-NOT-PAUSED)
+```
+✅ **Correct!** Only paused streams can be expired  
+✅ **Why?** Active streams can be cancelled by sender  
+✅ **Why?** Depleted streams are already settled  
+✅ **Why?** Cancelled streams are already settled
+
+**Line 603: Must be past end-block**
+```clarity
+(asserts! (>= stacks-block-height end-block) ERR-STREAM-NOT-EXPIRED)
+```
+✅ **Correct!** Streaming window must be closed  
+✅ **Why?** If not past end, sender could still resume  
+✅ **Why?** This is the "stuck" condition - can't resume, won't cancel
+
+**Line 606: Token substitution prevention**
+```clarity
+(asserts! (is-eq token-principal (contract-of token)) ERR-TOKEN-MISMATCH)
+```
+✅ **Standard protection**
+
+**Verdict:** ✅ **Preconditions are exactly right!**
+
+#### Token Conservation (Lines 589-593)
+
+**Same math as cancel-stream:**
+```clarity
+effective-elapsed = calculate-effective-elapsed(...) // Frozen at paused-at-block
+streamed = calculate-streamed-amount-internal(...)
+recipient-amount = streamed - withdrawn
+sender-refund = deposit - streamed
+```
+
+✅ **Identical to cancel-stream**  
+✅ **Token conservation already verified**  
+✅ **Total = deposit - withdrawn (exact escrow balance)**
+
+**Verdict:** ✅ **Math is correct!**
+
+#### Transfer Logic (Lines 609-624)
+
+**Same pattern as cancel-stream:**
+1. Transfer to recipient (if any)
+2. Transfer to sender (if any)
+3. Update state
+4. Emit event
+
+✅ **Both use `try!`** - atomic  
+✅ **Same ordering** - recipient first, sender second  
+✅ **Status → CANCELLED** - same terminal state
+
+**Verdict:** ✅ **Transfer logic is correct!**
+
+---
+
+## 🔍 Deep Dive: expire-stream Edge Cases
+
+### Edge Case 1: Expire immediately after end-block
+```
+Stream: blocks 100-200
+Paused at block 180
+Current block: 200 (exactly at end)
+
+Can expire? YES (>= end-block)
+effective-elapsed = 80 (frozen at pause)
+streamed = 80% of deposit
+Distribution: Fair ✅
+```
+
+### Edge Case 2: Expire long after end-block
+```
+Stream: blocks 100-200
+Paused at block 180
+Current block: 1000 (way past end)
+
+Can expire? YES
+effective-elapsed = 80 (still frozen at pause!)
+streamed = 80% of deposit
+Distribution: Same as case 1 ✅
+
+Time doesn't matter - frozen at pause!
+```
+
+### Edge Case 3: Try to expire active stream
+```
+Stream: ACTIVE
+Current block >= end-block
+
+Can expire? NO
+Error: ERR-STREAM-NOT-PAUSED ✅
+
+Correct! Sender can cancel active streams.
+```
+
+### Edge Case 4: Try to expire before end-block
+```
+Stream: PAUSED
+Current block < end-block
+
+Can expire? NO
+Error: ERR-STREAM-NOT-EXPIRED ✅
+
+Correct! Sender could still resume.
+```
+
+### Edge Case 5: Griefing attempt
+```
+Attacker calls expire-stream on someone else's paused stream
+
+Result:
+- Recipient gets earned tokens ✅
+- Sender gets refund ✅
+- Both parties benefit!
+
+No griefing possible - deterministic settlement.
+```
+
+**All edge cases pass!** ✅
+
+---
+
+## 🚨 Security Analysis: Permissionless Function
+
+**Question:** Can permissionless settlement be abused?
+
+**Attack Scenario 1: Premature expiry**
+- Attacker tries to expire before end-block
+- **Blocked:** `>= end-block` check
+
+**Attack Scenario 2: Expire active stream**
+- Attacker tries to expire active stream
+- **Blocked:** `STATUS-PAUSED` check
+
+**Attack Scenario 3: Grief sender**
+- Attacker expires to prevent sender from cancelling
+- **Not griefing:** Sender gets same refund as cancel
+- **Actually helpful:** Sender gets their money back!
+
+**Attack Scenario 4: Grief recipient**
+- Attacker expires to prevent recipient from claiming more
+- **Not griefing:** Recipient gets all earned tokens
+- **Actually helpful:** Recipient gets their money!
+
+**Attack Scenario 5: Front-run sender's cancel**
+- Sender tries to cancel paused-expired stream
+- Attacker front-runs with expire
+- **Result:** Identical distribution (same math!)
+- **No advantage to either party**
+
+**Verdict:** ✅ **No attack vectors! Permissionless is safe!**
+
+---
+
+## 🎯 M-1 Fix Verification
+
+**Original Issue (dannyy2000):**
+> "Paused stream past end-block — unearned portion permanently locked, no permissionless recovery"
+
+**Fix Applied:**
+✅ Added `expire-stream` function  
+✅ Permissionless (anyone can call)  
+✅ Only works on PAUSED streams past end-block  
+✅ Settles identically to cancel-stream  
+✅ No new trust assumptions  
+✅ Minimal surface area
+
+**Verification:**
+- ✅ Solves the stuck-funds problem
+- ✅ No new vulnerabilities introduced
+- ✅ Token conservation maintained
+- ✅ Atomic transfers
+- ✅ No griefing possible
+
+**Verdict:** ✅ **M-1 FIX IS CORRECT AND COMPLETE!**
+
+---
+
+## Security Assessment: expire-stream
+
+**Overall:** ✅ **SECURE**
+
+**Permissionless Design:** ✅ **SAFE**
+- No authorization needed (intentional)
+- No griefing vectors
+- Deterministic settlement
+- Benefits both parties
+
+**Token Conservation:** ✅ **PERFECT**
+- Same math as cancel-stream
+- Already verified
+
+**Preconditions:** ✅ **EXACTLY RIGHT**
+- PAUSED only
+- Past end-block only
+- Solves stuck-funds problem
+
+**Transfer Logic:** ✅ **ATOMIC**
+- Same pattern as cancel
+- Both use try!
+- No partial state
+
+**M-1 Fix:** ✅ **VERIFIED**
+- Solves the problem
+- No new issues
+- Minimal design
+
+**No vulnerabilities found!**
+
+---

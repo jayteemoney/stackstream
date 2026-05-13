@@ -103,154 +103,182 @@
 
 ### Critical Findings 🔴
 
-> None found / [X findings]
-
----
-
-#### [C-1] [Title]
-
-**Severity:** Critical  
-**Contract:** [stream-manager.clar / stream-factory.clar]  
-**Function:** [function-name]  
-**Status:** [New / Confirmed / Fixed / False Positive]
-
-**Description:**
-[Clear explanation of the vulnerability]
-
-**Impact:**
-- **Who is affected:** [Users/DAOs/Protocol]
-- **What can go wrong:** [Specific attack outcome]
-- **Funds at risk:** [Amount/Percentage]
-
-**Proof of Concept:**
-```typescript
-// Test case demonstrating the vulnerability
-it("should demonstrate [attack]", () => {
-  // PoC code here
-});
-```
-
-**Recommendation:**
-```clarity
-;; Suggested fix
-(define-public (function-name ...)
-  ;; Fixed implementation
-)
-```
-
-**References:**
-- [Related CVE / Similar issue]
+> None found so far
 
 ---
 
 ### High Findings 🟠
 
-> None found / [X findings]
-
----
-
-#### [H-1] [Title]
-
-**Severity:** High  
-**Contract:** [contract-name]  
-**Function:** [function-name]  
-**Status:** [New / Confirmed / Fixed / False Positive]
-
-**Description:**
-[Explanation]
-
-**Impact:**
-[Impact details]
-
-**Proof of Concept:**
-```clarity
-;; PoC code
-```
-
-**Recommendation:**
-[Fix suggestion]
+> None found so far
 
 ---
 
 ### Medium Findings 🟡
 
-> None found / [X findings]
-
----
-
-#### [M-1] [Title]
-
-**Severity:** Medium  
-**Contract:** [contract-name]  
-**Function:** [function-name]  
-**Status:** [New / Confirmed / Fixed / False Positive]
-
-**Description:**
-[Explanation]
-
-**Impact:**
-[Impact details]
-
-**Proof of Concept:**
-```clarity
-;; PoC code
-```
-
-**Recommendation:**
-[Fix suggestion]
+> None found so far
 
 ---
 
 ### Low Findings 🟢
 
-> None found / [X findings]
-
----
-
-#### [L-1] [Title]
-
-**Severity:** Low  
-**Contract:** [contract-name]  
-**Function:** [function-name]  
-**Status:** [New / Confirmed / Fixed / False Positive]
-
-**Description:**
-[Explanation]
-
-**Impact:**
-[Impact details]
-
-**Proof of Concept:**
-```clarity
-;; PoC code
-```
-
-**Recommendation:**
-[Fix suggestion]
+> None found so far
 
 ---
 
 ### Informational Findings ℹ️
 
-> None found / [X findings]
+#### [I-1] Constant naming convention uses hyphens instead of underscores
+
+**Severity:** Informational  
+**Contract:** stream-manager.clar  
+**Lines:** Throughout (constants defined at top)  
+**Status:** Observed
+
+**Description:**
+All constants use kebab-case (e.g., `STATUS-ACTIVE`, `ERR-NOT-AUTHORIZED`) instead of SCREAMING_SNAKE_CASE (e.g., `STATUS_ACTIVE`, `ERR_NOT_AUTHORIZED`). While this is valid Clarity syntax and doesn't affect functionality, it deviates from common convention in many languages.
+
+**Impact:**
+- No functional impact
+- Clarity allows hyphens in identifiers
+- This is actually idiomatic Clarity style (Lisp-like)
+
+**Recommendation:**
+No change needed. This is standard Clarity convention.
+
+**Status:** Accepted - This is idiomatic Clarity style
 
 ---
 
-#### [I-1] [Title]
+## Function Analysis
 
-**Severity:** Informational  
-**Contract:** [contract-name]  
-**Function:** [function-name]  
-**Status:** [New / Confirmed / Fixed / False Positive]
+### create-stream (Lines 195-277)
 
-**Description:**
-[Explanation]
+**Review Date:** May 13, 2026  
+**Status:** ✅ In Progress
+
+#### Authorization
+- ✅ **Permissionless:** Any caller can create a stream
+- ✅ **Uses `contract-caller`:** Correct (not `tx-sender`)
+- ✅ **Emergency pause check:** Blocks creation when paused
+
+#### Input Validation (Lines 220-233)
+✅ **Line 220:** `emergency-paused` check - prevents new streams during emergency  
+✅ **Line 221:** `deposit-amount > 0` - prevents zero-value streams  
+✅ **Line 222:** `duration-blocks > 0` - prevents division by zero  
+✅ **Line 223:** `start-block >= stacks-block-height` - prevents past start times  
+✅ **Line 224:** `recipient != contract-caller` - prevents self-streaming  
+✅ **Line 225:** `recipient != (as-contract tx-sender)` - prevents contract as recipient  
+✅ **Line 228-229:** Stream count limits (100 per user) - DoS prevention  
+✅ **Line 233:** Zero-rate guard: `deposit * PRECISION >= duration` - prevents rate = 0
+
+**Observation:** All validation happens BEFORE calculations. Good defensive programming!
+
+#### Calculations (Lines 236-242)
+✅ **Line 237:** `sender = contract-caller` - correct authorization context  
+✅ **Line 238:** `stream-id = nonce + 1` - monotonic, never reused  
+✅ **Line 239:** `end-block = start-block + duration` - straightforward  
+⚠️ **Line 239:** **POTENTIAL ISSUE** - What if `start-block + duration-blocks` overflows?  
+✅ **Line 240:** `token-principal = contract-of token` - extracts principal for storage  
+✅ **Line 241:** `rate-per-block = (deposit * PRECISION) / duration` - high precision math
+
+**Finding Alert:** Need to check overflow on `end-block` calculation!
+
+#### Token Transfer (Lines 244-248)
+✅ **Line 244:** Uses `try!` - reverts entire tx if transfer fails  
+✅ **Line 245:** Transfer FROM sender TO contract  
+✅ **Line 246:** Amount is `deposit-amount` (full amount upfront)  
+✅ **Line 247:** Destination is `(as-contract tx-sender)` - contract escrow  
+✅ **Line 248:** Memo is `none` - no memo on token transfer
+
+**Observation:** Token transfer happens AFTER validation but BEFORE state changes. If transfer fails, no state is written. Good!
+
+#### State Changes (Lines 251-264)
+✅ **Line 251:** `map-set` creates new stream entry  
+✅ **Line 252-264:** All fields initialized correctly  
+✅ **Line 258:** `status: STATUS-ACTIVE` - starts active  
+✅ **Line 259:** `paused-at-block: u0` - not paused initially  
+✅ **Line 260:** `total-paused-duration: u0` - no pause time yet  
+✅ **Line 261:** `created-at-block: stacks-block-height` - timestamp
+
+#### Index Updates (Lines 267-268)
+✅ **Line 267:** `add-sender-stream` - adds to sender's list  
+✅ **Line 268:** `add-recipient-stream` - adds to recipient's list  
+✅ Both use `try!` - will revert if list is full (100 limit)
+
+#### Nonce Update (Line 271)
+✅ **Line 271:** `stream-nonce` incremented AFTER stream is created  
+✅ Nonce is never reused
+
+#### Event Emission (Lines 274-277)
+✅ Event includes all relevant data  
+✅ Emitted at the end (after all state changes)
+
+---
+
+## 🚨 POTENTIAL FINDING #1: Integer Overflow on end-block
+
+**Severity:** Low (likely)  
+**Function:** create-stream  
+**Line:** 239
+
+**Issue:**
+```clarity
+(end-block (+ start-block duration-blocks))
+```
+
+If `start-block` is very large and `duration-blocks` is also large, this addition could theoretically overflow the uint128 max value.
+
+**Analysis:**
+- Clarity uint max: 2^128 - 1 ≈ 3.4 × 10^38
+- Stacks block height grows ~1 block per 10 minutes
+- Even after millions of years, block height won't approach uint128 max
+- **Verdict:** Not a practical concern, but worth noting
 
 **Impact:**
-[Impact details]
+- Extremely unlikely in practice
+- Clarity aborts on overflow (doesn't wrap)
+- If it did happen, transaction would fail (safe failure)
 
 **Recommendation:**
-[Suggestion]
+No fix needed. Document as theoretical only.
+
+**Status:** Informational - Not a real-world risk
+
+---
+
+## Questions for Further Investigation
+
+1. ✅ **Can recipient be a contract?** 
+   - Yes, any principal is allowed
+   - Contract recipients could have custom claim logic
+   - Need to verify this doesn't create issues
+
+2. ⚠️ **What if start-block is far in the future (e.g., 1 million blocks)?**
+   - Stream would be valid but not start for a long time
+   - Tokens locked in escrow until start-block
+   - Sender could cancel to recover funds
+   - **This seems intentional** - allows scheduling future streams
+
+3. ✅ **Token transfer ordering:**
+   - Transfer happens BEFORE state changes
+   - If transfer fails, entire tx reverts
+   - No partial state possible
+   - **This is correct!**
+
+4. ⚠️ **Stream count limit (100) is lifetime, not concurrent:**
+   - Once you hit 100 streams, you can't create more
+   - Even if old streams are cancelled/depleted
+   - This is documented in SECURITY_REVIEW.md as L-2
+   - **Known limitation, accepted for v1**
+
+---
+
+## Next Steps
+
+- [ ] Review `claim` function
+- [ ] Test overflow scenario (theoretical)
+- [ ] Verify contract recipient behavior
+- [ ] Check if far-future start-block causes issues
 
 ---
 

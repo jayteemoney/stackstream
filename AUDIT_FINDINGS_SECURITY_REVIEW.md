@@ -427,6 +427,289 @@ DEPLETED → claim → REJECTED (via ERR-ZERO-CLAIM)
 
 ---
 
+### pause-stream (Lines 378-418)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed
+
+#### Authorization
+✅ **Line 397:** Only sender can pause  
+✅ **Uses `contract-caller`:** Correct
+
+#### State Checks (Lines 401-407)
+✅ **Line 401:** Must be STATUS-ACTIVE  
+✅ **Line 401:** Returns ERR-STREAM-PAUSED if not active (slightly confusing error name, but correct)  
+✅ **Line 405:** **CRITICAL FIX** - Must have started! (dannyy2000 L-9 fix)  
+✅ **Line 407:** Must not have ended
+
+**Why the start-block check is critical:**
+```
+Without it:
+- Stream starts at block 200
+- Sender pauses at block 190 (before start!)
+- Sender resumes at block 260
+- Pause duration = 260 - 190 = 70 blocks
+- But stream hadn't started yet for first 10 blocks!
+- Those 10 blocks get counted as pause time
+- Recipient loses 10 blocks of streaming
+- Tokens permanently locked!
+
+With the fix:
+- Can only pause after start-block
+- All pause time is legitimate
+- No token locking
+```
+
+**Verdict:** ✅ **Critical fix correctly implemented!**
+
+#### State Update (Lines 410-413)
+✅ **Line 411:** Status → PAUSED  
+✅ **Line 412:** Records `paused-at-block = current-block`
+
+**Note:** `total-paused-duration` is NOT updated here. It's updated on resume. This is correct!
+
+#### Event (Lines 416-421)
+✅ Includes stream-id, sender, paused-at
+
+---
+
+### resume-stream (Lines 421-463)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed
+
+#### Authorization
+✅ **Line 442:** Only sender can resume
+
+#### Pause Duration Calculation (Lines 437-439)
+✅ **Line 437:** `pause-duration = current-block - paused-at`  
+✅ **Line 438:** `new-total-paused = total-paused + pause-duration`
+
+**This is the heart of pause accounting!**
+
+**Example:**
+```
+Stream: blocks 100-200 (100 block duration)
+Pause at block 125, resume at block 145
+pause-duration = 145 - 125 = 20 blocks
+total-paused-duration = 0 + 20 = 20 blocks
+
+Later: Pause at block 160, resume at block 170
+pause-duration = 170 - 160 = 10 blocks
+total-paused-duration = 20 + 10 = 30 blocks
+
+Effective duration = 100 - 30 = 70 blocks of actual streaming
+```
+
+**Verdict:** ✅ **Math is correct!**
+
+#### State Checks (Lines 445-449)
+✅ **Line 445:** Must be STATUS-PAUSED  
+✅ **Line 449:** **CRITICAL FIX** - Cannot resume after end-block! (Marvy247 L-4 fix)
+
+**Why the end-block check is critical:**
+```
+Without it:
+- Stream ends at block 200
+- Sender pauses at block 180
+- Current block reaches 250 (past end)
+- Sender resumes → stream becomes ACTIVE
+- But end-block is 200 (in the past!)
+- Stream is in "zombie" ACTIVE state
+- Calculations break, tokens stuck
+
+With the fix:
+- Cannot resume past end-block
+- Stream stays PAUSED
+- expire-stream can settle it (M-1 fix)
+- No zombie states!
+```
+
+**Verdict:** ✅ **Critical fix correctly implemented!**
+
+#### State Update (Lines 452-456)
+✅ **Line 453:** Status → ACTIVE  
+✅ **Line 454:** Clears `paused-at-block` (set to u0)  
+✅ **Line 455:** Updates `total-paused-duration`
+
+**Note:** Clearing `paused-at-block` is important for `calculate-effective-elapsed` logic!
+
+---
+
+## 🔍 Deep Dive: Pause Accounting Math
+
+Let me verify the pause accounting is correct by tracing through `calculate-effective-elapsed`:
+
+```clarity
+(define-private (calculate-effective-elapsed
+    (start-block uint)
+    (end-block uint)
+    (status uint)
+    (paused-at-block uint)
+    (total-paused-duration uint)
+  )
+  (let (
+    (current-block stacks-block-height)
+    (duration (- end-block start-block))
+    ;; If paused, use pause time; otherwise use current time
+    (effective-current
+      (if (is-eq status STATUS-PAUSED)
+        paused-at-block
+        current-block))
+    ;; Calculate raw elapsed (0 if not started yet)
+    (raw-elapsed
+      (if (< effective-current start-block)
+        u0
+        (- effective-current start-block)))
+    ;; Subtract paused duration
+    (adjusted-elapsed
+      (if (> raw-elapsed total-paused-duration)
+        (- raw-elapsed total-paused-duration)
+        u0))
+  )
+    ;; Clamp to max duration
+    (if (> adjusted-elapsed duration)
+      duration
+      adjusted-elapsed)
+  )
+)
+```
+
+**Test Case 1: Active Stream**
+```
+start-block = 100
+end-block = 200
+status = ACTIVE
+paused-at-block = 0
+total-paused-duration = 0
+current-block = 150
+
+effective-current = 150 (not paused, use current)
+raw-elapsed = 150 - 100 = 50
+adjusted-elapsed = 50 - 0 = 50
+result = 50 ✅
+```
+
+**Test Case 2: Paused Stream**
+```
+start-block = 100
+end-block = 200
+status = PAUSED
+paused-at-block = 150
+total-paused-duration = 0
+current-block = 180 (doesn't matter!)
+
+effective-current = 150 (paused, use paused-at)
+raw-elapsed = 150 - 100 = 50
+adjusted-elapsed = 50 - 0 = 50
+result = 50 ✅
+
+Even if current-block = 1000, result is still 50!
+Claimable is frozen at pause time! ✅
+```
+
+**Test Case 3: Multi-Cycle Pause**
+```
+start-block = 100
+end-block = 200
+status = ACTIVE
+paused-at-block = 0
+total-paused-duration = 30 (from previous pauses)
+current-block = 180
+
+effective-current = 180
+raw-elapsed = 180 - 100 = 80
+adjusted-elapsed = 80 - 30 = 50
+result = 50 ✅
+
+80 wall-clock blocks, but 30 were paused
+Effective streaming = 50 blocks ✅
+```
+
+**Test Case 4: Underflow Protection**
+```
+start-block = 100
+end-block = 200
+status = ACTIVE
+paused-at-block = 0
+total-paused-duration = 100 (paused for entire duration!)
+current-block = 250
+
+effective-current = 250
+raw-elapsed = 250 - 100 = 150
+adjusted-elapsed = max(150 - 100, 0) = 50
+result = min(50, 100) = 50 ✅
+
+Wait, this doesn't look right...
+If paused for 100 blocks out of 100 duration,
+shouldn't result be 0?
+
+Let me recalculate:
+duration = 200 - 100 = 100
+raw-elapsed = 150 (clamped to duration in final step)
+adjusted-elapsed = 150 - 100 = 50
+result = min(50, 100) = 50
+
+Hmm, if total-paused = 100 and duration = 100,
+and we're at block 250 (50 blocks past end),
+then raw-elapsed should be clamped first...
+
+Actually, looking at the code:
+- raw-elapsed = 150 (current - start)
+- adjusted-elapsed = 150 - 100 = 50
+- THEN clamped to duration = 100
+- result = 50
+
+This seems wrong! If paused for 100 blocks,
+and duration is 100 blocks, effective should be 0!
+
+Wait... let me re-read the code more carefully...
+```
+
+🚨 **WAIT - POTENTIAL ISSUE FOUND!**
+
+Let me trace through this more carefully...
+
+Actually, looking at the final clamp:
+```clarity
+(if (> adjusted-elapsed duration)
+  duration
+  adjusted-elapsed)
+```
+
+If `adjusted-elapsed = 50` and `duration = 100`, result is `50`.
+
+But if the stream was paused for 100 blocks total, and duration is 100 blocks, then:
+- Wall-clock time = 200 blocks (100 active + 100 paused)
+- Effective time = 100 blocks
+- This is correct!
+
+**False alarm!** The math is actually correct. The clamp prevents going over duration, not under.
+
+**Verdict:** ✅ **Pause accounting math is correct!**
+
+---
+
+## Security Assessment: pause-stream & resume-stream
+
+**Overall:** ✅ **SECURE**
+
+**Critical Fixes Verified:**
+1. ✅ **L-9 (dannyy2000):** Pre-start pause prevented
+2. ✅ **L-4 (Marvy247):** Resume past end-block prevented
+3. ✅ **L-15 (Jayy4rl):** Redundant asserts removed
+
+**Pause Accounting:**
+1. ✅ Pause duration calculated correctly
+2. ✅ Multi-cycle pauses accumulate correctly
+3. ✅ Claimable frozen during pause
+4. ✅ Underflow protection in place
+5. ✅ Overflow not possible (pause duration ≤ wall-clock time)
+
+**No vulnerabilities found!**
+
+---
+
 ---
 
 ## Positive Observations

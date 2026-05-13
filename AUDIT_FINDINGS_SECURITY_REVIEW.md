@@ -275,10 +275,157 @@ No fix needed. Document as theoretical only.
 
 ## Next Steps
 
-- [ ] Review `claim` function
+- [x] Review `create-stream` function ✅
+- [x] Review `claim` function ✅
+- [ ] Review `claim-all` function
+- [ ] Review `pause-stream` function
 - [ ] Test overflow scenario (theoretical)
 - [ ] Verify contract recipient behavior
 - [ ] Check if far-future start-block causes issues
+
+---
+
+## Function Analysis Continued
+
+### claim (Lines 291-357)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed
+
+#### Authorization
+- ✅ **Recipient-only:** Line 330 checks `caller == recipient`
+- ✅ **Uses `contract-caller`:** Correct authorization context
+- ⚠️ **Auth check AFTER calculations:** This is actually SAFE because:
+  - All calculations are read-only
+  - No state changes before auth
+  - No token transfers before auth
+  - Transaction reverts if auth fails
+
+**Note:** Previous auditor (Marvy247) flagged this as L-5. Confirmed it's a gas efficiency concern only, not a security issue.
+
+#### Token Conservation Math (Lines 323-328)
+✅ **Line 323:** `effective-elapsed` calculated with pause accounting  
+✅ **Line 324:** `streamed` = rate × elapsed (clamped to deposit)  
+✅ **Line 325:** `claimable` = streamed - withdrawn (with underflow protection)  
+✅ **Line 328:** `claim-amount` = min(requested, claimable) - **prevents over-claiming!**  
+✅ **Line 329:** `new-withdrawn` = withdrawn + claim-amount
+
+**Critical Invariant Verified:**
+```
+withdrawn ≤ streamed ≤ deposit
+claimable = streamed - withdrawn
+claim-amount ≤ claimable
+```
+
+#### State Checks (Lines 333-336)
+✅ **Line 333:** Blocks CANCELLED streams  
+⚠️ **Line 333:** Does NOT block PAUSED streams - **This is intentional!**  
+  - Recipient can claim earned tokens even if paused
+  - Claimable amount is frozen at pause time
+  - **This is fair and correct**
+
+⚠️ **Line 333:** Does NOT block DEPLETED streams - **This is safe!**  
+  - If depleted, claimable = 0
+  - Line 335 would fail with ERR-ZERO-CLAIM
+  - No explicit check needed (elegant!)
+
+✅ **Line 335:** Prevents zero-amount claims  
+✅ **Line 336:** Token substitution prevention
+
+#### Token Transfer (Lines 339-343)
+✅ **Line 339:** Uses `as-contract` - transfers from contract escrow  
+✅ **Line 340:** Amount is `claim-amount` (validated)  
+✅ **Line 341:** From `tx-sender` (contract context)  
+✅ **Line 342:** To `recipient` (validated)  
+✅ **Line 339:** Uses `try!` - reverts if transfer fails
+
+**Observation:** Transfer happens BEFORE state update. If transfer fails, state is not changed. Correct!
+
+#### State Update (Lines 346-350)
+✅ **Line 346:** Uses `merge` to update only changed fields  
+✅ **Line 347:** `withdrawn-amount` updated  
+✅ **Line 349:** Auto-depletes when `new-withdrawn == deposit`
+
+**Critical:** State update happens AFTER token transfer. If transfer succeeds but state update fails (impossible in Clarity), tokens would be lost. But Clarity's atomicity guarantees this can't happen.
+
+#### Event Emission (Lines 353-361)
+✅ **Line 353:** Event includes all relevant data  
+✅ **Line 357:** `requested-amount` vs `amount` - shows clamping  
+✅ **Line 358:** `total-withdrawn` - running total  
+✅ **Line 359:** `remaining` - deposit - withdrawn
+
+**Note:** Jayy4rl L-14 fix added `requested-amount` field to detect silent clamping. Good improvement!
+
+---
+
+### claim-all (Lines 360-366)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed
+
+#### Implementation
+✅ **Line 365:** Calls `claim` with `MAX-CLAIM-AMOUNT`  
+✅ **MAX-CLAIM-AMOUNT** = 2^128 - 1 (max uint)  
+✅ **Logic:** `min(MAX_UINT, claimable) = claimable`
+
+**Observation:** Simple wrapper, no additional logic. Safe!
+
+---
+
+## Verified Invariants
+
+### Token Conservation ✅
+```clarity
+∀ claim: claimed ≤ claimable
+∀ claim: claimable = streamed - withdrawn
+∀ claim: streamed ≤ deposit
+∴ withdrawn ≤ deposit (always)
+```
+
+**Tested in code:**
+- Line 325: Claimable calculation with underflow protection
+- Line 328: Claim amount clamped to claimable
+- Line 329: New withdrawn = old withdrawn + claim amount
+
+**Verdict:** ✅ **Token conservation is mathematically sound!**
+
+### Authorization ✅
+```clarity
+∀ claim: caller == recipient
+```
+
+**Tested in code:**
+- Line 330: Explicit check
+
+**Verdict:** ✅ **Only recipient can claim!**
+
+### State Machine ✅
+```clarity
+ACTIVE → claim → ACTIVE | DEPLETED
+PAUSED → claim → PAUSED | DEPLETED
+CANCELLED → claim → REJECTED
+DEPLETED → claim → REJECTED (via ERR-ZERO-CLAIM)
+```
+
+**Verdict:** ✅ **State transitions are correct!**
+
+---
+
+## Security Assessment: claim & claim-all
+
+**Overall:** ✅ **SECURE**
+
+**Strengths:**
+1. Token conservation is mathematically enforced
+2. Authorization is explicit and correct
+3. Token substitution is prevented
+4. Zero-claim protection prevents griefing
+5. Automatic depletion detection
+6. Atomic token transfer + state update
+
+**No vulnerabilities found!**
+
+---
 
 ---
 

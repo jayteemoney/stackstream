@@ -1659,3 +1659,258 @@ Rate preserved through multiple top-ups!
 **No vulnerabilities found!**
 
 ---
+
+
+## Admin Functions Analysis
+
+### set-emergency-pause (Lines 862-872)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed
+
+#### Purpose: Circuit Breaker
+
+**What it does:**
+- Stops new stream creation
+- Does NOT affect existing streams
+- Existing streams can still be claimed/cancelled
+
+#### Authorization (Line 863)
+✅ **Owner-only:** `(asserts! (is-eq contract-caller (var-get contract-owner)))`  
+✅ **Uses `contract-caller`:** Correct  
+✅ **Uses `var-get contract-owner`:** Dynamic owner (can be transferred)
+
+#### Scope Verification
+✅ **Line 864:** Sets `emergency-paused` flag  
+✅ **Used in create-stream (line 220):** Blocks new streams  
+✅ **NOT used in claim:** Existing streams can be claimed  
+✅ **NOT used in cancel:** Existing streams can be cancelled  
+✅ **NOT used in pause/resume:** Existing streams can be controlled
+
+**Scope is correct!** Emergency pause doesn't hold funds hostage.
+
+#### Event (Lines 865-868)
+✅ Emits `emergency-pause-set` with boolean value
+
+**Verdict:** ✅ **SECURE - Correctly scoped circuit breaker**
+
+---
+
+### propose-ownership (Lines 875-882)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed - M-2 FIX (Part 1)
+
+#### Purpose: Step 1 of Two-Step Ownership Transfer
+
+**Why two-step?** (Ryjen1 L-13 fix)
+```
+One-step problem:
+- Owner calls transfer-ownership(wrong-address)
+- Typo in address!
+- Ownership lost forever ❌
+
+Two-step solution:
+- Owner calls propose-ownership(new-address)
+- New address must call accept-ownership
+- If wrong address, owner can propose again ✅
+```
+
+#### Authorization (Line 877)
+✅ **Current owner only:** `(asserts! (is-eq contract-caller (var-get contract-owner)))`  
+✅ **Uses `contract-caller`:** Correct
+
+#### State Update (Line 878)
+✅ **Sets `pending-owner`:** `(var-set pending-owner (some new-owner))`  
+✅ **Wraps in `some`:** Correct optional type usage  
+✅ **Does NOT change `contract-owner` yet:** Correct!
+
+**Key Observation:**
+- Current owner retains control until accept-ownership is called
+- Can propose multiple times (overwrites pending-owner)
+- No time limit on acceptance
+
+#### Event (Line 879)
+✅ Emits `ownership-proposed` with proposed address
+
+**Verdict:** ✅ **SECURE - Step 1 of two-step transfer**
+
+---
+
+### accept-ownership (Lines 885-896)
+
+**Review Date:** May 13, 2026  
+**Status:** ✅ Completed - M-2 FIX (Part 2)
+
+#### Purpose: Step 2 of Two-Step Ownership Transfer
+
+#### Authorization (Lines 888-890)
+✅ **Line 888:** Unwraps `pending-owner` (fails if none)  
+✅ **Line 890:** `(asserts! (is-eq contract-caller proposed))`  
+✅ **Only the proposed address can accept!**
+
+**Security Check:**
+```
+Scenario: Attacker tries to accept
+- pending-owner = 0x123 (legitimate new owner)
+- Attacker (0xBAD) calls accept-ownership
+- Line 890: contract-caller (0xBAD) != proposed (0x123)
+- Transaction fails ✅
+```
+
+#### State Updates (Lines 891-892)
+✅ **Line 891:** `contract-owner` updated to proposed  
+✅ **Line 892:** `pending-owner` cleared (set to none)
+
+**Atomicity:**
+- Both updates happen in same transaction
+- No partial state possible
+- Old owner loses control immediately
+
+#### Event (Line 893)
+✅ Emits `ownership-accepted` with new owner
+
+**Verdict:** ✅ **SECURE - Step 2 of two-step transfer**
+
+---
+
+## 🔥 M-2 FIX VERIFICATION (Zachyo)
+
+**Original Issue:**
+> "`CONTRACT-OWNER` was a constant — silent change on redeploy, no key rotation possible"
+
+**Problems with constant:**
+1. If contract redeployed by different address, owner silently changes
+2. No way to rotate keys without redeployment
+3. No on-chain way to query current owner
+
+**The Fix:**
+✅ **Changed to `define-data-var`:** Line 19  
+✅ **Initialized to `tx-sender`:** Deployer becomes initial owner  
+✅ **Added `propose-ownership`:** Two-step transfer (step 1)  
+✅ **Added `accept-ownership`:** Two-step transfer (step 2)  
+✅ **Added `get-contract-owner`:** Read-only query  
+✅ **Added `get-pending-owner`:** Read-only query
+
+**Verification:**
+- ✅ Owner can be transferred without redeployment
+- ✅ Two-step prevents typo disasters (Ryjen1 L-13)
+- ✅ On-chain queries available
+- ✅ No silent ownership changes
+
+**Verdict:** ✅ **M-2 FIX IS COMPLETE AND CORRECT!**
+
+---
+
+## 🔍 Admin Functions Edge Cases
+
+### Edge Case 1: Emergency pause while streams active
+```
+- 100 active streams
+- Owner calls set-emergency-pause(true)
+- New streams blocked ✅
+- Existing streams still work ✅
+- Recipients can claim ✅
+- Senders can cancel ✅
+```
+
+### Edge Case 2: Propose ownership twice
+```
+- Owner proposes Alice
+- Owner proposes Bob (overwrites)
+- Alice tries to accept → fails (not pending) ✅
+- Bob accepts → succeeds ✅
+```
+
+### Edge Case 3: Propose then emergency pause
+```
+- Owner proposes new owner
+- Owner sets emergency pause
+- New owner accepts
+- New owner is now in control ✅
+- New owner can unpause ✅
+```
+
+### Edge Case 4: Attacker tries to accept
+```
+- Owner proposes Alice
+- Attacker calls accept-ownership
+- Fails: caller != proposed ✅
+```
+
+### Edge Case 5: Owner proposes self
+```
+- Owner proposes their own address
+- Owner accepts
+- Ownership "transferred" to same address
+- Harmless but pointless ✅
+```
+
+**All edge cases pass!** ✅
+
+---
+
+## Security Assessment: Admin Functions
+
+**Overall:** ✅ **SECURE**
+
+**set-emergency-pause:**
+- ✅ Owner-only authorization
+- ✅ Correctly scoped (blocks creates only)
+- ✅ Doesn't hold funds hostage
+- ✅ Can be toggled on/off
+
+**propose-ownership:**
+- ✅ Owner-only authorization
+- ✅ Sets pending-owner
+- ✅ Doesn't change current owner
+- ✅ Can be called multiple times
+
+**accept-ownership:**
+- ✅ Proposed-address-only authorization
+- ✅ Atomically updates owner and clears pending
+- ✅ Old owner loses control immediately
+- ✅ No partial state
+
+**M-2 Fix (Zachyo):**
+- ✅ Owner can be transferred
+- ✅ No redeployment needed
+- ✅ On-chain queries available
+
+**L-13 Fix (Ryjen1):**
+- ✅ Two-step prevents typo disasters
+- ✅ Proposed address must accept
+- ✅ Owner can propose again if wrong
+
+**No vulnerabilities found!**
+
+---
+
+## 🎉 stream-manager.clar COMPLETE!
+
+**All 11 public functions audited:**
+1. ✅ create-stream
+2. ✅ claim
+3. ✅ claim-all
+4. ✅ pause-stream
+5. ✅ resume-stream
+6. ✅ cancel-stream
+7. ✅ expire-stream
+8. ✅ top-up-stream
+9. ✅ set-emergency-pause
+10. ✅ propose-ownership
+11. ✅ accept-ownership
+
+**Critical Verifications:**
+- ✅ Token conservation (mathematically proven)
+- ✅ Authorization (all functions)
+- ✅ Pause accounting (multi-cycle)
+- ✅ Atomic transfers (all exit paths)
+- ✅ State machine (all transitions)
+- ✅ Community fixes (M-1, M-2, L-4, L-7-L-15)
+
+**Findings:** 0 Critical, 0 High, 0 Medium, 0 Low
+
+**stream-manager.clar is PRODUCTION READY!** 🚀
+
+---

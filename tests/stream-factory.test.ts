@@ -166,6 +166,39 @@ describe("StackStream - Stream Factory Contract", () => {
 
       expect(result.result).toBeErr(Cl.uint(501)); // ERR-DAO-NOT-FOUND
     });
+
+    it("should reject update-dao-name for deactivated DAO with ERR-DAO-INACTIVE", () => {
+      simnet.callPublicFn(factoryContract, "register-dao", [Cl.stringUtf8("Alpha")], wallet1);
+      simnet.callPublicFn(factoryContract, "deactivate-dao", [], wallet1);
+
+      const result = simnet.callPublicFn(
+        factoryContract,
+        "update-dao-name",
+        [Cl.stringUtf8("Beta")],
+        wallet1
+      );
+
+      expect(result.result).toBeErr(Cl.uint(507)); // ERR-DAO-INACTIVE
+    });
+
+    it("should not free a name when deactivated DAO rename is blocked", () => {
+      // Register "Alpha" under wallet1, then deactivate
+      simnet.callPublicFn(factoryContract, "register-dao", [Cl.stringUtf8("Alpha")], wallet1);
+      simnet.callPublicFn(factoryContract, "deactivate-dao", [], wallet1);
+
+      // Rename attempt is rejected — "Alpha" stays locked in dao-names
+      simnet.callPublicFn(factoryContract, "update-dao-name", [Cl.stringUtf8("Beta")], wallet1);
+
+      // wallet3 should not be able to register "Alpha" — it's still taken
+      const result = simnet.callPublicFn(
+        factoryContract,
+        "register-dao",
+        [Cl.stringUtf8("Alpha")],
+        wallet3
+      );
+
+      expect(result.result).toBeErr(Cl.uint(504)); // ERR-INVALID-NAME (name taken)
+    });
   });
 
   describe("deactivate-dao", () => {
@@ -333,6 +366,48 @@ describe("StackStream - Stream Factory Contract", () => {
 
       expect(tracked1.result).toBeBool(true);
       expect(tracked2.result).toBeBool(true);
+    });
+
+    it("should reject track-stream for deactivated DAO with ERR-DAO-INACTIVE", () => {
+      simnet.callPublicFn(factoryContract, "register-dao", [Cl.stringUtf8("TestDAO")], wallet1);
+
+      const startBlock = getCurrentBlock() + 10;
+      createStreamDirect(wallet1, wallet2, 1000_000_000_00, startBlock, 100);
+
+      simnet.callPublicFn(factoryContract, "deactivate-dao", [], wallet1);
+
+      const result = simnet.callPublicFn(
+        factoryContract,
+        "track-stream",
+        [Cl.uint(1)],
+        wallet1
+      );
+
+      expect(result.result).toBeErr(Cl.uint(507)); // ERR-DAO-INACTIVE
+    });
+
+    it("should not update DAO stats when track-stream is blocked after deactivation", () => {
+      simnet.callPublicFn(factoryContract, "register-dao", [Cl.stringUtf8("TestDAO")], wallet1);
+
+      const startBlock = getCurrentBlock() + 10;
+      createStreamDirect(wallet1, wallet2, 1000_000_000_00, startBlock, 100);
+
+      // Deactivate before tracking
+      simnet.callPublicFn(factoryContract, "deactivate-dao", [], wallet1);
+
+      // Attempt track — should be rejected
+      simnet.callPublicFn(factoryContract, "track-stream", [Cl.uint(1)], wallet1);
+
+      // Stats must remain at zero
+      const dao = simnet.callReadOnlyFn(
+        factoryContract,
+        "get-dao",
+        [Cl.principal(wallet1)],
+        deployer
+      );
+      const stats = (dao.result as any).value.value;
+      expect(stats["total-streams-created"].value).toBe(0n);
+      expect(stats["total-deposited"].value).toBe(0n);
     });
   });
 

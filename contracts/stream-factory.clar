@@ -18,6 +18,7 @@
 (define-constant ERR-INVALID-NAME (err u504))
 (define-constant ERR-STREAM-NOT-FOUND (err u505))
 (define-constant ERR-ALREADY-TRACKED (err u506))
+(define-constant ERR-DAO-INACTIVE (err u507))
 
 ;; ============================================================================
 ;; DATA STORAGE
@@ -102,6 +103,7 @@
     (dao-data (unwrap! (map-get? daos caller) ERR-DAO-NOT-FOUND))
     (old-name (get name dao-data))
   )
+    (asserts! (get is-active dao-data) ERR-DAO-INACTIVE)
     (asserts! (> (len new-name) u0) ERR-INVALID-NAME)
     (asserts! (is-none (map-get? dao-names new-name)) ERR-INVALID-NAME)
 
@@ -156,6 +158,9 @@
     ;; Verify stream exists and belongs to caller
     (stream (unwrap! (contract-call? .stream-manager get-stream stream-id) ERR-STREAM-NOT-FOUND))
   )
+    ;; Deactivated DAOs cannot track streams
+    (asserts! (get is-active dao-data) ERR-DAO-INACTIVE)
+
     ;; Verify caller is the stream sender
     (asserts! (is-eq caller (get sender stream)) ERR-NOT-DAO-ADMIN)
 

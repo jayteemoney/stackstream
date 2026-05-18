@@ -687,6 +687,13 @@
     (asserts! (not (is-eq status STATUS-CANCELLED)) ERR-STREAM-CANCELLED)
     (asserts! (not (is-eq status STATUS-DEPLETED)) ERR-STREAM-DEPLETED)
 
+    ;; Cannot top up a paused stream. Top-up extends end-block while earnings are frozen
+    ;; at paused-at-block, so the sender could call this repeatedly with minimum-valid amounts
+    ;; just before end-block passes, pushing end-block forward indefinitely and permanently
+    ;; blocking expire-stream (which requires stacks-block-height >= end-block).
+    ;; Resume the stream first, then top up.
+    (asserts! (not (is-eq status STATUS-PAUSED)) ERR-STREAM-PAUSED)
+
     ;; Cannot top up a stream whose window has already closed.
     ;; Without this guard, a sender could top up a paused-and-expired stream to extend
     ;; its end-block into the future, making it resumable again and bypassing expire-stream.

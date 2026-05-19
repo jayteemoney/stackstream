@@ -1,9 +1,9 @@
 ---
-id: 1
+id: 0
 name: Mainnet deployment
 network: mainnet
 stacks-node: "https://api.hiro.so"
-bitcoin-node: "https://api.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332"
 plan:
   batches:
     - id: 0
@@ -11,21 +11,21 @@ plan:
         - contract-publish:
             contract-name: sip-010-trait
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 10260
+            cost: 860543
             path: contracts/traits/sip-010-trait.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-manager
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 311340
+            cost: 865681
             path: contracts/stream-manager.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-factory
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 60810
+            cost: 861599
             path: contracts/stream-factory.clar
             anchor-block-only: true
             clarity-version: 3

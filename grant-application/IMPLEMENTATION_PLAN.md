@@ -434,44 +434,59 @@ Redeploy on Railway. Verify `/health` endpoint responds.
 
 ### DELIVERABLE 2.3 — 5 End-to-End Mainnet Streams
 
-**Who creates them:** You + 2 cohort mates (warmed up during M1 outreach)
+**Who creates them:** 5 Stacks community members recruited via @Stackstream0X, StackStream Telegram, and Stacks Discord. Each participant is the sender of one stream and the recipient of another (ring topology) — no self-sends, no deployer-as-sender.
 
 **What "end-to-end" means:** Stream is created (tx 1) AND at least one claim is made from it (tx 2). Both tx hashes are evidence.
 
-**Stream plan:**
+**Tokens used:** StackStream supports any SIP-010 fungible token on Stacks mainnet. The contract is token-agnostic — it accepts a `<sip-010-trait>` argument at stream creation. For M2 demo evidence we use:
 
-| Stream | Sender | Recipient | Token | Amount | Duration | Purpose |
-|---|---|---|---|---|---|---|
-| 1 | You (Jethro) | Friend A wallet | SSTREAM | 1.0 | 7 days | Primary demo |
-| 2 | Friend A | Friend B wallet | SSTREAM | 0.5 | 3 days | Second sender |
-| 3 | Friend B | You (Jethro) | SSTREAM | 0.5 | 3 days | Proves multi-party |
-| 4 | You (Jethro) | Friend C wallet | SSTREAM | 1.0 | 14 days | Longer duration |
-| 5 | Friend C | Their own collaborator | SSTREAM | 0.5 | 7 days | Third-party usage |
+| Token | Why we use it for M2 | Stream count |
+|---|---|---|
+| **USDA** (Arkadiko USD stablecoin) | Easiest SIP-010 to acquire on mainnet via Bitflow/Velar. Demonstrates the stablecoin-payroll use case directly relevant to the M3 DAO-contributor target audience. Price-stable, so the demo amount is predictable to participants. | 5 of 5 streams |
 
-Note: friends must have mainnet Leather or Xverse wallets and a small amount of STX for gas (~1-2 STX per transaction is sufficient). STX for gas is the only real cost here.
+**Tokens supported but deferred to M3 demos:** sBTC, ALEX, xBTC, and any other SIP-010 fungible token deployed on Stacks mainnet (no contract change needed — they will work with the existing deployment). sBTC streams will be the centerpiece of the post-M2 marketing push and the first DAO onboarding cases.
 
-**Process for each stream:**
-1. Sender gets SSTREAM from the mainnet faucet
-2. Sender connects wallet on https://stackstream.vercel.app/
-3. Creates the stream — records create tx hash
-4. Waits at least 1 block (~10 minutes)
-5. Recipient connects their wallet on the /earn page
-6. Clicks Claim — records claim tx hash
-7. Jethro records both hashes
+> **Important:** StackStream does **not** support native STX directly. Native STX uses `stx-transfer?`, while StackStream uses the SIP-010 `transfer` trait. To stream STX, users wrap it via an existing STX→SIP-010 wrapper (or use one of the SIP-010 tokens above).
+
+**Stream plan (durations compressed to fit M2 submission window of May 22):**
+
+Stacks block time averages ~10 minutes (Bitcoin-anchored). All durations below are in **blocks**, not days.
+
+| Stream | Sender | Recipient | Token | Amount | Duration (blocks) | Wall-clock | Purpose |
+|---|---|---|---|---|---|---|---|
+| 1 | Participant P1 | Participant P2 | USDA | 1 USDA   | 30 | ~5 hrs | Primary demo (partial claim) |
+| 2 | Participant P2 | Participant P3 | USDA | 1.5 USDA | 30 | ~5 hrs | Full-claim test |
+| 3 | Participant P3 | Participant P4 | USDA | 1 USDA   | 60 | ~10 hrs | Pause+resume cycle |
+| 4 | Participant P4 | Participant P5 | USDA | 2 USDA   | 30 | ~5 hrs | Top-up extension test |
+| 5 | Participant P5 | Participant P1 | USDA | 1 USDA   | 20 | ~3.5 hrs | Cancel-split test |
+
+**Total wall-clock to complete all 5 end-to-end:** ~12 hours of stream elapsed time + transaction confirmations. All 5 streams can be created in parallel on Day 1, with claims happening as each stream accrues over the next 12 hours. Comfortably fits within a single day before May 22 submission.
+
+**Seed cost per participant:** 0.5 STX (gas, ~$0.80) + 1.1 to 2.2 USDA (stream amount + small buffer). Total seed cost across 5 participants: ~2.5 STX + ~7.5 USDA ≈ **$11 total project cost**.
+
+**Per-participant process:**
+1. Receive seed STX + token from project operations wallet (see `M2_DEPLOY_RUNBOOK.md` for the seeding procedure).
+2. Connect Leather or Xverse to https://stackstream.vercel.app on mainnet.
+3. Create the assigned stream — records create tx hash.
+4. Wait at least 3–5 blocks (~30–50 min) for tokens to accrue.
+5. Switch to the recipient wallet they were assigned, claim from their incoming stream — records claim tx hash.
+6. Maintainer collects all 10 tx hashes.
 
 **Evidence document format:**
 
 ```markdown
 ## M2 Stream Evidence
 
-| # | Create Tx | Claim Tx | Explorer Link |
-|---|---|---|---|
-| 1 | 0x... | 0x... | link |
-| 2 | 0x... | 0x... | link |
-| 3 | 0x... | 0x... | link |
-| 4 | 0x... | 0x... | link |
-| 5 | 0x... | 0x... | link |
+| # | Token | Create Tx | Claim Tx | Explorer Link |
+|---|---|---|---|---|
+| 1 | USDA | 0x... | 0x... | link |
+| 2 | USDA | 0x... | 0x... | link |
+| 3 | USDA | 0x... | 0x... | link |
+| 4 | USDA | 0x... | 0x... | link |
+| 5 | USDA | 0x... | 0x... | link |
 ```
+
+**Transparency note for grants submission:** Per `MILESTONE_PLAN.md` line 198–200, M2 demo streams may be self-funded or community-recruited. Participants here were recruited via public channels and seeded with small amounts of STX (gas) and tokens (stream payload) from a project operations wallet. Each participant created and claimed independently from their own wallet — the seeding pattern is fully disclosed in `M2_EVIDENCE_PACKAGE.md` Section 3.
 
 ---
 

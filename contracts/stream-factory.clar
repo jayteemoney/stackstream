@@ -18,6 +18,8 @@
 (define-constant ERR-INVALID-NAME (err u504))
 (define-constant ERR-STREAM-NOT-FOUND (err u505))
 (define-constant ERR-ALREADY-TRACKED (err u506))
+(define-constant ERR-DAO-INACTIVE (err u507))
+(define-constant ERR-DAO-ALREADY-ACTIVE (err u508))
 
 ;; ============================================================================
 ;; DATA STORAGE
@@ -102,6 +104,9 @@
     (dao-data (unwrap! (map-get? daos caller) ERR-DAO-NOT-FOUND))
     (old-name (get name dao-data))
   )
+    ;; Deactivated DAOs cannot rename - otherwise map-delete would release the original
+    ;; name from dao-names, letting an attacker register the freed name and impersonate.
+    (asserts! (get is-active dao-data) ERR-DAO-INACTIVE)
     (asserts! (> (len new-name) u0) ERR-INVALID-NAME)
     (asserts! (is-none (map-get? dao-names new-name)) ERR-INVALID-NAME)
 
@@ -140,6 +145,27 @@
   )
 )
 
+;; Reactivate a previously-deactivated DAO. Mirrors deactivate-dao.
+;; Without this, a deactivated DAO is permanently locked out of the registry
+;; and its name remains burned in dao-names forever, since register-dao
+;; rejects any principal that already has a record.
+(define-public (reactivate-dao)
+  (let (
+    (caller contract-caller)
+    (dao-data (unwrap! (map-get? daos caller) ERR-DAO-NOT-FOUND))
+  )
+    (asserts! (not (get is-active dao-data)) ERR-DAO-ALREADY-ACTIVE)
+    (map-set daos caller (merge dao-data { is-active: true }))
+
+    (print {
+      event: "dao-reactivated",
+      admin: caller
+    })
+
+    (ok true)
+  )
+)
+
 ;; ============================================================================
 ;; STREAM TRACKING
 ;; ============================================================================
@@ -156,6 +182,9 @@
     ;; Verify stream exists and belongs to caller
     (stream (unwrap! (contract-call? .stream-manager get-stream stream-id) ERR-STREAM-NOT-FOUND))
   )
+    ;; Deactivated DAOs cannot track streams - prevents post-deactivation analytics inflation
+    (asserts! (get is-active dao-data) ERR-DAO-INACTIVE)
+
     ;; Verify caller is the stream sender
     (asserts! (is-eq caller (get sender stream)) ERR-NOT-DAO-ADMIN)
 

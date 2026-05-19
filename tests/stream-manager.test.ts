@@ -968,14 +968,39 @@ describe("StackStream - Stream Manager Contract", () => {
       expect(result.result).toBeErr(Cl.uint(300)); // ERR-INVALID-AMOUNT
     });
 
-    it("should allow topping up a paused stream", () => {
+    it("F-1 (Majormaxx): should reject top-up on a paused stream with ERR-STREAM-PAUSED", () => {
       const startBlock = getCurrentBlock() + 1;
       createStream(wallet1, wallet2, 1000_000_000_00, startBlock, 100);
 
       // Pause
       simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
 
-      // Top up while paused
+      // Top-up while paused must be rejected: would let sender extend end-block indefinitely
+      // and grief expire-stream.
+      const result = simnet.callPublicFn(
+        streamManagerContract,
+        "top-up-stream",
+        [
+          Cl.uint(1),
+          Cl.contractPrincipal(deployer, "mock-sip010-token"),
+          Cl.uint(500_000_000_00),
+        ],
+        wallet1
+      );
+
+      expect(result.result).toBeErr(Cl.uint(203)); // ERR-STREAM-PAUSED
+    });
+
+    it("F-1 (Majormaxx): should allow top-up after resuming a paused stream", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1000_000_000_00, startBlock, 100);
+
+      // Pause, then resume
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+      simnet.mineEmptyBlocks(2);
+      simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(1)], wallet1);
+
+      // Top up the now-active stream
       const result = simnet.callPublicFn(
         streamManagerContract,
         "top-up-stream",
@@ -1939,7 +1964,10 @@ describe("StackStream - Stream Manager Contract", () => {
       // Mine past end-block
       simnet.mineEmptyBlocks(15);
 
-      // Sender tries to top up to extend end-block and escape expire-stream
+      // Sender tries to top up to extend end-block and escape expire-stream.
+      // After F-1 (Majormaxx), the paused-guard fires before the end-block guard,
+      // so this returns ERR-STREAM-PAUSED rather than ERR-STREAM-ENDED. Either
+      // rejection is correct — the stream is unreachable for top-up.
       const result = simnet.callPublicFn(
         streamManagerContract,
         "top-up-stream",
@@ -1947,7 +1975,36 @@ describe("StackStream - Stream Manager Contract", () => {
         wallet1
       );
 
-      expect(result.result).toBeErr(Cl.uint(207)); // ERR-STREAM-ENDED
+      expect(result.result).toBeErr(Cl.uint(203)); // ERR-STREAM-PAUSED (F-1 ordering)
+    });
+
+    it("F-1 end-to-end (Majormaxx): paused stream cannot escape expire-stream via top-up", () => {
+      const startBlock = getCurrentBlock() + 1;
+      createStream(wallet1, wallet2, 1_000_000_000, startBlock, 10);
+
+      // Pause mid-stream
+      simnet.mineEmptyBlocks(4);
+      simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(1)], wallet1);
+
+      // Attempt the griefing top-up
+      const topUpAttempt = simnet.callPublicFn(
+        streamManagerContract,
+        "top-up-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token"), Cl.uint(1_000_000_000)],
+        wallet1
+      );
+      expect(topUpAttempt.result).toBeErr(Cl.uint(203)); // ERR-STREAM-PAUSED
+
+      // Mine past end-block; expire-stream now succeeds (was previously blockable)
+      simnet.mineEmptyBlocks(15);
+      const expireResult = simnet.callPublicFn(
+        streamManagerContract,
+        "expire-stream",
+        [Cl.uint(1), Cl.contractPrincipal(deployer, "mock-sip010-token")],
+        wallet1
+      );
+      // expire-stream returns a tuple { recipient-amount, sender-refund } on success
+      expect(expireResult.result.type).toBe("ok");
     });
   });
 });

@@ -13,3 +13,10 @@ node_modules
 grant-application/MEETING_PREP_APR16.md
 grant-application/M1_SUBMISSION_EMAIL.md
 grant-application/M2_SOCIAL_MEDIA_POSTS.md
+
+# Operational step-by-step procedures — local only, not part of public artifacts
+grant-application/M2_DEPLOY_RUNBOOK.md
+grant-application/M2_RECRUITMENT_POSTS.md
+grant-application/MAINNET_READINESS_AUDIT.md
+grant-application/DOMAIN_SETUP.md
+grant-application/TESTER_GUIDE.md

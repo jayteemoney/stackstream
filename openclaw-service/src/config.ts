@@ -2,7 +2,7 @@ import "dotenv/config";
 
 export const PORT = Number(process.env.PORT ?? 3001);
 
-export const NETWORK = (process.env.NETWORK ?? "testnet") as
+export const NETWORK = (process.env.NETWORK ?? "mainnet") as
   | "testnet"
   | "mainnet";
 
@@ -10,7 +10,7 @@ export const IS_MAINNET = NETWORK === "mainnet";
 
 export const CONTRACT_DEPLOYER =
   process.env.CONTRACT_DEPLOYER ??
-  "ST1D7YBYFW44KJE8VAAN2ACX23BCX3FDV5YQRX3RB";
+  "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
 
 export const STREAM_MANAGER_CONTRACT = `${CONTRACT_DEPLOYER}.stream-manager`;
 export const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;

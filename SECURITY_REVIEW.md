@@ -456,4 +456,26 @@ Verifies stream exists and `contract-caller` is the stream's sender before updat
 
 ---
 
-All findings from the community review have been reviewed, addressed where applicable, and documented. The contracts are considered ready for mainnet deployment.
+All findings from the community review have been reviewed, addressed where applicable, and documented.
+
+---
+
+## v1.0.0-rc2 — Formal Paid Bounty Review (May 9–20, 2026)
+
+A second, formal paid bounty review was conducted before mainnet deployment as the chosen mainnet-audit path. Two additional independent auditors submitted comprehensive reports:
+
+- **Akanimoh** ([@Akanimoh12](https://github.com/Akanimoh12)) — PR #5. Raised **H-1: `stream-factory.deactivate-dao` had no recovery path** — once deactivated, a DAO was permanently locked out of the registry. **Fixed in v1.0.0-rc2** via new `reactivate-dao` public function with `ERR-DAO-ALREADY-ACTIVE (err u507)`. 5 new tests added covering the deactivate→reactivate cycle, data preservation, multi-cycle behavior, and authorization. Also raised M-1 (unbounded sender pause — documented as design), M-2 (pre-start cancel — documented), and 6 Low/Informational items (see `audits/AUDIT_REPORT_v1.0.0.md`).
+
+- **dannyy2000** ([@dannyy2000](https://github.com/dannyy2000)) — PR #4. Conducted a comprehensive 4,261-line written audit verifying all 11 prior community fixes and confirming no critical / high / medium / low findings remained. Raised 2 informational items (constants naming, deactivated DAOs tracking) — both Wont-fix-rationale.
+
+**Test suite post-audit:** 119 passing tests (was 113 pre-bounty — +6 for `reactivate-dao`).
+
+**Mainnet-audit-path decision:** A multi-auditor paid bounty review was chosen over a single-firm audit on the basis of broader coverage at the same cost. Across both phases, **11 independent reviewers** examined the 1,125-line Clarity codebase. **Zero critical or fund-loss findings** were identified. Total bounty paid: $1,050.
+
+**For the full audit artifacts, see:**
+- `audits/AUDIT_REPORT_v1.0.0.md` — master report
+- `audits/FINDINGS_TRIAGE.md` — every finding deduplicated with triage classification
+- `audits/CREDITS.md` — auditor credits and bounty payments
+- `audits/reports/` — each auditor's full report verbatim
+
+The contracts are signed off for mainnet deployment as `v1.0.0-rc2`.

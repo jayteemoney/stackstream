@@ -255,9 +255,15 @@ export function buildCreateStreamTx(params: {
   };
 }
 
+// M-3 (Godbrand0): buildClaimTx, buildClaimAllTx, and buildCancelStreamTx now
+// include post-conditions and use PostConditionMode.Deny so the wallet enforces
+// expected token movements at signing time. Without these, any tampered functionArgs
+// (e.g. swapped streamId) would produce a wallet prompt indistinguishable from a
+// legitimate claim.
 export function buildClaimTx(params: {
   streamId: number;
   tokenContract: string;
+  ftName: string;
   amount: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
@@ -271,7 +277,12 @@ export function buildClaimTx(params: {
       principalCV(params.tokenContract),
       uintCV(params.amount),
     ],
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [
+      Pc.principal(`${mgrAddr}.${mgrName}`)
+        .willSendLte(params.amount)
+        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+    ],
     network: getNetwork(),
   };
 }
@@ -279,6 +290,9 @@ export function buildClaimTx(params: {
 export function buildClaimAllTx(params: {
   streamId: number;
   tokenContract: string;
+  ftName: string;
+  /** Expected claimable amount fetched pre-build (upper bound). */
+  expectedAmount: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
 
@@ -290,7 +304,12 @@ export function buildClaimAllTx(params: {
       uintCV(params.streamId),
       principalCV(params.tokenContract),
     ],
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [
+      Pc.principal(`${mgrAddr}.${mgrName}`)
+        .willSendLte(params.expectedAmount)
+        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+    ],
     network: getNetwork(),
   };
 }
@@ -324,6 +343,9 @@ export function buildResumeStreamTx(streamId: number) {
 export function buildCancelStreamTx(params: {
   streamId: number;
   tokenContract: string;
+  ftName: string;
+  /** Upper bound for total token movement from the contract on cancel (recipient + sender refund). */
+  unclaimedBalance: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
   return {
@@ -334,7 +356,12 @@ export function buildCancelStreamTx(params: {
       uintCV(params.streamId),
       principalCV(params.tokenContract),
     ],
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [
+      Pc.principal(`${mgrAddr}.${mgrName}`)
+        .willSendLte(params.unclaimedBalance)
+        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+    ],
     network: getNetwork(),
   };
 }

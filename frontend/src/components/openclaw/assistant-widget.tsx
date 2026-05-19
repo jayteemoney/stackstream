@@ -131,21 +131,48 @@ export function AssistantWidget() {
     const q = input.trim();
     if (!q && queryType !== "block") return;
 
+    // M-4 (Godbrand0): validate input before constructing fetch paths. Unencoded
+    // user input containing slashes silently redirects the request to a different
+    // route, producing misleading rendered results.
+    if (queryType === "stream" && !/^\d+$/.test(q)) {
+      setResults((prev) => [
+        ...prev,
+        { type: queryType, query: q, data: null, error: "Stream ID must be a non-negative integer." },
+      ]);
+      setInput("");
+      return;
+    }
+    if (
+      (queryType === "sender" || queryType === "recipient" || queryType === "dao") &&
+      !/^S[A-Z0-9]{38,40}$/.test(q)
+    ) {
+      setResults((prev) => [
+        ...prev,
+        { type: queryType, query: q, data: null, error: "Must be a valid Stacks address (starts with S)." },
+      ]);
+      setInput("");
+      return;
+    }
+
+    // M-4 (Godbrand0): encodeURIComponent so any residual slash/special chars
+    // are escaped rather than altering the URL path.
+    const safe = encodeURIComponent(q);
+
     setLoading(true);
     try {
       let data: any;
       switch (queryType) {
         case "stream":
-          data = await fetchApi(`/api/streams/${q}`);
+          data = await fetchApi(`/api/streams/${safe}`);
           break;
         case "sender":
-          data = await fetchApi(`/api/streams/sender/${q}`);
+          data = await fetchApi(`/api/streams/sender/${safe}`);
           break;
         case "recipient":
-          data = await fetchApi(`/api/streams/recipient/${q}`);
+          data = await fetchApi(`/api/streams/recipient/${safe}`);
           break;
         case "dao":
-          data = await fetchApi(`/api/daos/${q}`);
+          data = await fetchApi(`/api/daos/${safe}`);
           break;
         case "block":
           data = await fetchApi(`/api/blocks/current`);

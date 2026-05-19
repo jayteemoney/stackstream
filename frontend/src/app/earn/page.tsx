@@ -11,6 +11,7 @@ import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimAllTx } from "@/lib/stacks";
+import { getTokenConfigByContractId } from "@/lib/constants";
 import { formatTokenAmount } from "@/lib/utils";
 import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
@@ -91,6 +92,8 @@ export default function EarnPage() {
                           buildClaimAllTx({
                             streamId: stream.id,
                             tokenContract: stream.token,
+                            ftName: getTokenConfigByContractId(stream.token).ftName,
+                            expectedAmount: stream.claimable ?? 0n,
                           })
                         );
                         if (result?.confirmed) {

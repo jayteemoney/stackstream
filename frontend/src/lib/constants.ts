@@ -171,6 +171,15 @@ export const SUPPORTED_TOKENS: readonly TokenConfig[] = IS_MAINNET
 /** Default token for the create stream form (first in list) */
 export const DEFAULT_TOKEN = SUPPORTED_TOKENS[0];
 
+/**
+ * Lookup a TokenConfig by its on-chain contract identifier (e.g. "SP3K8...token-sbtc").
+ * Falls back to DEFAULT_TOKEN when not found so callers always get a non-null
+ * record. Used by transaction builders to derive the ftName for post-conditions.
+ */
+export function getTokenConfigByContractId(contractId: string): TokenConfig {
+  return SUPPORTED_TOKENS.find((t) => t.contractId === contractId) ?? DEFAULT_TOKEN;
+}
+
 /** Polling interval for balance updates (ms) */
 export const BALANCE_POLL_INTERVAL = 15_000;
 

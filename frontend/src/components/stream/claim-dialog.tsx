@@ -61,6 +61,7 @@ export function ClaimDialog({
       buildClaimTx({
         streamId,
         tokenContract: stream.token,
+        ftName: tokenConfig.ftName,
         amount: amountRaw,
       })
     );

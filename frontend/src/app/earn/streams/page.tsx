@@ -8,6 +8,7 @@ import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimAllTx } from "@/lib/stacks";
+import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
 import { ClaimDialog } from "@/components/stream/claim-dialog";
 import { toast } from "sonner";
@@ -68,6 +69,8 @@ export default function EarnStreamsPage() {
               buildClaimAllTx({
                 streamId: stream.id,
                 tokenContract: stream.token,
+                ftName: getTokenConfigByContractId(stream.token).ftName,
+                expectedAmount: stream.claimable ?? 0n,
               })
             );
             if (result?.confirmed) {

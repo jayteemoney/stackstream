@@ -16,7 +16,7 @@ import {
 } from "@/lib/stacks";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
 import { toast } from "sonner";
 import Link from "next/link";
 import { PlusCircle, Zap, Filter } from "lucide-react";
@@ -148,6 +148,8 @@ export default function ManageStreamsPage() {
                   buildCancelStreamTx({
                     streamId: stream.id,
                     tokenContract: stream.token,
+                    ftName: getTokenConfigByContractId(stream.token).ftName,
+                    unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
                   })
                 );
                 if (result?.confirmed) {

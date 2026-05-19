@@ -11,6 +11,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { formatTokenAmount } from "@/lib/utils";
 import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
+import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
 import { STREAM_STATUS } from "@/lib/constants";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
@@ -139,6 +140,8 @@ export default function DashboardPage() {
                   buildCancelStreamTx({
                     streamId: stream.id,
                     tokenContract: stream.token,
+                    ftName: getTokenConfigByContractId(stream.token).ftName,
+                    unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
                   })
                 );
                 if (result?.confirmed) {

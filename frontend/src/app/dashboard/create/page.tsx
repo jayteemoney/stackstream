@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
+import { useTokenBalance } from "@/hooks/use-token-balance";
 import { buildCreateStreamTx } from "@/lib/stacks";
 import {
   SUPPORTED_TOKENS,
@@ -34,6 +35,11 @@ export default function CreateStreamPage() {
   const [selectedToken, setSelectedToken] = useState<TokenConfig>(DEFAULT_TOKEN);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const { balance, isLoading: isBalanceLoading } = useTokenBalance(
+    selectedToken.contractId,
+    selectedToken.ftName,
+  );
+
   if (!isConnected) {
     return (
       <EmptyState
@@ -56,6 +62,12 @@ export default function CreateStreamPage() {
     if (!recipient || !recipient.startsWith("S")) errs.recipient = "Enter a valid Stacks address";
     if (recipient === address) errs.recipient = "Cannot stream to yourself";
     if (!amount || parseFloat(amount) <= 0) errs.amount = "Enter a positive amount";
+    // Pre-flight balance check. The on-chain ft-transfer? inside create-stream
+    // returns (err u1) if the wallet is short — catch it here so users don't
+    // burn gas on a doomed tx.
+    else if (BigInt(amountRaw) > balance) {
+      errs.amount = `Insufficient ${selectedToken.symbol} balance. You have ${formatTokenAmount(Number(balance) / tokenMultiplier)} ${selectedToken.symbol}.`;
+    }
     if (!durationValue || parseFloat(durationValue) <= 0) errs.duration = "Enter a positive duration";
     if (durationBlocks < 1) errs.duration = "Duration must be at least 1 block (~10 minutes)";
     setErrors(errs);
@@ -152,18 +164,39 @@ export default function CreateStreamPage() {
             </div>
           )}
 
-          <Input
-            label={`Total Amount (${selectedToken.symbol})`}
-            type="number"
-            step={`${1 / tokenMultiplier}`}
-            min="0"
-            placeholder="1.0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            error={errors.amount}
-            hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units (${selectedToken.decimals} decimals)` : undefined}
-            disabled={isSubmitting}
-          />
+          <div className="space-y-1.5">
+            <Input
+              label={`Total Amount (${selectedToken.symbol})`}
+              type="number"
+              step={`${1 / tokenMultiplier}`}
+              min="0"
+              placeholder="1.0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              error={errors.amount}
+              hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units (${selectedToken.decimals} decimals)` : undefined}
+              disabled={isSubmitting}
+            />
+            {address && (
+              <div className="flex items-center justify-between text-xs text-zinc-500">
+                <span>
+                  Available:{" "}
+                  {isBalanceLoading
+                    ? "…"
+                    : `${formatTokenAmount(Number(balance) / tokenMultiplier)} ${selectedToken.symbol}`}
+                </span>
+                {balance > 0n && !isSubmitting && (
+                  <button
+                    type="button"
+                    onClick={() => setAmount((Number(balance) / tokenMultiplier).toString())}
+                    className="text-brand-400 hover:text-brand-300 underline"
+                  >
+                    Use max
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <label htmlFor="duration-value" className="block text-sm font-medium text-zinc-300">Duration</label>

@@ -60,6 +60,10 @@ export function StreamCard({
   const isTerminal =
     stream.status === STREAM_STATUS.CANCELLED ||
     stream.status === STREAM_STATUS.DEPLETED;
+  // A stream stays in STATUS-ACTIVE after its end-block until someone claims or
+  // cancels — but the contract's pause-stream / resume-stream reject this state
+  // with ERR-STREAM-ENDED (u207). Hide both controls once the window has closed.
+  const isWindowClosed = blockHeight > 0 && blockHeight >= stream.endBlock;
 
   return (
     <Card
@@ -146,7 +150,7 @@ export function StreamCard({
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
         {perspective === "sender" && !isTerminal && (
           <>
-            {isActive && onPause && (
+            {isActive && !isWindowClosed && onPause && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -156,7 +160,7 @@ export function StreamCard({
                 <Pause className="h-3.5 w-3.5" /> Pause
               </Button>
             )}
-            {isPaused && onResume && (
+            {isPaused && !isWindowClosed && onResume && (
               <Button
                 variant="secondary"
                 size="sm"

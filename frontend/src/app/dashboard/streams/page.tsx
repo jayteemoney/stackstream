@@ -13,6 +13,7 @@ import {
   buildResumeStreamTx,
   buildCancelStreamTx,
   buildExpireStreamTx,
+  clarityErrorMessage,
 } from "@/lib/stacks";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
@@ -32,6 +33,21 @@ const filterOptions = [
 ] as const;
 
 type FilterValue = (typeof filterOptions)[number]["value"];
+
+/**
+ * Build a user-facing toast message from a failed TxResult.
+ * Routes Clarity error codes (e.g. `u207`) through the human-readable
+ * mapping so users see "Stream has already ended" instead of raw `u207`.
+ */
+function formatTxError(
+  prefix: string,
+  result: { status: string; errorCode?: string },
+): string {
+  if (result.status === "timeout") return "Transaction timed out";
+  const human = clarityErrorMessage(result.errorCode);
+  if (human) return `${prefix}: ${human}`;
+  return `${prefix}: ${result.errorCode ?? result.status}`;
+}
 
 export default function ManageStreamsPage() {
   const { isConnected } = useWalletStore();
@@ -130,7 +146,7 @@ export default function ManageStreamsPage() {
                   toast.success("Stream paused");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to pause: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to pause", result));
                 }
               }}
               onResume={async () => {
@@ -139,7 +155,7 @@ export default function ManageStreamsPage() {
                   toast.success("Stream resumed");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to resume: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to resume", result));
                 }
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
@@ -156,7 +172,7 @@ export default function ManageStreamsPage() {
                   toast.success("Stream cancelled");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to cancel: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to cancel", result));
                 }
               }}
               onExpire={async () => {
@@ -170,7 +186,7 @@ export default function ManageStreamsPage() {
                   toast.success("Stream expired and funds settled");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to expire: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to expire", result));
                 }
               }}
             />

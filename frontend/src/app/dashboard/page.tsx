@@ -10,7 +10,7 @@ import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { formatTokenAmount } from "@/lib/utils";
-import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
+import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx, clarityErrorMessage } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
 import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
@@ -20,6 +20,21 @@ import Link from "next/link";
 import { PlusCircle, Zap, Users, Coins, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+
+/**
+ * Build a user-facing toast message from a failed TxResult.
+ * Routes Clarity error codes (e.g. `u207`) through the human-readable
+ * mapping so users see "Stream has already ended" instead of raw `u207`.
+ */
+function formatTxError(
+  prefix: string,
+  result: { status: string; errorCode?: string },
+): string {
+  if (result.status === "timeout") return "Transaction timed out";
+  const human = clarityErrorMessage(result.errorCode);
+  if (human) return `${prefix}: ${human}`;
+  return `${prefix}: ${result.errorCode ?? result.status}`;
+}
 
 export default function DashboardPage() {
   const { isConnected } = useWalletStore();
@@ -122,7 +137,7 @@ export default function DashboardPage() {
                   toast.success("Stream paused");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to pause: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to pause", result));
                 }
               }}
               onResume={async () => {
@@ -131,7 +146,7 @@ export default function DashboardPage() {
                   toast.success("Stream resumed");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to resume: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to resume", result));
                 }
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
@@ -148,7 +163,7 @@ export default function DashboardPage() {
                   toast.success("Stream cancelled");
                   refetch();
                 } else if (result && !result.confirmed) {
-                  toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to cancel: ${result.errorCode ? result.errorCode : result.status}`);
+                  toast.error(formatTxError("Failed to cancel", result));
                 }
               }}
             />

@@ -479,6 +479,14 @@ export async function getTokenBalance(
 // ============================================================================
 
 const CLARITY_ERROR_MESSAGES: Record<string, string> = {
+  // SIP-010 / Clarity ft-transfer? built-in errors. These bubble up from the
+  // token contract's transfer call inside create-stream / top-up-stream /
+  // claim / cancel — they are NOT stream-manager codes.
+  "u1": "Insufficient token balance — your wallet does not hold enough of the selected token",
+  "u2": "Token transfer rejected: sender and recipient are the same",
+  "u3": "Token transfer rejected: amount must be positive",
+  "u4": "Token transfer rejected: signer is not the token sender",
+  // Stream-manager errors
   "u100": "Not authorized",
   "u101": "Only the stream sender can do this",
   "u102": "Only the stream recipient can do this",

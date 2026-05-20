@@ -11,21 +11,28 @@ plan:
         - contract-publish:
             contract-name: sip-010-trait
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 860543
+            cost: 10260
             path: contracts/traits/sip-010-trait.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: mock-sip010-token
+            expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
+            cost: 26500
+            path: contracts/mocks/mock-sip010-token.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-manager
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 865681
+            cost: 316200
             path: contracts/stream-manager.clar
             anchor-block-only: true
             clarity-version: 3
         - contract-publish:
             contract-name: stream-factory
             expected-sender: SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79
-            cost: 861599
+            cost: 72010
             path: contracts/stream-factory.clar
             anchor-block-only: true
             clarity-version: 3

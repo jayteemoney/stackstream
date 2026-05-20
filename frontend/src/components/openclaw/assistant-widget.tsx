@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OPENCLAW_API_URL } from "@/lib/constants";
+import { OPENCLAW_API_URL, DEFAULT_TOKEN } from "@/lib/constants";
 import { formatTokenAmount, getStreamStatusLabel, getStreamStatusColor } from "@/lib/utils";
 import { MessageCircle, X, Search, Loader2, Zap, Hash, User, Building2 } from "lucide-react";
 
@@ -41,11 +41,11 @@ function StreamResult({ data }: { data: any }) {
         <div className="font-mono text-zinc-300 truncate">{data.recipient?.slice(0, 8)}...</div>
         <div>Deposited</div>
         <div className="font-mono text-zinc-300">
-          {data.formatted?.deposit ?? formatTokenAmount(data.depositAmount ?? data["deposit-amount"] ?? 0)} msBTC
+          {data.formatted?.deposit ?? formatTokenAmount(data.depositAmount ?? data["deposit-amount"] ?? 0)} {DEFAULT_TOKEN.symbol}
         </div>
         <div>Claimable</div>
         <div className="font-mono text-emerald-400">
-          {data.formatted?.claimable ?? formatTokenAmount(data.claimable ?? 0)} msBTC
+          {data.formatted?.claimable ?? formatTokenAmount(data.claimable ?? 0)} {DEFAULT_TOKEN.symbol}
         </div>
         {data.progress !== undefined && (
           <>
@@ -94,7 +94,7 @@ function DaoResult({ data }: { data: any }) {
         <div className="font-mono text-zinc-300">{data.totalStreamsCreated ?? data["total-streams-created"] ?? 0}</div>
         <div>Total deposited</div>
         <div className="font-mono text-zinc-300">
-          {formatTokenAmount(data.totalDeposited ?? data["total-deposited"] ?? 0)} msBTC
+          {formatTokenAmount(data.totalDeposited ?? data["total-deposited"] ?? 0)} {DEFAULT_TOKEN.symbol}
         </div>
       </div>
     </div>

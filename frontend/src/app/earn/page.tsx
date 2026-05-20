@@ -13,7 +13,7 @@ import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimAllTx } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
 import { formatTokenAmount } from "@/lib/utils";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
 import { toast } from "sonner";
 import { Coins, Download, Zap, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -126,12 +126,12 @@ export default function EarnPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
               label="Total Earned"
-              value={`${formatTokenAmount(totalEarned)} msBTC`}
+              value={`${formatTokenAmount(totalEarned)} ${DEFAULT_TOKEN.symbol}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <StatCard
               label="Total Claimed"
-              value={`${formatTokenAmount(totalClaimed)} msBTC`}
+              value={`${formatTokenAmount(totalClaimed)} ${DEFAULT_TOKEN.symbol}`}
               icon={<Wallet className="h-4 w-4" />}
             />
             <StatCard

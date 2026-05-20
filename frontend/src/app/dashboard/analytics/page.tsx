@@ -9,7 +9,7 @@ import { useSenderStreams } from "@/hooks/use-streams";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { formatTokenAmount, getStreamProgress } from "@/lib/utils";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
 import { BarChart3, Zap, TrendingDown, Clock, Coins } from "lucide-react";
 
@@ -61,13 +61,13 @@ export default function AnalyticsPage() {
             <StatCard
               label="Total Value Locked"
               value={`${formatTokenAmount(totalRemaining)}`}
-              sub="msBTC in streams"
+              sub={`${DEFAULT_TOKEN.symbol} in streams`}
               icon={<Coins className="h-4 w-4" />}
             />
             <StatCard
               label="Burn Rate"
               value={`${burnRatePerDay.toFixed(4)}`}
-              sub="msBTC / day"
+              sub={`${DEFAULT_TOKEN.symbol} / day`}
               icon={<TrendingDown className="h-4 w-4" />}
               trend="down"
             />

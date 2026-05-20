@@ -8,6 +8,7 @@ import { useTokenBalance } from "@/hooks/use-token-balance";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useAppStore } from "@/stores/app-store";
 import { formatTokenAmount } from "@/lib/utils";
+import { IS_MAINNET, DEFAULT_TOKEN } from "@/lib/constants";
 import { Coins, Droplets, Menu } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
@@ -44,14 +45,14 @@ export function Header() {
           <h1 className="text-lg font-semibold text-zinc-100">{title}</h1>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          {isConnected && !isLoading && (
+          {isConnected && !isLoading && !IS_MAINNET && (
             <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-400">
               <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span className="font-mono tabular-nums">{formatTokenAmount(balance)}</span>
-              <span className="hidden sm:inline text-zinc-600 text-xs">msBTC</span>
+              <span className="hidden sm:inline text-zinc-600 text-xs">{DEFAULT_TOKEN.symbol}</span>
             </div>
           )}
-          {isConnected && (
+          {isConnected && !IS_MAINNET && (
             <button
               onClick={() => setMintOpen(true)}
               className="hidden sm:flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 transition-colors"
@@ -63,7 +64,7 @@ export function Header() {
           <ConnectButton />
         </div>
       </header>
-      <MintDialog open={mintOpen} onClose={() => setMintOpen(false)} />
+      {!IS_MAINNET && <MintDialog open={mintOpen} onClose={() => setMintOpen(false)} />}
     </>
   );
 }

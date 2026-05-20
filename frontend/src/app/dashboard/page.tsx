@@ -13,7 +13,7 @@ import { formatTokenAmount } from "@/lib/utils";
 import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -60,12 +60,12 @@ export default function DashboardPage() {
             />
             <StatCard
               label="Total Deposited"
-              value={`${formatTokenAmount(totalDeposited)} msBTC`}
+              value={`${formatTokenAmount(totalDeposited)} ${DEFAULT_TOKEN.symbol}`}
               icon={<Coins className="h-4 w-4" />}
             />
             <StatCard
               label="Total Claimed"
-              value={`${formatTokenAmount(totalWithdrawn)} msBTC`}
+              value={`${formatTokenAmount(totalWithdrawn)} ${DEFAULT_TOKEN.symbol}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <StatCard

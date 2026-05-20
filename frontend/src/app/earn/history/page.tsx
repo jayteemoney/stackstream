@@ -8,7 +8,7 @@ import { useRecipientStreams } from "@/hooks/use-streams";
 import { useWalletStore } from "@/stores/wallet-store";
 import { formatTokenAmount, truncateAddress, getStreamStatusLabel } from "@/lib/utils";
 import { Clock, ExternalLink } from "lucide-react";
-import { EXPLORER_BASE } from "@/lib/constants";
+import { EXPLORER_BASE, DEFAULT_TOKEN } from "@/lib/constants";
 
 export default function HistoryPage() {
   const { isConnected } = useWalletStore();
@@ -80,10 +80,10 @@ export default function HistoryPage() {
                   </span>
                 </td>
                 <td className="py-3 pr-4 text-zinc-200">
-                  {formatTokenAmount(s.depositAmount)} msBTC
+                  {formatTokenAmount(s.depositAmount)} {DEFAULT_TOKEN.symbol}
                 </td>
                 <td className="py-3 pr-4 text-emerald-400 font-medium">
-                  {formatTokenAmount(s.withdrawnAmount)} msBTC
+                  {formatTokenAmount(s.withdrawnAmount)} {DEFAULT_TOKEN.symbol}
                 </td>
                 <td className="py-3 pr-4">
                   <Badge variant={streamStatusToBadge(s.status)}>

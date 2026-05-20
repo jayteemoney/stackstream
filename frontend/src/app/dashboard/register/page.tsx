@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildRegisterDaoTx } from "@/lib/stacks";
+import { EXPLORER_BASE } from "@/lib/constants";
 import { toast } from "sonner";
 import { Zap, ArrowRight } from "lucide-react";
 
@@ -78,7 +79,7 @@ export default function RegisterDaoPage() {
             <p className="text-xs text-emerald-400 text-center">
               Transaction submitted:{" "}
               <a
-                href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
+                href={`${EXPLORER_BASE}/txid/${txId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline"

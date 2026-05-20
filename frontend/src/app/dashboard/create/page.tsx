@@ -18,7 +18,7 @@ import {
   type DurationUnit,
   type TokenConfig,
 } from "@/lib/constants";
-import { formatTokenAmount, blocksToTimeString } from "@/lib/utils";
+import { formatTokenAmount, blocksToTimeString, blockToClockTime } from "@/lib/utils";
 import { toast } from "sonner";
 import { Zap, ArrowRight, Info, Loader2, CheckCircle2 } from "lucide-react";
 
@@ -253,18 +253,32 @@ export default function CreateStreamPage() {
                   <p className="text-zinc-200 font-mono">{formatTokenAmount(ratePerBlock)} {selectedToken.symbol}</p>
                 </div>
                 <div>
-                  <p className="text-zinc-500 text-xs">Start block</p>
-                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 120).toLocaleString()}</p>
+                  <p className="text-zinc-500 text-xs">Starts at</p>
+                  <p
+                    className="text-zinc-200"
+                    title={`~Block #${(blockHeight + 120).toLocaleString()}`}
+                  >
+                    ~{blockToClockTime(blockHeight + 120, blockHeight)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-zinc-500 text-xs">End block</p>
-                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 120 + durationBlocks).toLocaleString()}</p>
+                  <p className="text-zinc-500 text-xs">Ends at</p>
+                  <p
+                    className="text-zinc-200"
+                    title={`~Block #${(blockHeight + 120 + durationBlocks).toLocaleString()}`}
+                  >
+                    ~{blockToClockTime(blockHeight + 120 + durationBlocks, blockHeight)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Token</p>
                   <p className="text-zinc-200">{selectedToken.name} ({selectedToken.symbol})</p>
                 </div>
               </div>
+              <p className="text-[11px] text-zinc-600 pt-1 border-t border-border/40">
+                Duration is approximate. Stacks blocks target ~5s under Nakamoto,
+                so the actual stream length may vary by a few minutes.
+              </p>
             </div>
           )}
 

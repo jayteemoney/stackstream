@@ -10,6 +10,7 @@ import {
   truncateAddress,
   getStreamStatusLabel,
   getStreamProgress,
+  formatStreamWindow,
 } from "@/lib/utils";
 import { STREAM_STATUS } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
@@ -86,9 +87,12 @@ export function StreamCard({
                 )}
               </span>
             </p>
-            <p className="text-xs text-zinc-600">
-              Block {stream.startBlock.toLocaleString()} &rarr;{" "}
-              {stream.endBlock.toLocaleString()}
+            <p
+              className="text-xs text-zinc-600"
+              title={`Block ${stream.startBlock.toLocaleString()} → ${stream.endBlock.toLocaleString()}`}
+            >
+              {formatStreamWindow(stream.startBlock, stream.endBlock, blockHeight) ??
+                `Block ${stream.startBlock.toLocaleString()} → ${stream.endBlock.toLocaleString()}`}
             </p>
             {stream.memo && (
               <p className="text-xs text-zinc-500 mt-0.5 italic truncate max-w-30 sm:max-w-50" title={stream.memo}>

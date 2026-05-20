@@ -88,6 +88,47 @@ export function blocksToTimeString(blocks: number): string {
   return `${months}mo ${days % 30}d`;
 }
 
+/**
+ * Wall-clock description of a stream's window relative to the current block.
+ * Hides block numbers behind a time-first phrasing.
+ *
+ *   future:   "Starts in 12m"
+ *   active:   "Ends in 4h 30m"
+ *   past:     "Ended 1d ago"
+ *   loading:  null  (caller renders a fallback)
+ */
+export function formatStreamWindow(
+  startBlock: number,
+  endBlock: number,
+  currentBlock: number,
+): string | null {
+  if (currentBlock <= 0) return null;
+  if (currentBlock < startBlock) return `Starts in ${blocksToTimeString(startBlock - currentBlock)}`;
+  if (currentBlock < endBlock) return `Ends in ${blocksToTimeString(endBlock - currentBlock)}`;
+  return `Ended ${blocksToTimeString(currentBlock - endBlock)} ago`;
+}
+
+/**
+ * Approximate wall-clock time at which a future block will be mined,
+ * computed as now + (targetBlock - currentBlock) * BLOCK_TIME_SECONDS.
+ * Returns local-time "3:42 PM" if within the next 24h, else "May 21 · 3:42 PM".
+ */
+export function blockToClockTime(targetBlock: number, currentBlock: number): string {
+  if (currentBlock <= 0) return "—";
+  const deltaMs = (targetBlock - currentBlock) * BLOCK_TIME_SECONDS * 1000;
+  const target = new Date(Date.now() + deltaMs);
+  const sameDay = target.toDateString() === new Date().toDateString();
+  if (sameDay) {
+    return target.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+  return target.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 /** PRECISION constant matching smart contract (1e12) */
 export const PRECISION = 1_000_000_000_000n;
 

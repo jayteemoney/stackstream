@@ -21,17 +21,23 @@
 
 ### Contract addresses
 
-| Contract | Mainnet address | Explorer link |
+| Contract | Mainnet address | Deploy tx |
 |---|---|---|
-| `stream-manager` | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-manager` | _[POST-DEPLOY]_ https://explorer.hiro.so/txid/<TX_HASH>?chain=mainnet |
-| `stream-factory` | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-factory` | _[POST-DEPLOY]_ https://explorer.hiro.so/txid/<TX_HASH>?chain=mainnet |
-| `sip-010-trait` | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.sip-010-trait` | _[POST-DEPLOY]_ https://explorer.hiro.so/txid/<TX_HASH>?chain=mainnet |
+| **`stream-manager`** | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-manager` | [`0xe566d415ac3eb1ad00389b04bbb072f6ae06b83914df873b316703d4505e7c95`](https://explorer.hiro.so/txid/0xe566d415ac3eb1ad00389b04bbb072f6ae06b83914df873b316703d4505e7c95?chain=mainnet) |
+| **`stream-factory`** | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-factory` | [`0x2a9df50e6200162809b6e4f44d92dcb92c28e1606b495510ee00cc25c21c01bc`](https://explorer.hiro.so/txid/0x2a9df50e6200162809b6e4f44d92dcb92c28e1606b495510ee00cc25c21c01bc?chain=mainnet) |
+| `sip-010-trait` | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.sip-010-trait` | [`0x0571cc4c8ff97f592e2364d9fdc2c056eaf3db9b963141ef8b354134c944022e`](https://explorer.hiro.so/txid/0x0571cc4c8ff97f592e2364d9fdc2c056eaf3db9b963141ef8b354134c944022e?chain=mainnet) |
+
+> **Note on the fourth published contract:** `mock-sip010-token` (tx [`0xac601e2f2f2d83f45244fa6d46ab0f9c803a3f7fcc750fc97939e9bf39db68d4`](https://explorer.hiro.so/txid/0xac601e2f2f2d83f45244fa6d46ab0f9c803a3f7fcc750fc97939e9bf39db68d4?chain=mainnet)) was published in the same batch because `clarinet deployments generate` includes every contract listed in `Clarinet.toml`. This is a test-helper contract with a public `mint` function used by the local Vitest suite. It is **not** whitelisted in the production frontend (`frontend/src/lib/constants.ts` MAINNET_TOKENS list: sBTC, USDA, ALEX, xBTC only). It carries no protocol authority and is not referenced by `stream-manager.clar` or `stream-factory.clar` on mainnet. Documented here for transparency.
+
+**Block:** 8016983 (anchored to Bitcoin block 950145)
+**Confirmed at:** 2026-05-19 22:28:58 UTC
+**Total deploy cost:** 424,970 microSTX (~0.42 STX)
 
 ### Deployer
 
-- **Address:** `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79`
-- **Explorer:** https://explorer.hiro.so/address/SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79?chain=mainnet
-- **Deploy plan:** `deployments/default.mainnet-plan.yaml` (committed)
+- **Address:** [`SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79`](https://explorer.hiro.so/address/SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79?chain=mainnet)
+- **Deploy plan:** `deployments/default.mainnet-plan.yaml` (committed at `af8b0ea`)
+- **Deploy date:** 2026-05-20 (Stacks block 8016983)
 
 ### Release tag
 
@@ -40,8 +46,12 @@
 
 ### Post-Deploy Validation
 
-After deploy, each public function was called via `clarinet console --mainnet` or the production frontend to confirm responsiveness:
-- `stream-manager.get-next-stream-id` returns `u1` (no streams yet — clean state)
+Both contracts confirmed live on the Stacks Explorer with full source verification:
+- https://explorer.hiro.so/address/SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-manager?chain=mainnet
+- https://explorer.hiro.so/address/SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-factory?chain=mainnet
+
+All four contract-publish transactions confirmed in the same Stacks block (#8016983) with `tx_status: success`. Initial protocol state verified clean:
+- `stream-manager.get-next-stream-id` returns `u1` (no streams yet — fresh state)
 - `stream-factory.get-dao-count` returns `u0`
 - `stream-manager.get-emergency-pause-state` returns `false`
 - `stream-factory.is-registered-dao` returns `false` for any unregistered principal

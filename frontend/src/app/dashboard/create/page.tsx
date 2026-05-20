@@ -67,8 +67,10 @@ export default function CreateStreamPage() {
     if (!validate() || !address) return;
 
     // Fetch the latest block height right before submitting to avoid stale data.
-    // Add a buffer of +3 blocks so the start-block is still in the future
-    // when the tx is mined (blocks are ~10 min on mainnet).
+    // Nakamoto Stacks blocks tick every ~5s, so a small buffer is not enough —
+    // 120 blocks gives ~10–20 min of headroom for wallet review, mempool wait,
+    // and mining inclusion. The contract asserts start-block >= stacks-block-height
+    // at mine time, so too small a buffer surfaces as "Start block is in the past".
     let latestBlock = blockHeight;
     try {
       const { getCurrentBlockHeight } = await import("@/lib/stacks");
@@ -83,7 +85,7 @@ export default function CreateStreamPage() {
       tokenContract: selectedToken.contractId,
       ftName: selectedToken.ftName,
       depositAmount: BigInt(amountRaw),
-      startBlock: latestBlock + 3,
+      startBlock: latestBlock + 120,
       durationBlocks,
       memo: memo || undefined,
       senderAddress: address,
@@ -219,11 +221,11 @@ export default function CreateStreamPage() {
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Start block</p>
-                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 3).toLocaleString()}</p>
+                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 120).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">End block</p>
-                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 3 + durationBlocks).toLocaleString()}</p>
+                  <p className="text-zinc-200 font-mono">~#{(blockHeight + 120 + durationBlocks).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Token</p>

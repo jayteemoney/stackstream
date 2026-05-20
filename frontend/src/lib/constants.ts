@@ -52,20 +52,27 @@ export const APP_NAME = "StackStream";
 export const APP_DESCRIPTION =
   "Real-time payment streaming on Stacks — for teams, organizations, and individuals. Stream sBTC, USDA, ALEX, xBTC, or any SIP-010 token.";
 
-/** Average Stacks block time in seconds */
-export const BLOCK_TIME_SECONDS = 600; // ~10 minutes
+// Stacks block cadence under Nakamoto (Epoch 3.0+). `stacks-block-height` —
+// which the stream-manager contract uses for start-block / end-block — now
+// advances roughly every 5 seconds, decoupled from the 10-min Bitcoin block.
+// Pre-Nakamoto values (600s/block, 6/hour, 144/day) made a "5 hour" stream
+// run on-chain for ~2.5 minutes; see commit 2f15b6f for the related start-
+// block buffer fix.
 
-/** Blocks per day (approx) */
-export const BLOCKS_PER_DAY = 144;
+/** Average Stacks block time in seconds (Nakamoto) */
+export const BLOCK_TIME_SECONDS = 5;
 
-/** Blocks per month (approx 30 days) */
-export const BLOCKS_PER_MONTH = 4320;
+/** Blocks per minute (60 / 5) */
+export const BLOCKS_PER_MINUTE = 12;
 
-/** Blocks per hour (approx) */
-export const BLOCKS_PER_HOUR = 6;
+/** Blocks per hour (60 * 12) */
+export const BLOCKS_PER_HOUR = 720;
 
-/** Blocks per minute (approx — 1 block / 10 min) */
-export const BLOCKS_PER_MINUTE = 1 / 10;
+/** Blocks per day (24 * 720) */
+export const BLOCKS_PER_DAY = 17_280;
+
+/** Blocks per month (30 * 17_280) */
+export const BLOCKS_PER_MONTH = 518_400;
 
 /** Duration unit options for stream creation */
 export const DURATION_UNITS = [

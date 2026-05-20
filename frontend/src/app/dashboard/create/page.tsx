@@ -69,7 +69,7 @@ export default function CreateStreamPage() {
       errs.amount = `Insufficient ${selectedToken.symbol} balance. You have ${formatTokenAmount(Number(balance) / tokenMultiplier)} ${selectedToken.symbol}.`;
     }
     if (!durationValue || parseFloat(durationValue) <= 0) errs.duration = "Enter a positive duration";
-    if (durationBlocks < 1) errs.duration = "Duration must be at least 1 block (~10 minutes)";
+    if (durationBlocks < 1) errs.duration = "Duration must be at least 1 block (~5 seconds)";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }

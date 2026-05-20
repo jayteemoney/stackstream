@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { BLOCK_TIME_SECONDS } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -73,9 +74,11 @@ export function getStreamProgress(
   return Math.min(100, Math.max(0, (elapsed / duration) * 100));
 }
 
-/** Estimate time remaining from blocks (Stacks ~10 min/block) */
+/** Estimate wall-clock time from a Stacks-block count (Nakamoto: ~5s/block) */
 export function blocksToTimeString(blocks: number): string {
-  const minutes = blocks * 10;
+  const totalSeconds = blocks * BLOCK_TIME_SECONDS;
+  const minutes = Math.floor(totalSeconds / 60);
+  if (minutes < 1) return `${totalSeconds}s`;
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ${minutes % 60}m`;

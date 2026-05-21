@@ -3,21 +3,21 @@
 /**
  * Signature component: real-time animated balance counter.
  *
- * Interpolates between on-chain balance snapshots using per-second
- * linear interpolation based on the stream's rate-per-block and
- * the average Stacks block time (~10 min / 600s).
+ * Interpolates between on-chain balance snapshots using per-second linear
+ * interpolation based on the stream's rate-per-block and the Nakamoto Stacks
+ * block time (~5s).
  *
  * Inspired by Sablier's streaming visualization.
  */
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { SBTC_DECIMALS, PRECISION } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { PRECISION } from "@/lib/utils";
 import { BLOCK_TIME_SECONDS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface RealtimeBalanceProps {
-  /** Current on-chain claimable balance (raw, 8 decimals) */
+  /** Current on-chain claimable balance in the token's raw smallest units */
   baseBalance: bigint;
   /** Rate per block from contract (with PRECISION multiplier) */
   ratePerBlock: bigint;
@@ -25,6 +25,10 @@ interface RealtimeBalanceProps {
   depositAmount?: bigint;
   /** Is the stream actively accruing? */
   isActive: boolean;
+  /** Decimals for the token being streamed (8 for sBTC, 6 for USDA, etc.) */
+  decimals: number;
+  /** Optional symbol shown next to the "Streaming live" tag */
+  symbol?: string;
   /** Size variant */
   size?: "sm" | "lg";
   className?: string;
@@ -35,6 +39,8 @@ export function RealtimeBalance({
   ratePerBlock,
   depositAmount,
   isActive,
+  decimals,
+  symbol,
   size = "lg",
   className,
 }: RealtimeBalanceProps) {
@@ -75,9 +81,13 @@ export function RealtimeBalance({
     };
   }, [isActive, ratePerSecond, baseBalance]);
 
-  const humanValue = displayValue / Math.pow(10, SBTC_DECIMALS);
-  const formatted = humanValue.toFixed(12);
+  const humanValue = displayValue / Math.pow(10, decimals);
+  // Pad fractional precision past the token's native decimals so the rapid-
+  // animation tail still has digits to flicker for tokens with fewer decimals.
+  const displayDigits = Math.max(decimals + 4, 12);
+  const formatted = humanValue.toFixed(displayDigits);
   const [intPart, decPart] = formatted.split(".");
+  const stableDigits = Math.max(decimals - 2, 4);
 
   return (
     <div className={cn("relative", className)}>
@@ -89,15 +99,18 @@ export function RealtimeBalance({
       >
         <span className="text-zinc-100">{Number(intPart).toLocaleString()}</span>
         <span className="text-zinc-100">.</span>
-        {/* First 6 decimals are visible, remaining animate rapidly */}
-        <span className="text-zinc-300">{decPart?.slice(0, 6)}</span>
+        {/* First `stableDigits` are easy to read; the tail flickers as it ticks */}
+        <span className="text-zinc-300">{decPart?.slice(0, stableDigits)}</span>
         <motion.span
           className="text-brand-400"
           animate={isActive ? { opacity: [0.4, 1, 0.4] } : { opacity: 0.3 }}
           transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }}
         >
-          {decPart?.slice(6, 12)}
+          {decPart?.slice(stableDigits, displayDigits)}
         </motion.span>
+        {symbol && (
+          <span className="text-sm text-zinc-500 ml-2 font-medium">{symbol}</span>
+        )}
       </div>
 
       {/* Accruing indicator */}

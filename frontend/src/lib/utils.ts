@@ -1,6 +1,12 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { BLOCK_TIME_SECONDS } from "./constants";
+import {
+  BLOCK_TIME_SECONDS,
+  DEFAULT_TOKEN,
+  getTokenConfigByContractId,
+  type TokenConfig,
+} from "./constants";
+import { clarityErrorMessage } from "./stacks";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -127,6 +133,55 @@ export function blockToClockTime(targetBlock: number, currentBlock: number): str
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+/**
+ * Pick the dominant token across a set of streams (by stream count) for
+ * aggregate stat-card / hero-card display. Streams in other tokens are
+ * reported via `otherCount` so callers can surface them as a footnote.
+ *
+ * Aggregating raw amounts across tokens with different decimals would be
+ * meaningless (1e8 raw sBTC sums incorrectly with 1e6 raw USDA), so callers
+ * should reduce only `primaryStreams` when computing totals.
+ */
+export function pickPrimaryToken<T extends { token: string }>(
+  streams: readonly T[],
+): {
+  token: TokenConfig;
+  primaryStreams: T[];
+  otherCount: number;
+} {
+  if (streams.length === 0) {
+    return { token: DEFAULT_TOKEN, primaryStreams: [], otherCount: 0 };
+  }
+  const byToken = streams.reduce<Record<string, T[]>>((acc, s) => {
+    (acc[s.token] ??= []).push(s);
+    return acc;
+  }, {});
+  const primaryTokenId = Object.keys(byToken).reduce((a, b) =>
+    byToken[a].length >= byToken[b].length ? a : b,
+  );
+  const primaryStreams = byToken[primaryTokenId];
+  return {
+    token: getTokenConfigByContractId(primaryTokenId),
+    primaryStreams,
+    otherCount: streams.length - primaryStreams.length,
+  };
+}
+
+/**
+ * Build a user-facing toast message from a failed TxResult.
+ * Routes Clarity error codes (e.g. `u207`) through the human-readable
+ * mapping so users see "Stream has already ended" instead of raw `u207`.
+ */
+export function formatTxError(
+  prefix: string,
+  result: { status: string; errorCode?: string },
+): string {
+  if (result.status === "timeout") return "Transaction timed out";
+  const human = clarityErrorMessage(result.errorCode);
+  if (human) return `${prefix}: ${human}`;
+  return `${prefix}: ${result.errorCode ?? result.status}`;
 }
 
 /** PRECISION constant matching smart contract (1e12) */

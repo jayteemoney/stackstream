@@ -9,32 +9,17 @@ import { useSenderStreams } from "@/hooks/use-streams";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
-import { formatTokenAmount } from "@/lib/utils";
-import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx, clarityErrorMessage } from "@/lib/stacks";
+import { formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
+import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
-import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
+import { STREAM_STATUS } from "@/lib/constants";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { PlusCircle, Zap, Users, Coins, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-
-/**
- * Build a user-facing toast message from a failed TxResult.
- * Routes Clarity error codes (e.g. `u207`) through the human-readable
- * mapping so users see "Stream has already ended" instead of raw `u207`.
- */
-function formatTxError(
-  prefix: string,
-  result: { status: string; errorCode?: string },
-): string {
-  if (result.status === "timeout") return "Transaction timed out";
-  const human = clarityErrorMessage(result.errorCode);
-  if (human) return `${prefix}: ${human}`;
-  return `${prefix}: ${result.errorCode ?? result.status}`;
-}
 
 export default function DashboardPage() {
   const { isConnected } = useWalletStore();
@@ -44,8 +29,9 @@ export default function DashboardPage() {
   const { execute, isPending, isConfirming } = useStacksTx();
 
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
-  const totalDeposited = streams.reduce((acc, s) => acc + s.depositAmount, 0n);
-  const totalWithdrawn = streams.reduce((acc, s) => acc + s.withdrawnAmount, 0n);
+  const { token: primaryToken, primaryStreams, otherCount } = pickPrimaryToken(streams);
+  const totalDeposited = primaryStreams.reduce((acc, s) => acc + s.depositAmount, 0n);
+  const totalWithdrawn = primaryStreams.reduce((acc, s) => acc + s.withdrawnAmount, 0n);
 
   if (!isConnected) {
     return (
@@ -74,13 +60,14 @@ export default function DashboardPage() {
               icon={<Zap className="h-4 w-4" />}
             />
             <StatCard
-              label="Total Deposited"
-              value={`${formatTokenAmount(totalDeposited)} ${DEFAULT_TOKEN.symbol}`}
+              label={`Total Deposited (${primaryToken.symbol})`}
+              value={`${formatTokenAmount(totalDeposited, primaryToken.decimals)} ${primaryToken.symbol}`}
+              sub={otherCount > 0 ? `+ ${otherCount} stream${otherCount === 1 ? "" : "s"} in other tokens` : undefined}
               icon={<Coins className="h-4 w-4" />}
             />
             <StatCard
-              label="Total Claimed"
-              value={`${formatTokenAmount(totalWithdrawn)} ${DEFAULT_TOKEN.symbol}`}
+              label={`Total Claimed (${primaryToken.symbol})`}
+              value={`${formatTokenAmount(totalWithdrawn, primaryToken.decimals)} ${primaryToken.symbol}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <StatCard

@@ -15,6 +15,7 @@ import {
   DEFAULT_TOKEN,
   DURATION_UNITS,
   EXPLORER_BASE,
+  BLOCKS_PER_HOUR,
   type DurationUnit,
   type TokenConfig,
 } from "@/lib/constants";
@@ -66,7 +67,7 @@ export default function CreateStreamPage() {
     // returns (err u1) if the wallet is short — catch it here so users don't
     // burn gas on a doomed tx.
     else if (BigInt(amountRaw) > balance) {
-      errs.amount = `Insufficient ${selectedToken.symbol} balance. You have ${formatTokenAmount(Number(balance) / tokenMultiplier)} ${selectedToken.symbol}.`;
+      errs.amount = `Insufficient ${selectedToken.symbol} balance. You have ${formatTokenAmount(balance, selectedToken.decimals)} ${selectedToken.symbol}.`;
     }
     if (!durationValue || parseFloat(durationValue) <= 0) errs.duration = "Enter a positive duration";
     if (durationBlocks < 1) errs.duration = "Duration must be at least 1 block (~5 seconds)";
@@ -183,7 +184,7 @@ export default function CreateStreamPage() {
                   Available:{" "}
                   {isBalanceLoading
                     ? "…"
-                    : `${formatTokenAmount(Number(balance) / tokenMultiplier)} ${selectedToken.symbol}`}
+                    : `${formatTokenAmount(balance, selectedToken.decimals)} ${selectedToken.symbol}`}
                 </span>
                 {balance > 0n && !isSubmitting && (
                   <button
@@ -249,8 +250,13 @@ export default function CreateStreamPage() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                 <div>
-                  <p className="text-zinc-500 text-xs">Rate per block</p>
-                  <p className="text-zinc-200 font-mono">{formatTokenAmount(ratePerBlock)} {selectedToken.symbol}</p>
+                  <p className="text-zinc-500 text-xs">Rate per hour</p>
+                  <p
+                    className="text-zinc-200 font-mono"
+                    title={`${ratePerBlock.toLocaleString()} raw units per block`}
+                  >
+                    {formatTokenAmount(ratePerBlock * BLOCKS_PER_HOUR, selectedToken.decimals)} {selectedToken.symbol}
+                  </p>
                 </div>
                 <div>
                   <p className="text-zinc-500 text-xs">Starts at</p>

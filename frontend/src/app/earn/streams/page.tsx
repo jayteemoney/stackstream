@@ -11,6 +11,7 @@ import { buildClaimAllTx } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
 import type { StreamData } from "@/lib/stacks";
 import { ClaimDialog } from "@/components/stream/claim-dialog";
+import { formatTxError } from "@/lib/utils";
 import { toast } from "sonner";
 import { Coins } from "lucide-react";
 import { useState } from "react";
@@ -77,7 +78,7 @@ export default function EarnStreamsPage() {
               toast.success("Tokens claimed!");
               refetch();
             } else if (result && !result.confirmed) {
-              toast.error(result.status === "timeout" ? "Transaction timed out" : `Failed to claim: ${result.errorCode ? result.errorCode : result.status}`);
+              toast.error(formatTxError("Failed to claim", result));
             }
           }}
           onClaimPartial={() =>

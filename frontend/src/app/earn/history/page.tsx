@@ -6,13 +6,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge, streamStatusToBadge } from "@/components/ui/badge";
 import { useRecipientStreams } from "@/hooks/use-streams";
 import { useWalletStore } from "@/stores/wallet-store";
-import { formatTokenAmount, truncateAddress, getStreamStatusLabel } from "@/lib/utils";
-import { Clock, ExternalLink } from "lucide-react";
-import { EXPLORER_BASE, DEFAULT_TOKEN } from "@/lib/constants";
+import { formatTokenAmount, truncateAddress, getStreamStatusLabel, formatStreamWindow } from "@/lib/utils";
+import { Clock } from "lucide-react";
+import { getTokenConfigByContractId } from "@/lib/constants";
+import { useAppStore } from "@/stores/app-store";
+import { useBlockHeight } from "@/hooks/use-block-height";
 
 export default function HistoryPage() {
   const { isConnected } = useWalletStore();
   const { streams, isLoading } = useRecipientStreams();
+  useBlockHeight();
+  const blockHeight = useAppStore((s) => s.currentBlockHeight);
 
   if (!isConnected) {
     return (
@@ -64,37 +68,43 @@ export default function HistoryPage() {
                 Status
               </th>
               <th className="py-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                Block Range
+                Window
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {streamsWithHistory.map((s) => (
-              <tr key={s.id} className="hover:bg-surface-2 transition-colors">
-                <td className="py-3 pr-4">
-                  <span className="font-mono text-xs text-brand-400">#{s.id}</span>
-                </td>
-                <td className="py-3 pr-4">
-                  <span className="font-mono text-xs text-zinc-300">
-                    {truncateAddress(s.sender, 5)}
-                  </span>
-                </td>
-                <td className="py-3 pr-4 text-zinc-200">
-                  {formatTokenAmount(s.depositAmount)} {DEFAULT_TOKEN.symbol}
-                </td>
-                <td className="py-3 pr-4 text-emerald-400 font-medium">
-                  {formatTokenAmount(s.withdrawnAmount)} {DEFAULT_TOKEN.symbol}
-                </td>
-                <td className="py-3 pr-4">
-                  <Badge variant={streamStatusToBadge(s.status)}>
-                    {getStreamStatusLabel(s.status)}
-                  </Badge>
-                </td>
-                <td className="py-3 text-xs text-zinc-500 font-mono">
-                  {s.startBlock.toLocaleString()} &rarr; {s.endBlock.toLocaleString()}
-                </td>
-              </tr>
-            ))}
+            {streamsWithHistory.map((s) => {
+              const tokenConfig = getTokenConfigByContractId(s.token);
+              return (
+                <tr key={s.id} className="hover:bg-surface-2 transition-colors">
+                  <td className="py-3 pr-4">
+                    <span className="font-mono text-xs text-brand-400">#{s.id}</span>
+                  </td>
+                  <td className="py-3 pr-4">
+                    <span className="font-mono text-xs text-zinc-300">
+                      {truncateAddress(s.sender, 5)}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 text-zinc-200">
+                    {formatTokenAmount(s.depositAmount, tokenConfig.decimals)} {tokenConfig.symbol}
+                  </td>
+                  <td className="py-3 pr-4 text-emerald-400 font-medium">
+                    {formatTokenAmount(s.withdrawnAmount, tokenConfig.decimals)} {tokenConfig.symbol}
+                  </td>
+                  <td className="py-3 pr-4">
+                    <Badge variant={streamStatusToBadge(s.status)}>
+                      {getStreamStatusLabel(s.status)}
+                    </Badge>
+                  </td>
+                  <td
+                    className="py-3 text-xs text-zinc-500"
+                    title={`Block ${s.startBlock.toLocaleString()} → ${s.endBlock.toLocaleString()}`}
+                  >
+                    {formatStreamWindow(s.startBlock, s.endBlock, blockHeight) ?? "—"}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

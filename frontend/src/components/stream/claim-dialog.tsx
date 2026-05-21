@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimTx, type StreamData } from "@/lib/stacks";
 import { SUPPORTED_TOKENS, DEFAULT_TOKEN } from "@/lib/constants";
-import { formatTokenAmount } from "@/lib/utils";
+import { formatTokenAmount, formatTxError } from "@/lib/utils";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 
@@ -45,7 +45,7 @@ export function ClaimDialog({
     }
     if (amountRaw > claimable) {
       setError(
-        `Max claimable is ${formatTokenAmount(claimable)} ${tokenConfig.symbol}`
+        `Max claimable is ${formatTokenAmount(claimable, tokenConfig.decimals)} ${tokenConfig.symbol}`
       );
       return false;
     }
@@ -67,15 +67,11 @@ export function ClaimDialog({
     );
 
     if (result?.confirmed) {
-      toast.success(`Claimed ${formatTokenAmount(amountRaw)} ${tokenConfig.symbol}`);
+      toast.success(`Claimed ${formatTokenAmount(amountRaw, tokenConfig.decimals)} ${tokenConfig.symbol}`);
       setAmount("");
       onSuccess();
     } else if (result && !result.confirmed) {
-      toast.error(
-        result.status === "timeout"
-          ? "Transaction timed out"
-          : `Claim failed: ${result.errorCode ?? result.status}`
-      );
+      toast.error(formatTxError("Claim failed", result));
     }
   }
 
@@ -96,7 +92,7 @@ export function ClaimDialog({
             Claim from Stream #{streamId}
           </h2>
           <p className="text-xs text-zinc-500">
-            Available: {formatTokenAmount(claimable)} {tokenConfig.symbol}
+            Available: {formatTokenAmount(claimable, tokenConfig.decimals)} {tokenConfig.symbol}
           </p>
         </div>
       </div>
@@ -107,7 +103,7 @@ export function ClaimDialog({
           type="number"
           step={`${1 / tokenMultiplier}`}
           min="0"
-          placeholder={formatTokenAmount(claimable)}
+          placeholder={formatTokenAmount(claimable, tokenConfig.decimals)}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           error={error}
@@ -123,7 +119,7 @@ export function ClaimDialog({
             )
           }
         >
-          Use max ({formatTokenAmount(claimable)} {tokenConfig.symbol})
+          Use max ({formatTokenAmount(claimable, tokenConfig.decimals)} {tokenConfig.symbol})
         </button>
 
         <div className="flex gap-3">

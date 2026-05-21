@@ -12,8 +12,8 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimAllTx } from "@/lib/stacks";
 import { getTokenConfigByContractId } from "@/lib/constants";
-import { formatTokenAmount } from "@/lib/utils";
-import { STREAM_STATUS, DEFAULT_TOKEN } from "@/lib/constants";
+import { formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
+import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
 import { Coins, Download, Zap, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -35,16 +35,15 @@ export default function EarnPage() {
   }
 
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
-  const totalClaimable = streams.reduce((a, s) => a + (s.claimable ?? 0n), 0n);
-  const totalEarned = streams.reduce((a, s) => a + (s.streamed ?? 0n), 0n);
-  const totalClaimed = streams.reduce((a, s) => a + s.withdrawnAmount, 0n);
+  const { token: primaryToken, primaryStreams, otherCount: otherStreamCount } = pickPrimaryToken(streams);
 
-  // Aggregate rate for active streams
-  const totalRatePerBlock = activeStreams.reduce(
-    (a, s) => a + s.ratePerBlock,
-    0n
-  );
-  const totalDepositAmount = streams.reduce((a, s) => a + s.depositAmount, 0n);
+  const totalClaimable = primaryStreams.reduce((a, s) => a + (s.claimable ?? 0n), 0n);
+  const totalEarned = primaryStreams.reduce((a, s) => a + (s.streamed ?? 0n), 0n);
+  const totalClaimed = primaryStreams.reduce((a, s) => a + s.withdrawnAmount, 0n);
+  const totalRatePerBlock = primaryStreams
+    .filter((s) => s.status === STREAM_STATUS.ACTIVE)
+    .reduce((a, s) => a + s.ratePerBlock, 0n);
+  const totalDepositAmount = primaryStreams.reduce((a, s) => a + s.depositAmount, 0n);
 
   return (
     <div className="space-y-6">
@@ -70,15 +69,22 @@ export default function EarnPage() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-brand-500/5 to-transparent rounded-bl-full" />
             <div className="relative">
               <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-3">
-                Total Claimable Balance
+                Total Claimable Balance ({primaryToken.symbol})
               </p>
               <RealtimeBalance
                 baseBalance={totalClaimable}
                 ratePerBlock={totalRatePerBlock}
                 depositAmount={totalDepositAmount}
-                isActive={activeStreams.length > 0}
+                isActive={activeStreams.some((s) => s.token === primaryToken.contractId)}
+                decimals={primaryToken.decimals}
+                symbol={primaryToken.symbol}
                 size="lg"
               />
+              {otherStreamCount > 0 && (
+                <p className="text-xs text-zinc-500 mt-3">
+                  + {otherStreamCount} stream{otherStreamCount === 1 ? "" : "s"} in other tokens — see the list below.
+                </p>
+              )}
               <div className="flex items-center gap-3 mt-6">
                 <Button
                   size="lg"
@@ -100,7 +106,7 @@ export default function EarnPage() {
                           toast.success(`Claimed stream #${stream.id}`);
                           anySuccess = true;
                         } else if (result && !result.confirmed) {
-                          toast.error(`Stream #${stream.id} failed: ${result.errorCode ?? result.status}`);
+                          toast.error(formatTxError(`Stream #${stream.id} failed`, result));
                         } else {
                           // User cancelled wallet prompt — stop the loop
                           break;
@@ -125,13 +131,13 @@ export default function EarnPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
-              label="Total Earned"
-              value={`${formatTokenAmount(totalEarned)} ${DEFAULT_TOKEN.symbol}`}
+              label={`Total Earned (${primaryToken.symbol})`}
+              value={`${formatTokenAmount(totalEarned, primaryToken.decimals)} ${primaryToken.symbol}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <StatCard
-              label="Total Claimed"
-              value={`${formatTokenAmount(totalClaimed)} ${DEFAULT_TOKEN.symbol}`}
+              label={`Total Claimed (${primaryToken.symbol})`}
+              value={`${formatTokenAmount(totalClaimed, primaryToken.decimals)} ${primaryToken.symbol}`}
               icon={<Wallet className="h-4 w-4" />}
             />
             <StatCard

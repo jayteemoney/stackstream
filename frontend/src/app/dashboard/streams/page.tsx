@@ -13,8 +13,8 @@ import {
   buildResumeStreamTx,
   buildCancelStreamTx,
   buildExpireStreamTx,
-  clarityErrorMessage,
 } from "@/lib/stacks";
+import { formatTxError } from "@/lib/utils";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
@@ -33,21 +33,6 @@ const filterOptions = [
 ] as const;
 
 type FilterValue = (typeof filterOptions)[number]["value"];
-
-/**
- * Build a user-facing toast message from a failed TxResult.
- * Routes Clarity error codes (e.g. `u207`) through the human-readable
- * mapping so users see "Stream has already ended" instead of raw `u207`.
- */
-function formatTxError(
-  prefix: string,
-  result: { status: string; errorCode?: string },
-): string {
-  if (result.status === "timeout") return "Transaction timed out";
-  const human = clarityErrorMessage(result.errorCode);
-  if (human) return `${prefix}: ${human}`;
-  return `${prefix}: ${result.errorCode ?? result.status}`;
-}
 
 export default function ManageStreamsPage() {
   const { isConnected } = useWalletStore();

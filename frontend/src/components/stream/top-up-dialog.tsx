@@ -5,10 +5,11 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
+import { useTokenBalance } from "@/hooks/use-token-balance";
 import { buildTopUpStreamTx, type StreamData } from "@/lib/stacks";
 import { useWalletStore } from "@/stores/wallet-store";
 import { SUPPORTED_TOKENS, DEFAULT_TOKEN } from "@/lib/constants";
-import { formatTokenAmount } from "@/lib/utils";
+import { formatTokenAmount, formatTxError } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowUpCircle } from "lucide-react";
 
@@ -35,10 +36,20 @@ export function TopUpDialog({
   const tokenConfig = SUPPORTED_TOKENS.find((t) => t.contractId === stream.token) ?? DEFAULT_TOKEN;
   const tokenMultiplier = Math.pow(10, tokenConfig.decimals);
   const amountRaw = Math.round(parseFloat(amount || "0") * tokenMultiplier);
+  const { balance, isLoading: isBalanceLoading } = useTokenBalance(
+    tokenConfig.contractId,
+    tokenConfig.ftName,
+  );
 
   function validate(): boolean {
     if (!amount || parseFloat(amount) <= 0) {
       setError("Enter a positive amount");
+      return false;
+    }
+    if (BigInt(amountRaw) > balance) {
+      setError(
+        `Insufficient ${tokenConfig.symbol} balance. You have ${formatTokenAmount(balance, tokenConfig.decimals)} ${tokenConfig.symbol}.`,
+      );
       return false;
     }
     setError("");
@@ -62,7 +73,7 @@ export function TopUpDialog({
       setAmount("");
       onSuccess();
     } else if (result && !result.confirmed) {
-      toast.error(result.status === "timeout" ? "Transaction timed out" : `Top-up failed: ${result.errorCode ?? result.status}`);
+      toast.error(formatTxError("Top-up failed", result));
     }
   }
 
@@ -83,23 +94,44 @@ export function TopUpDialog({
             Top Up Stream #{streamId}
           </h2>
           <p className="text-xs text-zinc-500">
-            Current deposit: {formatTokenAmount(stream.depositAmount)} {tokenConfig.symbol}
+            Current deposit: {formatTokenAmount(stream.depositAmount, tokenConfig.decimals)} {tokenConfig.symbol}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label={`Amount (${tokenConfig.symbol})`}
-          type="number"
-          step={`${1 / tokenMultiplier}`}
-          min="0"
-          placeholder="0.5"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          error={error}
-          hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units` : undefined}
-        />
+        <div className="space-y-1.5">
+          <Input
+            label={`Amount (${tokenConfig.symbol})`}
+            type="number"
+            step={`${1 / tokenMultiplier}`}
+            min="0"
+            placeholder="0.5"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            error={error}
+            hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units` : undefined}
+          />
+          {address && (
+            <div className="flex items-center justify-between text-xs text-zinc-500">
+              <span>
+                Available:{" "}
+                {isBalanceLoading
+                  ? "…"
+                  : `${formatTokenAmount(balance, tokenConfig.decimals)} ${tokenConfig.symbol}`}
+              </span>
+              {balance > 0n && (
+                <button
+                  type="button"
+                  onClick={() => setAmount((Number(balance) / tokenMultiplier).toString())}
+                  className="text-brand-400 hover:text-brand-300 underline"
+                >
+                  Use max
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex gap-3">
           <Button

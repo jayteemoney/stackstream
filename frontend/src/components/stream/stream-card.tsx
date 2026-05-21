@@ -12,7 +12,7 @@ import {
   getStreamProgress,
   formatStreamWindow,
 } from "@/lib/utils";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
 import type { StreamData } from "@/lib/stacks";
 import { Pause, Play, XCircle, ArrowUpCircle, Download, TimerOff } from "lucide-react";
@@ -50,6 +50,7 @@ export function StreamCard({
   actionLoading,
 }: StreamCardProps) {
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
+  const tokenConfig = getTokenConfigByContractId(stream.token);
   const progress = getStreamProgress(
     stream.startBlock,
     stream.endBlock,
@@ -115,6 +116,8 @@ export function StreamCard({
             ratePerBlock={stream.ratePerBlock}
             depositAmount={stream.depositAmount}
             isActive={isActive}
+            decimals={tokenConfig.decimals}
+            symbol={tokenConfig.symbol}
             size="sm"
           />
         </div>
@@ -123,19 +126,19 @@ export function StreamCard({
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Deposited</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(stream.depositAmount)}
+              {formatTokenAmount(stream.depositAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Streamed</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(streamed || stream.withdrawnAmount)}
+              {formatTokenAmount(streamed || stream.withdrawnAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Withdrawn</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(stream.withdrawnAmount)}
+              {formatTokenAmount(stream.withdrawnAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
             </p>
           </div>
         </div>

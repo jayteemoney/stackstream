@@ -1,6 +1,6 @@
 # StackStream — Milestone 2 Evidence Package
 
-**Submission date target:** 2026-05-22
+**Submission date target:** 2026-05-22 (evidence complete 2026-05-21)
 **Milestone:** M2 — Launch StackStream on Mainnet
 **Grant disbursement:** $2,400 (30%)
 **Maintainer:** Jethro Irmiya ([@jayteemoney](https://github.com/jayteemoney))
@@ -12,8 +12,8 @@
 | Criterion | Required | Submitted |
 |---|---|---|
 | 1. Verified contracts on mainnet | Both contracts deployed and verifiable on Stacks Explorer | ✅ Deploy date: **2026-05-20** — see Section 1 |
-| 2. Production frontend live | Frontend on production domain pointing at mainnet | ✅ Live URL: **https://stackstream.vercel.app** — see Section 2 |
-| 3. 5 successful mainnet streams (create + claim) | 5 streams created + claimed end-to-end | ✅ 5/5 created and partially-or-fully claimed — see Section 3 |
+| 2. Production frontend live | Frontend on production domain pointing at mainnet | ✅ Live URL: **https://stackstream.xyz** — see Section 2 |
+| 3. 5 successful mainnet streams (create + claim) | 5 streams created + claimed end-to-end | ✅ 5/5 created and claimed on 2026-05-21 — see Section 3 |
 
 ---
 
@@ -91,15 +91,15 @@ Per `MILESTONE_PLAN.md` line 191: "5 streams created AND partially claimed on ma
 
 StackStream supports any SIP-010 fungible token on Stacks mainnet — the contract takes a `<sip-010-trait>` argument at stream creation and is token-agnostic. The M2 demo exercises:
 
-- **USDA** (Arkadiko USD stablecoin) — all 5 streams. Easiest SIP-010 to acquire on mainnet (Bitflow STX→USDA swap), price-stable so each stream has predictable real-dollar value to the participant ("$1 streamed over 5 hours"), and directly aligned with the M3 DAO-contributor target audience (stablecoin payroll is the dominant DAO use case).
+- **USDA** (Arkadiko USD stablecoin) — every stream. Easiest SIP-010 to acquire on mainnet (Bitflow STX→USDA swap), price-stable so each stream has predictable real-dollar value to the participant, and directly aligned with the M3 DAO-contributor target audience (stablecoin payroll is the dominant DAO use case).
 
 **Tokens supported but deferred to M3 demos:** sBTC, ALEX, xBTC, and any other SIP-010 fungible token (no contract change required). sBTC streams will be the centerpiece of the post-M2 marketing push and the first DAO onboarding cases. **Native STX is not supported directly** — StackStream uses the SIP-010 `transfer` trait, not `stx-transfer?`. Users wrap STX via existing wrappers if they need to stream STX-equivalents.
 
-### Stream ring topology
+### Participants
 
-The 5 participants for M2 acceptance evidence are the deployer wallet plus the 4 most active independent security auditors who reviewed StackStream's Clarity contracts during the formal bounty window (May 11–18, 2026). Each participant is the **sender** of one stream and the **recipient** of another — a ring topology where every stream has a distinct sender and recipient pair, and no participant sends to themselves.
+The 5 participants for M2 acceptance evidence are the deployer wallet plus the 4 most active independent security auditors who reviewed StackStream's Clarity contracts during the formal bounty window (May 11–18, 2026). Every wallet on this list has prior on-chain or GitHub-verified engagement with the protocol — no outside recruitment, no synthetic participants.
 
-| Position | Wallet | Identity | Bounty earned (in STX) |
+| Position | Wallet | Identity | Bounty earned (USD eq.) |
 |---|---|---|---|
 | **P1** | `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79` | Deployer (Jethro Irmiya, @jayteemoney) | n/a |
 | **P2** | `SP11K7AFAH22JS5FZFWADYJZBG6AS5T9DNADKKEHQ` | [@Akanimoh12](https://github.com/Akanimoh12) — found H-1 (`reactivate-dao`) launch-blocker | $45 |
@@ -107,29 +107,55 @@ The 5 participants for M2 acceptance evidence are the deployer wallet plus the 4
 | **P4** | `SP19XTHQ3SVST2NCYPTHP2W31MFDQDBFG3W7E5AGD` | [@Godbrand0](https://github.com/Godbrand0) — found M-2/M-3/M-4 backend + frontend issues | $35 |
 | **P5** | `SP14V779KZH7Q62TXJ1G6HZBP23PJT6CE25C7WRBN` | [@dannyy2000](https://github.com/dannyy2000) — comprehensive verification audit of 11 prior fixes | $25 |
 
-This participant choice gives the M2 evidence package a uniquely strong story: **the same 4 independent developers who reviewed the contracts also became the first 4 wallets (alongside the deployer) to use them on mainnet.** No outside recruitment, no synthetic participants — every wallet on the M2 evidence list has prior on-chain or GitHub-verified engagement with the protocol.
+This participant choice gives the M2 evidence package a uniquely strong story: **the same 4 independent developers who reviewed the contracts also became the first 4 wallets (alongside the deployer) to use them on mainnet.**
 
-| # | Stream ID | Sender | Recipient | Token | Deposit | Duration (blocks) | Create tx | Claim tx | Final state |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | 1 | P1 | P2 | USDA | 1 USDA   | 30 | _[CREATE_TX_1]_ | _[CLAIM_TX_1]_ | Partially-claimed |
-| 2 | 2 | P2 | P3 | USDA | 1.5 USDA | 30 | _[CREATE_TX_2]_ | _[CLAIM_TX_2]_ | Depleted (full claim) |
-| 3 | 3 | P3 | P4 | USDA | 1 USDA   | 60 | _[CREATE_TX_3]_ | _[CLAIM_TX_3]_ | Pause+resume cycle then claim |
-| 4 | 4 | P4 | P5 | USDA | 2 USDA   | 30 | _[CREATE_TX_4]_ | _[CLAIM_TX_4]_ | Top-up extension + claim |
-| 5 | 5 | P5 | P1 | USDA | 1 USDA   | 20 | _[CREATE_TX_5]_ | _[CLAIM_TX_5]_ | Cancel-split (both refunds verified) |
+### Test execution and function coverage
 
-Each stream is independently verifiable on the Stacks Explorer. The 5 streams collectively exercise every state-mutating public function in `stream-manager.clar`: `create-stream`, `claim`, `claim-all`, `pause-stream`, `resume-stream`, `top-up-stream`, and `cancel-stream`.
+The original plan was a 5-stream ring (P1→P2→P3→P4→P5→P1) where each participant tested one management function on their own outgoing stream. The test ran on 2026-05-21 on Stacks mainnet, and during execution @Majormaxx (P3) was unable to complete the management portion of his assigned stream within the testing window. Rather than block the whole test, the remaining participants improvised additional streams so that **every state-mutating public function in `stream-manager.clar` still received at least one successful mainnet call**:
 
-### Auxiliary transaction hashes
+- @Godbrand0 (P4) created an extra stream and exercised `pause-stream` + `resume-stream` on it (originally Majormaxx's slot).
+- @Akanimoh12 (P2) created an extra stream and exercised `top-up-stream`.
+- P1 (deployer) created an extra long-duration stream and exercised `cancel-stream`.
 
-For streams 3, 4, and 5, the protocol-specific operations were also executed end-to-end:
+The M2 acceptance criterion in `MILESTONE_PLAN.md` line 191 reads: *"5 streams created AND partially claimed on mainnet, with transaction hashes."* The execution below meets that bar (5 distinct create+claim pairs from 5 distinct senders, all on mainnet), and on top of that exercises every other public function the contract exposes.
 
-- **Stream 3** (pause+resume cycle):
-  - `pause-stream` tx: _[PAUSE_TX_3]_
-  - `resume-stream` tx: _[RESUME_TX_3]_
-- **Stream 4** (top-up):
-  - `top-up-stream` tx: _[TOPUP_TX_4]_
-- **Stream 5** (cancel):
-  - `cancel-stream` tx: _[CANCEL_TX_5]_
+#### Per-stream summary
+
+All streams use **USDA** (`SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token`, 6 decimals) on Stacks mainnet. Durations are reported in wall-clock time (Nakamoto blocks ≈ 5s — for example, "1 hour" ≈ 720 blocks on-chain).
+
+| # | Sender | Recipient | Deposit | Duration | Create tx |
+|---|---|---|---|---|---|
+| 1 | P4 @Godbrand0 | P5 @dannyy2000 | 2.0 USDA | ~3 min (36 blocks) | [`0x70086503...adb70033c`](https://explorer.hiro.so/txid/0x700865038dc259120a7351974f74e84d8e10c1b7f096940beb4f65eadb70033c?chain=mainnet) |
+| 2 | P5 @dannyy2000 | P1 @jayteemoney | 1.0 USDA | ~1 min (12 blocks) | [`0xd5796f0c...906ddfaa5`](https://explorer.hiro.so/txid/0xd5796f0c2e3bbf0991414e5779df8ef9b345fc252d27542869740e1906ddfaa5?chain=mainnet) |
+| 3 | P2 @Akanimoh12 | P3 @Majormaxx | 1.5 USDA | ~3 min (36 blocks) | [`0xdd51c85d...2868e7c5d`](https://explorer.hiro.so/txid/0xdd51c85d196bc870f08eb2416dc2f66a89d080d86b6c75ad4c3b37e2868e7c5d?chain=mainnet) |
+| 4 | P3 @Majormaxx | P4 @Godbrand0 | 1.0 USDA | ~2.5 min (30 blocks) | [`0xea980bbe...6330d84e`](https://explorer.hiro.so/txid/0xea980bbea3a1a3293db9f41809f245af9977adee712ebcd4b04831c96330d84e?chain=mainnet) |
+| 5 | P1 @jayteemoney | P4 @Godbrand0 | 1.0 USDA | ~1 hour (720 blocks) | [`0x5d8fdf7d...886bebc8`](https://explorer.hiro.so/txid/0x5d8fdf7d4e979a605b7c936cb321ffc80f036858fcc74e9d80cdec95886bebc8?chain=mainnet) |
+
+#### Function coverage — every public state-mutating function exercised on mainnet
+
+| Function | Caller | Mainnet tx hash |
+|---|---|---|
+| `create-stream` ×5 | (see per-stream table above) | 5 distinct hashes above |
+| `claim` (partial) | P2 @Akanimoh12 | [`0xfc07bf26...16d895b5`](https://explorer.hiro.so/txid/0xfc07bf269c62b42b0d44820f88eb21c66901ac6205b3948f6a1b2b0316d895b5?chain=mainnet) |
+| `claim` (partial) | P5 @dannyy2000 | [`0x3bccbbd7...028b0674`](https://explorer.hiro.so/txid/0x3bccbbd7cbaa592325476c62e862bbcdcb776e4c7aa149f5dde776fa028b0674?chain=mainnet) |
+| `claim` (partial) | P1 @jayteemoney | [`0x2a71a5d0...672b146f3`](https://explorer.hiro.so/txid/0x2a71a5d01b5169387cf73bf5a42c76781eddf262e7363394dfc29cf672b146f3?chain=mainnet) |
+| `claim-all` | P2 @Akanimoh12 | [`0x6af89147...bc7758a68`](https://explorer.hiro.so/txid/0x6af89147c058f2bd4ea3d5bf0d6bf0bc2710e2d8116a38a68fc2312bc7758a68?chain=mainnet) |
+| `claim-all` | P3 @Majormaxx | [`0xf32c465f...4bd933c0`](https://explorer.hiro.so/txid/0xf32c465fb923c491c16a58502194ce44ad9d20b12897d6079e4607ce4bd933c0?chain=mainnet) |
+| `claim-all` | P4 @Godbrand0 | [`0xe160aef4...a61d18294`](https://explorer.hiro.so/txid/0xe160aef41931f652c399fde017f042259df6410650f6cf9f6f64050a61d18294?chain=mainnet) |
+| `claim-all` | P5 @dannyy2000 | [`0xa1824eb1...c44d1f35`](https://explorer.hiro.so/txid/0xa1824eb1c7059821ca23333ec712afad3bf01153b08a420c288cf9cfc44d1f35?chain=mainnet) |
+| `claim-all` | P1 @jayteemoney | [`0xf5d48780...28a7d776c`](https://explorer.hiro.so/txid/0xf5d48780c5040cfe490155b9074ce0ade2dd4a7cddd90dc673eeb8628a7d776c?chain=mainnet) |
+| `pause-stream` | P4 @Godbrand0 | [`0xd3633db5...c1e38dfa`](https://explorer.hiro.so/txid/0xd3633db5a8c28f76be626b2602d793bd5750d061a9578095ceb4b57cc1e38dfa?chain=mainnet) |
+| `resume-stream` | P4 @Godbrand0 | [`0xf89a9b63...229b5911`](https://explorer.hiro.so/txid/0xf89a9b63014cd376123ee644f8fb7b2c22c095b654df93e245c5bbbe229b5911?chain=mainnet) |
+| `top-up-stream` | P2 @Akanimoh12 | [`0xb05a00e4...5162fece`](https://explorer.hiro.so/txid/0xb05a00e4c91c044f46f7454e5fbd4cf60ea9948f46fb33319cd3e3835162fece?chain=mainnet) |
+| `cancel-stream` | P1 @jayteemoney | [`0x3fc9e4de...27ee909ad`](https://explorer.hiro.so/txid/0x3fc9e4dee2ab39c54cc4f47236afc872ab9af7d4cd07bc6704dbe3527ee909ad?chain=mainnet) |
+
+Every entry above is independently verifiable on https://explorer.hiro.so by pasting the tx hash. All transactions resolved to `tx_status: "success"`.
+
+#### Bonus evidence: real-world UX bug surfaced and fixed within the testing window
+
+During execution, @Majormaxx's wallet hit `(err u207)` (ERR-STREAM-ENDED) on his `pause-stream` attempts — the contract correctly rejected pauses on streams whose end-block had already passed, but the frontend wasn't surfacing the error in plain English and wasn't gating the Pause button to streams still in-window. This was a real interaction failure caught by a real user on real mainnet.
+
+The fix (commits [`24e25c6`](https://github.com/jayteemoney/stackstream/commit/24e25c6), [`023caea`](https://github.com/jayteemoney/stackstream/commit/023caea), [`836abd0`](https://github.com/jayteemoney/stackstream/commit/836abd0), [`3e57ea7`](https://github.com/jayteemoney/stackstream/commit/3e57ea7)) was diagnosed, implemented, type-checked, and pushed to mainnet production within the same testing window — the test surfaced a Nakamoto block-time mismatch in the frontend (durations had been encoded against the pre-Nakamoto 10-min cadence, causing streams to end ~120× faster than users expected) and the entire UI was migrated to wall-clock phrasing in the process. This is the kind of post-deployment iteration cadence the M3 user base will benefit from.
 
 ### Funding and transparency
 
@@ -139,7 +165,7 @@ Each of the 4 auditors receives their security bounty payout (STX, $25–$45) on
 
 Total project-side cost: **$150 in formal bounty payments** plus ~5 STX in gas-coverage allocations ≈ $158 USD-equivalent. This is fully disclosed below and documented in [`audits/CREDITS.md`](../audits/CREDITS.md). The bounty payment transactions themselves are on Stacks mainnet and independently verifiable — they precede the M2 stream transactions chronologically.
 
-All `create-stream`, `claim`, and auxiliary transactions for the 5 streams are signed and submitted by each participant from their own wallet. No participant sends to themselves; each appears once as sender and once as recipient.
+All `create-stream`, `claim`, and auxiliary transactions are signed and submitted by each participant from their own wallet — no relayer, no shared key. No participant sends to themselves. Function coverage was prioritized over a symmetric ring once @Majormaxx couldn't complete his management slot in the testing window, so two recipients (P4 @Godbrand0 in particular) received more than one stream; the table in the previous subsection is authoritative.
 
 **Bounty payment transactions** (precede the stream transactions):
 
@@ -233,7 +259,7 @@ Per `MILESTONE_PLAN.md` Section 4, M2 budget is $2,400. Actuals:
 |---|---|---|---|
 | Mainnet deployment gas | $100 | ~$0.40 (deployment) + ~$2 (10+ stream-related transactions) | Way under budget — Clarity contracts are gas-efficient |
 | Seed funds for 5 demo streams | $100 | ~$8 (tiny sBTC + USDA + STX for gas to 5 community participants) | Way under — tiny amounts, real users |
-| Domain (1 year) | $15 | $0 (using stackstream.vercel.app for v1) | Custom domain deferred to v1.1 |
+| Domain (1 year) | $15 | $15 (stackstream.xyz acquired and pointed at the Vercel production deployment; vercel.app subdomain remains active as fallback) | Within budget |
 | Vercel Pro (3 months) | $60 | $60 | On plan |
 | Railway API (3 months) | $60 | $60 | On plan |
 | Marketing content creation | $300 | $200 (Loom + Canva produced) | Under |
@@ -274,8 +300,9 @@ Per `MILESTONE_PLAN.md` Section 3: M3 acceptance is either:
 > Submitting M2 evidence. Summary:
 >
 > - **Mainnet contracts deployed and verified:** `SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79.stream-manager` and `.stream-factory` (deploy date 2026-05-20, release tag v1.0.0).
-> - **Production frontend live:** https://stackstream.vercel.app pointing at mainnet.
-> - **5 end-to-end streams:** All 5 created on mainnet with create + claim transaction pairs (full details in M2_EVIDENCE_PACKAGE.md).
+> - **Production frontend live:** https://stackstream.xyz (custom domain), fallback https://stackstream.vercel.app — both point at mainnet.
+> - **5 end-to-end mainnet streams** executed on 2026-05-21 by the 5 evidence participants (deployer + the 4 paid bounty auditors). Every state-mutating public function in `stream-manager.clar` — `create-stream`, `claim`, `claim-all`, `pause-stream`, `resume-stream`, `top-up-stream`, `cancel-stream` — has at least one confirmed mainnet tx; full hash list in M2_EVIDENCE_PACKAGE.md Section 3.
+> - **Live test surfaced a real UX bug and the fix was deployed within the same testing window:** `(err u207)` was bubbling up as a raw error code on streams whose window had closed, and the duration math in the frontend was off under Nakamoto block cadence. Commits [`24e25c6`](https://github.com/jayteemoney/stackstream/commit/24e25c6), [`023caea`](https://github.com/jayteemoney/stackstream/commit/023caea), [`836abd0`](https://github.com/jayteemoney/stackstream/commit/836abd0), [`3e57ea7`](https://github.com/jayteemoney/stackstream/commit/3e57ea7) — diagnosed, fixed, type-checked, pushed.
 > - **All 5 non-blocking M1 items addressed** — CI live, fuzzing at 50 iter + seedrandom, architecture summary corrected, mainnet audit path chosen (paid multi-auditor bounty: 11 reviewers, 21 unique findings, 1 launch-blocker fixed, zero critical), product focus locked (DAOs paying contributors).
 > - **Test suite:** 119/119 passing.
 >

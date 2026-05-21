@@ -306,8 +306,8 @@ Per `MILESTONE_PLAN.md` Section 3: M3 acceptance is either:
 > - **All 5 non-blocking M1 items addressed** — CI live, fuzzing at 50 iter + seedrandom, architecture summary corrected, mainnet audit path chosen (paid multi-auditor bounty: 11 reviewers, 21 unique findings, 1 launch-blocker fixed, zero critical), product focus locked (DAOs paying contributors).
 > - **Test suite:** 119/119 passing.
 >
-> Evidence package: [link to M2_EVIDENCE_PACKAGE.md on GitHub]
-> Audit report: [link to audits/AUDIT_REPORT_v1.0.0.md on GitHub]
+> Evidence package: https://github.com/jayteemoney/stackstream/blob/main/grant-application/M2_EVIDENCE_PACKAGE.md
+> Audit report: https://github.com/jayteemoney/stackstream/blob/main/audits/AUDIT_REPORT_v1.0.0.md
 >
 > M3 outreach has already started — pipeline of DAO leads in progress.
 >

@@ -14,7 +14,7 @@ import { Zap, ArrowRight } from "lucide-react";
 
 export default function RegisterDaoPage() {
   const { isConnected } = useWalletStore();
-  const { execute, isPending, txId } = useStacksTx();
+  const { execute, isWorking, txId } = useStacksTx();
 
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,7 +71,7 @@ export default function RegisterDaoPage() {
             hint="A unique name for your workspace (max 64 characters)"
           />
 
-          <Button type="submit" size="lg" className="w-full" loading={isPending}>
+          <Button type="submit" size="lg" className="w-full" loading={isWorking}>
             Register Workspace <ArrowRight className="h-4 w-4" />
           </Button>
 

@@ -126,5 +126,9 @@ export function useStacksTx() {
     reset,
     isPending: status === "pending",
     isConfirming: status === "confirming",
+    // Unified flag for button loading state — true through both the
+    // signing window and the on-chain confirmation poll, so the spinner
+    // does not stop the moment the wallet popup closes.
+    isWorking: status === "pending" || status === "confirming",
   };
 }

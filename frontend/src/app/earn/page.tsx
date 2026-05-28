@@ -22,7 +22,7 @@ export default function EarnPage() {
   const { isConnected } = useWalletStore();
   const { streams, isLoading, refetch } = useRecipientStreams();
   const { blockHeight } = useBlockHeight();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isWorking } = useStacksTx();
 
   if (!isConnected) {
     return (
@@ -102,7 +102,7 @@ export default function EarnPage() {
                 <Button
                   size="lg"
                   disabled={totalClaimable === 0n}
-                  loading={isPending}
+                  loading={isWorking}
                   onClick={async () => {
                     let anySuccess = false;
                     for (const stream of streams) {

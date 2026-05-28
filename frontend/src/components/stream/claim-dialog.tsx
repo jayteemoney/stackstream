@@ -28,7 +28,7 @@ export function ClaimDialog({
   onClose,
   onSuccess,
 }: ClaimDialogProps) {
-  const { execute, isPending } = useStacksTx();
+  const { execute, isWorking } = useStacksTx();
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
 
@@ -131,7 +131,7 @@ export function ClaimDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" className="flex-1" loading={isPending}>
+          <Button type="submit" className="flex-1" loading={isWorking}>
             Claim
           </Button>
         </div>

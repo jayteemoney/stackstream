@@ -19,7 +19,7 @@ interface MintDialogProps {
 
 export function MintDialog({ open, onClose }: MintDialogProps) {
   const { address } = useWalletStore();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isWorking } = useStacksTx();
   const { balance, refetch } = useTokenBalance();
   const [amount, setAmount] = useState("100");
 
@@ -111,7 +111,7 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
           >
             Close
           </Button>
-          <Button type="submit" className="flex-1" loading={isPending}>
+          <Button type="submit" className="flex-1" loading={isWorking}>
             <Droplets className="h-4 w-4" /> Mint Tokens
           </Button>
         </div>

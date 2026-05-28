@@ -29,7 +29,7 @@ export function TopUpDialog({
   onSuccess,
 }: TopUpDialogProps) {
   const { address } = useWalletStore();
-  const { execute, isPending } = useStacksTx();
+  const { execute, isWorking } = useStacksTx();
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
 
@@ -142,7 +142,7 @@ export function TopUpDialog({
           >
             Cancel
           </Button>
-          <Button type="submit" className="flex-1" loading={isPending}>
+          <Button type="submit" className="flex-1" loading={isWorking}>
             Top Up
           </Button>
         </div>

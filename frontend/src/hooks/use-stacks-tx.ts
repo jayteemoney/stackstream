@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { userSession } from "@/providers/stacks-provider";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
 
@@ -37,6 +38,11 @@ export function useStacksTx() {
       setError(null);
       setTxId(null);
 
+      // Single sonner loading toast that walks the user through each
+      // stage. Callers still fire their own domain-specific success/
+      // error toast on the result.
+      const toastId = toast.loading("Confirm the transaction in your wallet…");
+
       try {
         const { openContractCall } = await import("@stacks/connect");
 
@@ -56,6 +62,9 @@ export function useStacksTx() {
 
         setTxId(id);
         setStatus("confirming");
+        toast.loading("Submitted — waiting for on-chain confirmation (~5–15s)", {
+          id: toastId,
+        });
 
         // Poll for on-chain confirmation
         const result = await waitForTxConfirmation(id, {
@@ -65,6 +74,7 @@ export function useStacksTx() {
 
         if (result.confirmed) {
           setStatus("success");
+          toast.dismiss(toastId);
           // Force refetch all active stream-related queries.
           // Using refetchQueries (not invalidateQueries) to guarantee an
           // immediate network request regardless of staleTime.
@@ -91,6 +101,7 @@ export function useStacksTx() {
           }
           setError(msg);
           setStatus("error");
+          toast.dismiss(toastId);
           return {
             confirmed: false,
             txId: id,
@@ -100,6 +111,7 @@ export function useStacksTx() {
           };
         }
       } catch (err: any) {
+        toast.dismiss(toastId);
         if (err?.message === "cancelled") {
           setStatus("idle");
           return null;

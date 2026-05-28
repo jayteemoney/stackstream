@@ -9,11 +9,11 @@ import {
   formatTokenAmount,
   truncateAddress,
   getStreamStatusLabel,
-  getStreamProgress,
   formatStreamWindow,
 } from "@/lib/utils";
 import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
+import { useStreamProgress } from "@/hooks/use-stream-progress";
 import type { StreamData } from "@/lib/stacks";
 import { Pause, Play, XCircle, ArrowUpCircle, Download, TimerOff } from "lucide-react";
 
@@ -51,12 +51,6 @@ export function StreamCard({
 }: StreamCardProps) {
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
   const tokenConfig = getTokenConfigByContractId(stream.token);
-  const progress = getStreamProgress(
-    stream.startBlock,
-    stream.endBlock,
-    blockHeight,
-    stream.totalPausedDuration
-  );
   const isActive = stream.status === STREAM_STATUS.ACTIVE;
   const isPaused = stream.status === STREAM_STATUS.PAUSED;
   const isTerminal =
@@ -66,6 +60,16 @@ export function StreamCard({
   // cancels — but the contract's pause-stream / resume-stream reject this state
   // with ERR-STREAM-ENDED (u207). Hide both controls once the window has closed.
   const isWindowClosed = blockHeight > 0 && blockHeight >= stream.endBlock;
+  // True accrual requires both ACTIVE status AND an open window — drives
+  // both the live counter and the live progress bar.
+  const isAccruing = isActive && !isWindowClosed;
+  const progress = useStreamProgress(
+    stream.startBlock,
+    stream.endBlock,
+    blockHeight,
+    stream.totalPausedDuration,
+    isAccruing
+  );
 
   return (
     <Card
@@ -115,7 +119,8 @@ export function StreamCard({
             baseBalance={claimable}
             ratePerBlock={stream.ratePerBlock}
             depositAmount={stream.depositAmount}
-            isActive={isActive}
+            withdrawnAmount={stream.withdrawnAmount}
+            isActive={isAccruing}
             decimals={tokenConfig.decimals}
             symbol={tokenConfig.symbol}
             size="sm"

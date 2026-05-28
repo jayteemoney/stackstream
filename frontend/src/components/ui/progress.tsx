@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 interface ProgressProps {
   value: number; // 0–100
@@ -26,12 +25,16 @@ export function Progress({
 }: ProgressProps) {
   const clamped = Math.min(100, Math.max(0, value));
 
+  // CSS transition (not framer-motion) so callers can pump a new `value`
+  // every animation frame from useStreamProgress without the bar lagging
+  // behind a 0.8s tween. A short ease softens the per-frame steps while
+  // still feeling real-time.
   return (
     <div className={cn("w-full", className)}>
       {showLabel && (
         <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
           <span>Progress</span>
-          <span>{clamped.toFixed(1)}%</span>
+          <span>{clamped.toFixed(2)}%</span>
         </div>
       )}
       <div
@@ -40,11 +43,12 @@ export function Progress({
           size === "sm" ? "h-1.5" : "h-2.5"
         )}
       >
-        <motion.div
-          className={cn("h-full rounded-full bg-gradient-to-r", barColors[variant])}
-          initial={{ width: 0 }}
-          animate={{ width: `${clamped}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+        <div
+          className={cn(
+            "h-full rounded-full bg-gradient-to-r transition-[width] duration-100 ease-out",
+            barColors[variant]
+          )}
+          style={{ width: `${clamped}%` }}
         />
       </div>
     </div>

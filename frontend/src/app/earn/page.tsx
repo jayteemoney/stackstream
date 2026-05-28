@@ -21,7 +21,7 @@ import Link from "next/link";
 export default function EarnPage() {
   const { isConnected } = useWalletStore();
   const { streams, isLoading, refetch } = useRecipientStreams();
-  useBlockHeight();
+  const { blockHeight } = useBlockHeight();
   const { execute, isPending } = useStacksTx();
 
   if (!isConnected) {
@@ -37,13 +37,25 @@ export default function EarnPage() {
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
   const { token: primaryToken, primaryStreams, otherCount: otherStreamCount } = pickPrimaryToken(streams);
 
+  // Only streams still accruing (status==ACTIVE AND window open) should
+  // contribute to the live rate and the cap on the hero counter. Without
+  // the window check, the hero balance keeps ticking past a stream's
+  // end-block until someone claims-all or cancels.
+  const accruingPrimary = primaryStreams.filter(
+    (s) =>
+      s.status === STREAM_STATUS.ACTIVE &&
+      blockHeight > 0 &&
+      blockHeight < s.endBlock
+  );
   const totalClaimable = primaryStreams.reduce((a, s) => a + (s.claimable ?? 0n), 0n);
   const totalEarned = primaryStreams.reduce((a, s) => a + (s.streamed ?? 0n), 0n);
   const totalClaimed = primaryStreams.reduce((a, s) => a + s.withdrawnAmount, 0n);
-  const totalRatePerBlock = primaryStreams
-    .filter((s) => s.status === STREAM_STATUS.ACTIVE)
-    .reduce((a, s) => a + s.ratePerBlock, 0n);
+  const totalRatePerBlock = accruingPrimary.reduce(
+    (a, s) => a + s.ratePerBlock,
+    0n
+  );
   const totalDepositAmount = primaryStreams.reduce((a, s) => a + s.depositAmount, 0n);
+  const totalWithdrawnAmount = totalClaimed;
 
   return (
     <div className="space-y-6">
@@ -75,7 +87,8 @@ export default function EarnPage() {
                 baseBalance={totalClaimable}
                 ratePerBlock={totalRatePerBlock}
                 depositAmount={totalDepositAmount}
-                isActive={activeStreams.some((s) => s.token === primaryToken.contractId)}
+                withdrawnAmount={totalWithdrawnAmount}
+                isActive={accruingPrimary.length > 0}
                 decimals={primaryToken.decimals}
                 symbol={primaryToken.symbol}
                 size="lg"

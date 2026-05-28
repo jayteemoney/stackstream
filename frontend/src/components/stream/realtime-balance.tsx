@@ -21,9 +21,17 @@ interface RealtimeBalanceProps {
   baseBalance: bigint;
   /** Rate per block from contract (with PRECISION multiplier) */
   ratePerBlock: bigint;
-  /** Total deposit — display is capped at this value */
+  /** Total deposit (cap reference) */
   depositAmount?: bigint;
-  /** Is the stream actively accruing? */
+  /**
+   * Total already withdrawn by the recipient. The interpolated counter
+   * stops at `depositAmount - withdrawnAmount` — the maximum the
+   * recipient can ever claim from here on — so the balance does not
+   * keep ticking upward after a claim or after the stream's window has
+   * closed.
+   */
+  withdrawnAmount?: bigint;
+  /** Is the stream actively accruing? (status==ACTIVE AND window open) */
   isActive: boolean;
   /** Decimals for the token being streamed (8 for sBTC, 6 for USDA, etc.) */
   decimals: number;
@@ -38,6 +46,7 @@ export function RealtimeBalance({
   baseBalance,
   ratePerBlock,
   depositAmount,
+  withdrawnAmount,
   isActive,
   decimals,
   symbol,
@@ -66,7 +75,14 @@ export function RealtimeBalance({
       return;
     }
 
-    const cap = depositAmount !== undefined ? Number(depositAmount) : Infinity;
+    // Max claimable from now on = deposit - withdrawn (the recipient can
+    // never claim past this even if the stream keeps running). Falling
+    // back to Infinity when callers don't pass enough info matches the
+    // pre-fix behaviour.
+    const cap =
+      depositAmount !== undefined
+        ? Math.max(0, Number(depositAmount) - Number(withdrawnAmount ?? 0n))
+        : Infinity;
 
     function tick() {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
@@ -79,7 +95,7 @@ export function RealtimeBalance({
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isActive, ratePerSecond, baseBalance]);
+  }, [isActive, ratePerSecond, baseBalance, depositAmount, withdrawnAmount]);
 
   const humanValue = displayValue / Math.pow(10, decimals);
   // Pad fractional precision past the token's native decimals so the rapid-

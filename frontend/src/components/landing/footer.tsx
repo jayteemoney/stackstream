@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Twitter, Github, Linkedin, Zap, ExternalLink } from "lucide-react";
+import { FEEDBACK_URL } from "@/lib/constants";
 
 const TelegramIcon = () => (
   <svg
@@ -15,7 +16,7 @@ const TelegramIcon = () => (
 const socialLinks = [
   {
     label: "X (Twitter)",
-    href: "https://x.com/stackstream0",
+    href: "https://x.com/Stackstream0X",
     icon: <Twitter className="h-4 w-4" />,
   },
   {
@@ -73,9 +74,10 @@ const footerLinks = [
   {
     heading: "Community",
     links: [
-      { label: "X (Twitter)", href: "https://x.com/stackstream0", external: true },
+      { label: "X (Twitter)", href: "https://x.com/Stackstream0X", external: true },
       { label: "Telegram", href: "https://t.me/dev_jaytee", external: true },
       { label: "LinkedIn", href: "https://www.linkedin.com/in/jethro-irmiya-a2153427b/", external: true },
+      { label: "Send feedback", href: FEEDBACK_URL, external: true },
     ],
   },
 ];

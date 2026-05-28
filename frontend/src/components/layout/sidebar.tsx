@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useAppStore } from "@/stores/app-store";
+import { FEEDBACK_URL } from "@/lib/constants";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -15,6 +16,7 @@ import {
   Coins,
   Clock,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 
 const adminLinks = [
@@ -135,6 +137,19 @@ export function Sidebar() {
             </ul>
           </div>
         </nav>
+
+        {/* Feedback link */}
+        <div className="border-t border-border px-3 pt-3 pb-2">
+          <a
+            href={FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-zinc-400 transition-all duration-200 hover:bg-surface-3 hover:text-zinc-200"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Send feedback
+          </a>
+        </div>
 
         {/* Block height footer */}
         <div className="border-t border-border px-4 py-3">

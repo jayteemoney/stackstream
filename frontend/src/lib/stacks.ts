@@ -245,7 +245,11 @@ export function buildCreateStreamTx(params: {
     contractName: mgrName,
     functionName: "create-stream",
     functionArgs,
-    postConditionMode: PostConditionMode.Allow,
+    // Deny-by-default: the wallet rejects any token movement not covered by an
+    // explicit post-condition. create-stream moves the deposit out of the
+    // sender's wallet, so we bound that outflow at exactly depositAmount —
+    // matching the deny-by-default exit paths (claim/cancel).
+    postConditionMode: PostConditionMode.Deny,
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.depositAmount)
@@ -386,7 +390,10 @@ export function buildTopUpStreamTx(params: {
       principalCV(params.tokenContract),
       uintCV(params.amount),
     ],
-    postConditionMode: PostConditionMode.Allow,
+    // Deny-by-default: top-up moves additional tokens out of the sender's
+    // wallet, so we bound that outflow at exactly the top-up amount —
+    // matching the deny-by-default exit paths (claim/cancel).
+    postConditionMode: PostConditionMode.Deny,
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.amount)

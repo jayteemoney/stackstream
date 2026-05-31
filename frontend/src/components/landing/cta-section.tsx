@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { NETWORK_LABEL } from "@/lib/constants";
 import { ArrowRight } from "lucide-react";
 
 export function CTASection() {
@@ -20,7 +21,7 @@ export function CTASection() {
         </h2>
         <p className="mt-4 text-zinc-400 max-w-md mx-auto">
           Set up your first payment stream and start sending funds in real time
-          on Stacks testnet.
+          on Stacks {NETWORK_LABEL.toLowerCase()}.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/dashboard/create">

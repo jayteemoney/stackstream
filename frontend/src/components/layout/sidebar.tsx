@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useAppStore } from "@/stores/app-store";
-import { FEEDBACK_URL } from "@/lib/constants";
+import { FEEDBACK_URL, NETWORK_LABEL } from "@/lib/constants";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -158,7 +158,7 @@ export function Sidebar() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            <span>Testnet</span>
+            <span>{NETWORK_LABEL}</span>
             <span className="ml-auto font-mono tabular-nums text-zinc-500">
               #{blockHeight.toLocaleString()}
             </span>

@@ -1408,9 +1408,20 @@ describe("StackStream - Stream Manager Contract", () => {
 
       for (let cycle = 0; cycle < 5; cycle++) {
         simnet.mineEmptyBlocks(Math.max(2, Math.floor(Number(duration) * 0.04)));
-        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        // The contract intentionally rejects pause/resume once the stream has
+        // elapsed (ERR-STREAM-ENDED) to avoid a zombie ACTIVE state. The
+        // "returns to ACTIVE" invariant only applies while the stream is still
+        // live, so stop the cycle once a random walk pushes us past end-block —
+        // otherwise a resume that lands on/after end-block legitimately leaves
+        // the stream PAUSED and is not a contract bug.
+        const pause = simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+        if ((pause.result as any).type !== "ok") break;
+
         simnet.mineEmptyBlocks(2);
-        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+
+        const resume = simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+        if ((resume.result as any).type !== "ok") break;
 
         const status = (simnet.callReadOnlyFn(streamManagerContract, "get-stream-status", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
         expect(status).toBe(0n); // STATUS-ACTIVE

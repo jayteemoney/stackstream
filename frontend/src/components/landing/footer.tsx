@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Twitter, Github, Linkedin, Zap, ExternalLink } from "lucide-react";
-import { FEEDBACK_URL } from "@/lib/constants";
+import { FEEDBACK_URL, EXPLORER_BASE, NETWORK_LABEL } from "@/lib/constants";
 
 const TelegramIcon = () => (
   <svg
@@ -66,7 +66,7 @@ const footerLinks = [
       },
       {
         label: "Hiro Explorer",
-        href: "https://explorer.hiro.so/?chain=testnet",
+        href: EXPLORER_BASE,
         external: true,
       },
     ],
@@ -176,12 +176,12 @@ export function Footer() {
 
           <div className="flex items-center gap-4 text-xs text-zinc-600">
             <a
-              href="https://explorer.hiro.so/?chain=testnet"
+              href={EXPLORER_BASE}
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-zinc-400"
             >
-              Testnet
+              {NETWORK_LABEL}
             </a>
             <span className="text-zinc-800">·</span>
             <span className="flex items-center gap-1.5">

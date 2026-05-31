@@ -33,6 +33,10 @@ export const EXPLORER_BASE = IS_MAINNET
   ? "https://explorer.hiro.so"
   : "https://explorer.hiro.so/?chain=testnet";
 
+// Human-readable network name for UI badges and labels. Derived from NETWORK
+// so the site always reflects the chain it is actually running on.
+export const NETWORK_LABEL = IS_MAINNET ? "Mainnet" : "Testnet";
+
 // ============================================================================
 // Stream Status Codes (matching smart contract)
 // ============================================================================

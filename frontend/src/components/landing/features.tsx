@@ -2,50 +2,50 @@
 
 import { motion } from "framer-motion";
 import {
+  Bitcoin,
   Zap,
   Shield,
   Clock,
-  BarChart3,
   Coins,
-  Users,
+  Network,
 } from "lucide-react";
 
 const features = [
   {
-    icon: Zap,
-    title: "Real-Time Streaming",
+    icon: Bitcoin,
+    title: "Settled on Bitcoin",
     description:
-      "Funds flow block-by-block on Stacks. Recipients watch earnings accumulate live and claim anytime.",
+      "Every stream is anchored to Bitcoin and can't be reversed once final. No other chain can stream money with Bitcoin-grade settlement.",
+  },
+  {
+    icon: Zap,
+    title: "Real-time, every few seconds",
+    description:
+      "Funds flow every few seconds, not every payday. Recipients watch earnings add up live and claim any moment.",
   },
   {
     icon: Shield,
-    title: "Non-Custodial",
+    title: "Your money stays yours",
     description:
-      "Tokens are held in smart contract escrow. No intermediaries. Fully transparent and auditable on-chain.",
+      "Tokens sit in audited on-chain escrow. Recipients only ever claim what they've earned, and you reclaim everything else instantly.",
   },
   {
     icon: Clock,
-    title: "Flexible Control",
+    title: "Full lifecycle control",
     description:
-      "Pause, resume, cancel, or top-up streams as needed. Full lifecycle management for any workflow.",
-  },
-  {
-    icon: BarChart3,
-    title: "Full Visibility",
-    description:
-      "Track burn rate, active streams, and total value locked. Real-time analytics for your payment flows.",
+      "Pause, resume, top up, or cancel on demand. Anything not yet earned always comes back to the sender.",
   },
   {
     icon: Coins,
-    title: "Multi-Token",
+    title: "Stream any asset",
     description:
-      "Stream sBTC, USDA, ALEX, xBTC, or any SIP-010 token on Stacks. One protocol, every asset.",
+      "sBTC, STX, USDA, ALEX, or any SIP-010 token. Stream real Bitcoin, by the second.",
   },
   {
-    icon: Users,
-    title: "Built for Everyone",
+    icon: Network,
+    title: "Cross-chain and private, on the roadmap",
     description:
-      "Teams, organizations, DAOs, freelancers, and individuals. Register a workspace, create streams, and manage payments from one dashboard.",
+      "Coming next: pay out across other chains through sBTC bridges, plus shielded streams for private payroll on Bitcoin. The moat we're building toward.",
   },
 ];
 
@@ -58,8 +58,8 @@ export function Features() {
             Payments that never stop
           </h2>
           <p className="mt-3 text-zinc-500 max-w-lg mx-auto">
-            Everything you need to pay a team, a contractor, a grantee, or anyone —
-            continuously, transparently, and on your terms.
+            Everything you need to pay a team, a contractor, a grantee, or a
+            vendor. Continuously, transparently, and final like Bitcoin.
           </p>
         </div>
 

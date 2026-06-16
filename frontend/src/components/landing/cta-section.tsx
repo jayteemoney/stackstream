@@ -20,8 +20,8 @@ export function CTASection() {
           Ready to stream?
         </h2>
         <p className="mt-4 text-zinc-400 max-w-md mx-auto">
-          Set up your first payment stream and start sending funds in real time
-          on Stacks {NETWORK_LABEL.toLowerCase()}.
+          Open your first stream and start paying in real time. Settled on
+          Bitcoin, live on Stacks {NETWORK_LABEL.toLowerCase()}.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/dashboard/create">

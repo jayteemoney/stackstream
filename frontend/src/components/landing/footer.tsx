@@ -103,9 +103,9 @@ export function Footer() {
             </Link>
 
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs">
-              Real-time payment streaming on Stacks — for teams, organizations,
-              and individuals. Stream sBTC, USDA, ALEX, xBTC, or any SIP-010
-              token block-by-block.
+              Real-time money, settled on Bitcoin. Stream payroll, grants, and
+              subscriptions on Stacks in sBTC, USDA, ALEX, xBTC, or any SIP-010
+              token.
             </p>
 
             {/* Social icons */}

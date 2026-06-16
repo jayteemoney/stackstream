@@ -29,7 +29,7 @@ export default function EarnPage() {
       <EmptyState
         icon={<Coins className="h-12 w-12" />}
         title="Connect your wallet"
-        description="Connect a Stacks wallet to view your earnings and claim streamed tokens."
+        description="Connect a Stacks wallet to watch your earnings flow in and claim anytime."
       />
     );
   }
@@ -72,7 +72,7 @@ export default function EarnPage() {
         <EmptyState
           icon={<Coins className="h-12 w-12" />}
           title="No income streams"
-          description="You don't have any payment streams yet. When someone creates a stream for your address, it will appear here."
+          description="No one is streaming to you yet. When someone opens a stream to your address, it shows up here and starts earning in real time."
         />
       ) : (
         <>
@@ -95,7 +95,7 @@ export default function EarnPage() {
               />
               {otherStreamCount > 0 && (
                 <p className="text-xs text-zinc-500 mt-3">
-                  + {otherStreamCount} stream{otherStreamCount === 1 ? "" : "s"} in other tokens — see the list below.
+                  + {otherStreamCount} stream{otherStreamCount === 1 ? "" : "s"} in other tokens. See the list below.
                 </p>
               )}
               <div className="flex items-center gap-3 mt-6">

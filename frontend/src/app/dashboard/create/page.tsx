@@ -157,7 +157,7 @@ export default function CreateStreamPage() {
               >
                 {SUPPORTED_TOKENS.map((t) => (
                   <option key={t.contractId} value={t.contractId}>
-                    {t.symbol} — {t.name}
+                    {t.symbol} · {t.name}
                   </option>
                 ))}
               </select>

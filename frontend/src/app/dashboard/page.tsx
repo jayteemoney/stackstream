@@ -38,7 +38,7 @@ export default function DashboardPage() {
       <EmptyState
         icon={<Zap className="h-12 w-12" />}
         title="Connect your wallet"
-        description="Connect a Stacks wallet to view your dashboard and manage payment streams."
+        description="Connect a Stacks wallet to open streams and manage real-time payments, settled on Bitcoin."
       />
     );
   }
@@ -100,7 +100,7 @@ export default function DashboardPage() {
         <EmptyState
           icon={<Zap className="h-12 w-12" />}
           title="No streams yet"
-          description="Create your first payment stream to start sending funds in real time — to a team, a contractor, a grantee, or anyone."
+          description="Open your first stream and start paying in real time. Pay a teammate, a contractor, a grantee, or a vendor, settled on Bitcoin."
           action={
             <Link href="/dashboard/create">
               <Button>

@@ -452,6 +452,8 @@ Redeploy on Railway. Verify `/health` endpoint responds.
 
 Stacks block time averages ~10 minutes (Bitcoin-anchored). All durations below are in **blocks**, not days.
 
+> **Post-Nakamoto correction:** This plan was written before the Nakamoto upgrade, which reduced Stacks block time to ~5 seconds. The block counts below are unchanged because they are the values used at M2 submission, but the wall-clock estimates assume the old ~10-minute cadence. At ~5 second blocks the same block counts complete in minutes rather than hours (for example, 30 blocks is about 2.5 minutes, not ~5 hours). Retained here as the historical record of the M2 plan.
+
 | Stream | Sender | Recipient | Token | Amount | Duration (blocks) | Wall-clock | Purpose |
 |---|---|---|---|---|---|---|---|
 | 1 | Participant P1 | Participant P2 | USDA | 1 USDA   | 30 | ~5 hrs | Primary demo (partial claim) |

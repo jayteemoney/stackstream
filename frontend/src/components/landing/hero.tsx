@@ -31,7 +31,7 @@ export function Hero() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/5 px-4 py-1.5 text-xs font-medium text-brand-400">
             <Zap className="h-3 w-3" />
-            First Payment Streaming Protocol on Stacks
+            Real-time money, settled on Bitcoin
           </span>
         </motion.div>
 
@@ -42,9 +42,9 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
         >
-          <span className="text-zinc-100">Stream payments.</span>
+          <span className="text-zinc-100">Pay by the second.</span>
           <br />
-          <span className="gradient-text">Block by block.</span>
+          <span className="gradient-text">Settled on Bitcoin.</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -54,9 +54,10 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-zinc-400 leading-relaxed"
         >
-          StackStream lets teams, organizations, and individuals stream payments
-          in real time. Funds flow continuously on-chain — recipients watch earnings
-          accumulate and claim any moment. Multi-token. Built on Stacks.
+          StackStream turns payroll, grants, and subscriptions into a live stream
+          of money. Recipients earn every block and claim whenever they want.
+          Senders keep every token that isn&apos;t earned yet. It&apos;s the only
+          streaming protocol settled with Bitcoin finality.
         </motion.p>
 
         {/* CTAs */}
@@ -68,13 +69,13 @@ export function Hero() {
         >
           <Link href="/dashboard">
             <Button size="lg">
-              Launch App
+              Start Streaming
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
           <Link href="/earn">
             <Button size="lg" variant="outline">
-              View Earnings
+              Watch Earnings Flow
             </Button>
           </Link>
         </motion.div>
@@ -109,7 +110,7 @@ export function Hero() {
               <span className="text-zinc-500 text-lg ml-2">sBTC</span>
             </div>
             <div className="mt-4 flex items-center gap-4 text-xs text-zinc-500">
-              <span>Rate: 0.0001 sBTC/block</span>
+              <span>Rate: 0.0001 sBTC/sec</span>
               <span className="text-zinc-700">|</span>
               <span>78.4% streamed</span>
               <div className="ml-auto flex-1 max-w-32">

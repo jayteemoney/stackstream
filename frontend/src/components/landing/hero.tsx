@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { LiveStreamCard } from "@/components/landing/live-stream-card";
 import { ArrowRight, Zap } from "lucide-react";
 
 export function Hero() {
@@ -55,9 +56,9 @@ export function Hero() {
           className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-zinc-400 leading-relaxed"
         >
           StackStream turns payroll, grants, and subscriptions into a live stream
-          of money. Recipients earn every block and claim whenever they want.
-          Senders keep every token that isn&apos;t earned yet. It&apos;s the only
-          streaming protocol settled with Bitcoin finality.
+          of money. Recipients earn every block and claim whenever they want, and
+          senders keep every token that isn&apos;t earned yet. Stream sBTC, STX, or
+          any token on Stacks, settled with Bitcoin finality.
         </motion.p>
 
         {/* CTAs */}
@@ -87,44 +88,7 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mt-20 relative"
         >
-          <div className="rounded-2xl border border-border bg-surface-1/80 backdrop-blur-md p-4 sm:p-8 glow-orange">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-sm text-emerald-400 font-medium">Live Stream</span>
-              <span className="ml-auto hidden sm:inline text-xs text-zinc-600">sender.btc &rarr; recipient.btc</span>
-            </div>
-            <div className="font-mono text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold tabular-nums">
-              <span className="text-zinc-100">1,234</span>
-              <span className="text-zinc-100">.</span>
-              <span className="text-zinc-300">567891</span>
-              <motion.span
-                className="text-brand-400"
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-              >
-                234567
-              </motion.span>
-              <span className="text-zinc-500 text-lg ml-2">sBTC</span>
-            </div>
-            <div className="mt-4 flex items-center gap-4 text-xs text-zinc-500">
-              <span>Rate: 0.0001 sBTC/sec</span>
-              <span className="text-zinc-700">|</span>
-              <span>78.4% streamed</span>
-              <div className="ml-auto flex-1 max-w-32">
-                <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-linear-to-r from-brand-500 to-brand-400"
-                    initial={{ width: "70%" }}
-                    animate={{ width: "80%" }}
-                    transition={{ duration: 8, repeat: Infinity, repeatType: "reverse" }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <LiveStreamCard />
         </motion.div>
       </div>
     </section>

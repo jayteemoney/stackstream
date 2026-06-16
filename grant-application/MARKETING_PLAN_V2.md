@@ -22,8 +22,9 @@ This version realigns our marketing to a sharper differentiator. The pivot chang
 
 1. **Bitcoin-final.** The wedge. Money that cannot be reversed once final.
 2. **Real-time.** About 5 second blocks, so money moves continuously, not on payday.
-3. **Who it is for.** DAOs, merchants and SaaS, freelancers, grant programs. Lead with the person, not the plumbing.
-4. **The roadmap moat.** Cross-chain payout via sBTC bridges, then shielded streams for private payroll. Always labelled roadmap, never shipped.
+3. **Every token, not just one (full SIP-010 multi-token support).** Stream sBTC, STX, USDA, ALEX, or any token on Stacks. One product, every asset, so people pay and get paid in what they actually hold. In social copy say "any token", in product and developer contexts say SIP-010 multi-token support. Never let this go cold, it is a real selling point.
+4. **Who it is for.** DAOs, merchants and SaaS, freelancers, grant programs. Lead with the person, not the plumbing.
+5. **The roadmap moat.** Cross-chain payout via sBTC bridges, then shielded streams for private payroll. Always labelled roadmap, never shipped.
 
 ---
 

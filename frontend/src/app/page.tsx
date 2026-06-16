@@ -1,6 +1,7 @@
 "use client";
 
 import { Hero } from "@/components/landing/hero";
+import { WhoItsFor } from "@/components/landing/who-its-for";
 import { Features } from "@/components/landing/features";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/landing/footer";
@@ -37,6 +38,7 @@ export default function LandingPage() {
       </nav>
 
       <Hero />
+      <WhoItsFor />
       <Features />
       <CTASection />
       <Footer />

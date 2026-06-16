@@ -8,7 +8,7 @@
 
 StackStream is a fully on-chain payment streaming protocol built in Clarity v3 on the Stacks blockchain. It enables any Stacks user or DAO to stream SIP-010 tokens continuously — block by block — from a sender to a recipient, instead of distributing funds in lump-sum payments.
 
-Every Stacks block (~10 minutes), a proportional share of the deposited tokens becomes claimable by the recipient. The sender retains full management control: they can pause, resume, cancel, or top up a stream at any time. The recipient can claim accrued tokens at any time — partially or in full.
+Every Stacks block (roughly every 5 seconds since the Nakamoto upgrade), a proportional share of the deposited tokens becomes claimable by the recipient. The sender retains full management control: they can pause, resume, cancel, or top up a stream at any time. The recipient can claim accrued tokens at any time, partially or in full.
 
 StackStream is the first payment streaming protocol on Stacks. It fills the same infrastructure role that Sablier (>$2B cumulative streamed) and Superfluid fill on Ethereum — but natively anchored to Bitcoin via Proof of Transfer.
 
@@ -396,7 +396,7 @@ All on-chain data is fetched via `fetchCallReadOnlyFunction` from the Hiro API, 
 The `earn` page shows a live-updating token counter that animates smoothly between on-chain data snapshots. Implementation:
 
 1. On each 15-second poll, the latest claimable balance is stored as a snapshot
-2. The `rate-per-second` is derived from the on-chain `rate-per-block` divided by the Stacks block time (~120 seconds)
+2. The `rate-per-second` is derived from the on-chain `rate-per-block` divided by the Stacks block time (~5 seconds under Nakamoto)
 3. A `requestAnimationFrame` loop interpolates the displayed balance forward from the last snapshot using the derived rate
 4. This creates the appearance of real-time token accrual while the actual on-chain data updates every 15 seconds
 
@@ -657,7 +657,7 @@ A top-up must extend the stream's duration without changing the per-block rate, 
 
 ### 5. Real-Time UI from 15-Second On-Chain Data
 
-On-chain data updates every Stacks block (~10 minutes in production, polled every 15 seconds in the app). Showing a static claimable balance that jumps every 15 seconds is a poor UX for a product whose core value proposition is continuous payment. The solution is a `requestAnimationFrame` interpolation loop that derives a `rate-per-second` from the on-chain rate and uses it to increment the displayed balance every frame between polling cycles, creating the appearance of real-time accrual.
+On-chain data updates every Stacks block (roughly every 5 seconds in production under Nakamoto, polled on an interval in the app). Showing a static claimable balance that jumps every 15 seconds is a poor UX for a product whose core value proposition is continuous payment. The solution is a `requestAnimationFrame` interpolation loop that derives a `rate-per-second` from the on-chain rate and uses it to increment the displayed balance every frame between polling cycles, creating the appearance of real-time accrual.
 
 ---
 

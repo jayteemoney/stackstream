@@ -66,7 +66,7 @@ The dashboard home (`/dashboard`) shows:
    - **Duration** — How long the stream should last (minutes, hours, days, or months)
    - **Memo** (optional) — A note attached to the stream (e.g., "January salary")
 3. Review the **Stream Preview** showing:
-   - Rate per block (how many tokens accrue each ~10 min block)
+   - Rate per block (how many tokens accrue each Stacks block, roughly every 5 seconds)
    - Start block and end block
    - Token type
 4. Click **Create Stream**
@@ -210,10 +210,10 @@ Navigate to **Earn > History** to see your claim records:
 
 ### Block-Based Streaming
 
-StackStream uses Stacks block heights (not wall-clock time) to calculate token accrual. Each Stacks block takes approximately **10 minutes**.
+StackStream uses Stacks block heights (not wall-clock time) to calculate token accrual. Since the Nakamoto upgrade, each Stacks block is produced roughly every **5 seconds**.
 
-- **144 blocks ≈ 1 day**
-- **4,320 blocks ≈ 1 month**
+- **17,280 blocks ≈ 1 day**
+- **518,400 blocks ≈ 1 month**
 
 Tokens accrue linearly: `rate_per_block × elapsed_blocks = accrued_amount`
 
@@ -352,7 +352,7 @@ A: Unstreamed tokens are refunded to the sender. Already-streamed but unclaimed 
 A: No. Streams are immutable once created. To change terms, cancel the existing stream and create a new one.
 
 **Q: Why does the progress bar seem stuck?**
-A: If the stream is paused, progress halts. Also, Stacks blocks take ~10 minutes, so visible progress updates are gradual. The app polls for block updates every 30 seconds.
+A: If the stream is paused, progress halts. The app also polls for on-chain block updates every 30 seconds, so the bar advances in steps between polls while the live counter interpolates smoothly in between.
 
 **Q: How do I get testnet tokens?**
 A: Get testnet STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet). For msBTC test tokens, use the mock token faucet function in the deployed contracts.
@@ -361,7 +361,7 @@ A: Get testnet STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/fau
 A: Yes — the protocol is permissionless and accepts any SIP-010 compliant token. On mainnet, the frontend surfaces sBTC, USDA, ALEX, and xBTC as the default options. On testnet, msBTC (mock sBTC with a public faucet) is used for development. Additional tokens can be streamed by calling the contracts directly, or by adding them to the frontend token list.
 
 **Q: What's the minimum stream duration?**
-A: 1 block (~10 minutes). Practically, streams are most useful over longer periods — days, weeks, or months.
+A: 1 block (roughly 5 seconds since Nakamoto). Practically, streams are most useful over longer periods such as days, weeks, or months.
 
 **Q: Is there a maximum deposit amount?**
 A: There's no protocol-enforced maximum, but the amount must fit in a Clarity uint (up to 2^128 - 1).

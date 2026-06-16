@@ -7,30 +7,30 @@ const segments = [
   {
     icon: Landmark,
     title: "DAOs & protocol teams",
-    headline: "Retire multi-sig payday",
+    headline: "Payday that runs itself",
     description:
-      "Stop coordinating batch transfers every cycle. Open one stream per contributor and they claim as they earn. Pause or cancel anytime. Register your DAO on-chain for payroll anyone can audit.",
+      "Open one stream for each contributor, set the rate, and you are done. They watch their pay grow every second and cash out whenever they like. Need to change something? Pause, top up, or stop in a click, and anything not yet earned comes straight back to your treasury. Register your DAO once so every payment is on the record for members to see.",
   },
   {
     icon: Store,
     title: "Merchants & SaaS",
-    headline: "Subscriptions that settle per second",
+    headline: "Subscriptions that feel fair",
     description:
-      "Swap net-30 invoices and chargebacks for money that lands as the service is delivered. Stream to your vendors, or let customers stream to you.",
+      "Stop charging upfront and hoping it sticks. Set up a stream with your customer and the money flows in second by second for as long as they stay. If they cancel, it stops on the spot, so no chargebacks and no disputes. Pay your own suppliers the very same way.",
   },
   {
     icon: Laptop,
     title: "Freelancers & builders",
-    headline: "Get paid as you work",
+    headline: "Watch your pay grow as you work",
     description:
-      "No more waiting 30 days on an invoice. Share your address, watch earnings tick up live, and claim to your wallet any moment in real Bitcoin via sBTC.",
+      "Send your client your address, agree an amount and a length, and the stream handles the rest. Your balance ticks up live while you build, and you pull it to your wallet any moment you want. No invoice, no chasing, no 30 day wait. Get paid in sBTC, STX, or any token you choose.",
   },
   {
     icon: Target,
     title: "Grant & bounty programs",
-    headline: "Disburse with built-in clawback",
+    headline: "Fund builders, keep control",
     description:
-      "Stream funding in tranches instead of one lump sum. Anything not yet earned stays yours to reclaim, so milestone payouts need no escrow agent. We run on this ourselves.",
+      "Stream a grant across the whole project instead of handing over one lump sum. The builder earns steadily as they ship, and whatever is not yet earned stays in your wallet to pause or pull back if plans change. No escrow agent, no awkward refunds. We fund our own work exactly like this.",
   },
 ];
 
@@ -38,7 +38,7 @@ const steps = [
   {
     number: "1",
     title: "Create",
-    description: "Pick a recipient, an amount, and a duration.",
+    description: "Pick a recipient, any token, an amount, and a duration.",
   },
   {
     number: "2",
@@ -58,11 +58,11 @@ export function WhoItsFor() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-zinc-100">
-            One protocol. Every kind of payment.
+            One app. Every way to get paid.
           </h2>
           <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
-            However your team, DAO, or business moves money, StackStream makes it
-            flow in real time and makes it final.
+            DAOs, businesses, freelancers, grant programs. Here is exactly how
+            each one puts StackStream to work.
           </p>
         </div>
 

@@ -29,7 +29,7 @@ function StreamResult({ data }: { data: any }) {
   return (
     <div className="space-y-2 text-xs">
       <div className="flex items-center justify-between">
-        <span className="font-medium text-zinc-200">Stream #{data.id}</span>
+        <span className="font-medium text-zinc-200">Stream #{data.streamId ?? data.id}</span>
         <span className={cn("font-medium", getStreamStatusColor(data.status?.code ?? data.status))}>
           {data.status?.label ?? getStreamStatusLabel(data.status)}
         </span>

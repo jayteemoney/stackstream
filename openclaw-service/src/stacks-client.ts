@@ -102,7 +102,9 @@ export async function getStream(streamId: number): Promise<StreamData | null> {
     [uintCV(streamId)]
   );
   if (result.value === null) return null;
-  return parseStreamData(result.value);
+  // cvToJSON nests an (optional (tuple ...)) as { value: { value: {fields} } }
+  // — the tuple fields live one level below the optional's unwrapped value.
+  return parseStreamData(result.value.value);
 }
 
 export async function getStreamStatus(streamId: number): Promise<number | null> {
@@ -214,7 +216,8 @@ export async function getDao(admin: string): Promise<DaoData | null> {
     [principalCV(admin)]
   );
   if (result.value === null) return null;
-  return parseDaoData(result.value);
+  // Same optional-of-tuple nesting as get-stream (see getStream above).
+  return parseDaoData(result.value.value);
 }
 
 export async function getDaoCount(): Promise<number> {

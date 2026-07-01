@@ -27,6 +27,9 @@ export const STREAM_STATUS = {
   DEPLETED: 3,
 } as const;
 
-export const BLOCKS_PER_DAY = 144;
-export const BLOCKS_PER_MONTH = 4320;
+// Nakamoto (Epoch 3.0+) cadence: Stacks blocks advance ~every 5s, so a day is
+// 17_280 blocks, not the pre-Nakamoto 144. Kept in sync with the frontend.
+export const BLOCK_TIME_SECONDS = 5;
+export const BLOCKS_PER_DAY = 17_280;
+export const BLOCKS_PER_MONTH = 518_400;
 export const MAX_STREAMS_PER_USER = 100;

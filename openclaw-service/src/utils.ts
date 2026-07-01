@@ -30,9 +30,9 @@ export function getStreamStatusLabel(status: number): string {
   }
 }
 
-/** Estimate time remaining from blocks (Stacks ~10 min/block) */
+/** Estimate time remaining from blocks (Nakamoto ~5s/block) */
 export function blocksToTimeString(blocks: number): string {
-  const minutes = blocks * 10;
+  const minutes = Math.round((blocks * 5) / 60);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ${minutes % 60}m`;

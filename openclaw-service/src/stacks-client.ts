@@ -247,8 +247,14 @@ export async function getTokenBalance(
   );
   const data: any = await res.json();
   const ftBalances = data.fungible_tokens || {};
-  const key = `${tokenContract}::mock-sbtc`;
-  return BigInt(ftBalances[key]?.balance ?? "0");
+  // Balances are keyed by `<contractId>::<asset-name>`, and the asset name
+  // varies per token (sbtc, usda, wrapped-bitcoin, ...). Match by contract
+  // prefix so this works for any SIP-010 token, not just the testnet mock.
+  const entry = Object.entries(ftBalances).find(([k]) =>
+    k.startsWith(`${tokenContract}::`)
+  );
+  const balance = (entry?.[1] as { balance?: string } | undefined)?.balance;
+  return BigInt(balance ?? "0");
 }
 
 // ============================================================================

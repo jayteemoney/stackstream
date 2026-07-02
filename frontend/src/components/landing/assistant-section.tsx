@@ -11,28 +11,41 @@ import {
   Search,
   Sparkles,
   ArrowRight,
+  Check,
 } from "lucide-react";
 
 const capabilities = [
   {
     icon: Hash,
     title: "Look up any stream",
-    text: "Drop in a stream ID and see status, deposit, and exactly what's claimable right now.",
+    points: [
+      "Drop in a stream ID for status, deposit, and rate",
+      "See exactly what's claimable right now",
+    ],
   },
   {
     icon: User,
     title: "Search by address",
-    text: "Paste a sender or recipient address to pull every stream flowing in or out of it.",
+    points: [
+      "Paste any sender or recipient address",
+      "Pull every stream flowing in or out of it",
+    ],
   },
   {
     icon: Building2,
     title: "Inspect a workspace",
-    text: "Check a registered DAO or business — streams created, total deposited, active status.",
+    points: [
+      "Check any registered DAO or business",
+      "Streams created, total deposited, active status",
+    ],
   },
   {
     icon: Zap,
     title: "Read the chain live",
-    text: "Ask for the current block height and other on-chain state without leaving the app.",
+    points: [
+      "Ask for the current block height",
+      "Read on-chain state without leaving the app",
+    ],
   },
 ];
 
@@ -159,9 +172,17 @@ export function AssistantSection() {
                   <h3 className="text-sm font-semibold text-zinc-200">
                     {cap.title}
                   </h3>
-                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                    {cap.text}
-                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {cap.points.map((point) => (
+                      <li
+                        key={point}
+                        className="flex items-start gap-1.5 text-xs leading-relaxed text-zinc-500"
+                      >
+                        <Check className="mt-0.5 h-3 w-3 shrink-0 text-brand-400" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -65,9 +66,14 @@ export function Sidebar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 px-6 py-5 border-b border-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-600">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
+          <Image
+            src="/logo-mark.png"
+            alt="StackStream"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
+            priority
+          />
           <span className="text-lg font-bold tracking-tight">
             Stack<span className="text-brand-400">Stream</span>
           </span>

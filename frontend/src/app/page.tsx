@@ -8,7 +8,7 @@ import { FAQ } from "@/components/landing/faq";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/landing/footer";
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
@@ -16,9 +16,14 @@ export default function LandingPage() {
       {/* Landing nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-surface-0/80 backdrop-blur-md border-b border-border/50">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand-500 to-brand-600">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
+          <Image
+            src="/logo-mark.png"
+            alt="StackStream"
+            width={32}
+            height={32}
+            className="h-8 w-8 object-contain"
+            priority
+          />
           <span className="text-lg font-bold tracking-tight">
             Stack<span className="text-brand-400">Stream</span>
           </span>

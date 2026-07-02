@@ -8,44 +8,57 @@ import {
   Clock,
   Coins,
   Network,
+  Check,
 } from "lucide-react";
 
 const features = [
   {
     icon: Bitcoin,
     title: "Settled on Bitcoin",
-    description:
-      "Every stream is anchored to Bitcoin and can't be reversed once final. No other chain can stream money with Bitcoin-grade settlement.",
+    points: [
+      "Every stream is anchored to Bitcoin, final once settled",
+      "Can't be reversed — Bitcoin-grade settlement no other chain streams with",
+    ],
   },
   {
     icon: Zap,
     title: "Real-time, every few seconds",
-    description:
-      "Funds flow every few seconds, not every payday. Recipients watch earnings add up live and claim any moment.",
+    points: [
+      "Funds flow every few seconds, not every payday",
+      "Recipients watch earnings add up live and claim any moment",
+    ],
   },
   {
     icon: Shield,
     title: "Your money stays yours",
-    description:
-      "Tokens sit in audited on-chain escrow. Recipients only ever claim what they've earned, and you reclaim everything else instantly.",
+    points: [
+      "Tokens sit in audited on-chain escrow",
+      "Recipients claim only what they've earned; you reclaim the rest instantly",
+    ],
   },
   {
     icon: Clock,
     title: "Full lifecycle control",
-    description:
-      "Pause, resume, top up, or cancel on demand. Anything not yet earned always comes back to the sender.",
+    points: [
+      "Pause, resume, top up, or cancel on demand",
+      "Anything not yet earned always comes back to the sender",
+    ],
   },
   {
     icon: Coins,
     title: "Stream any asset",
-    description:
-      "sBTC, STX, USDA, ALEX, or any SIP-010 token. Stream real Bitcoin, by the second.",
+    points: [
+      "sBTC, STX, USDA, ALEX, or any SIP-010 token",
+      "Stream real Bitcoin, by the second",
+    ],
   },
   {
     icon: Network,
     title: "Cross-chain and private, on the roadmap",
-    description:
-      "Coming next: pay out across other chains through sBTC bridges, plus shielded streams for private payroll on Bitcoin. The moat we're building toward.",
+    points: [
+      "Coming next: pay out across other chains through sBTC bridges",
+      "Shielded streams for private payroll — the moat we're building toward",
+    ],
   },
 ];
 
@@ -77,9 +90,17 @@ export function Features() {
                 <feature.icon className="h-5 w-5" />
               </div>
               <h3 className="text-base font-semibold text-zinc-200">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-                {feature.description}
-              </p>
+              <ul className="mt-3 space-y-2">
+                {feature.points.map((point) => (
+                  <li
+                    key={point}
+                    className="flex items-start gap-2 text-sm leading-relaxed text-zinc-500"
+                  >
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
         </div>

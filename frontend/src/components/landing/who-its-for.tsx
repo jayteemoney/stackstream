@@ -17,29 +17,45 @@ const segments = [
     icon: Landmark,
     title: "DAOs & protocol teams",
     headline: "Payday that runs itself",
-    description:
-      "Open one stream for each contributor, set the rate, and you are done. They watch their pay grow every second and cash out whenever they like. Need to change something? Pause, top up, or stop in a click, and anything not yet earned comes straight back to your treasury. Register your DAO once so every payment is on the record for members to see.",
+    points: [
+      "One stream per contributor — set the rate and you're done",
+      "They watch pay grow live and cash out whenever they like",
+      "Pause, top up, or stop in a click; unearned funds return to treasury",
+      "Register your DAO so every payment is on the record for members",
+    ],
   },
   {
     icon: Store,
     title: "Merchants & SaaS",
     headline: "Subscriptions that feel fair",
-    description:
-      "Stop charging upfront and hoping it sticks. Set up a stream with your customer and the money flows in second by second for as long as they stay. If they cancel, it stops on the spot, so no chargebacks and no disputes. Pay your own suppliers the very same way.",
+    points: [
+      "Money flows in second by second for as long as they stay",
+      "No upfront charge — if they cancel, it stops on the spot",
+      "No chargebacks and no disputes",
+      "Pay your own suppliers the very same way",
+    ],
   },
   {
     icon: Laptop,
     title: "Freelancers & builders",
     headline: "Watch your pay grow as you work",
-    description:
-      "Send your client your address, agree an amount and a length, and the stream handles the rest. Your balance ticks up live while you build, and you pull it to your wallet any moment you want. No invoice, no chasing, no 30 day wait. Get paid in sBTC, STX, or any token you choose.",
+    points: [
+      "Share your address, agree an amount and a length — done",
+      "Balance ticks up live while you build; pull it anytime",
+      "No invoice, no chasing, no 30-day wait",
+      "Get paid in sBTC, STX, or any token you choose",
+    ],
   },
   {
     icon: Target,
     title: "Grant & bounty programs",
     headline: "Fund builders, keep control",
-    description:
-      "Stream a grant across the whole project instead of handing over one lump sum. The builder earns steadily as they ship, and whatever is not yet earned stays in your wallet to pause or pull back if plans change. No escrow agent, no awkward refunds. We fund our own work exactly like this.",
+    points: [
+      "Stream a grant across the whole project, not one lump sum",
+      "Builders earn steadily as they ship",
+      "Unearned funds stay in your wallet to pause or pull back",
+      "No escrow agent, no awkward refunds — we fund our work this way",
+    ],
   },
 ];
 
@@ -200,9 +216,17 @@ export function WhoItsFor() {
               <h3 className="text-lg font-semibold text-zinc-100">
                 {segment.headline}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                {segment.description}
-              </p>
+              <ul className="mt-3 space-y-2">
+                {segment.points.map((point) => (
+                  <li
+                    key={point}
+                    className="flex items-start gap-2 text-sm leading-relaxed text-zinc-400"
+                  >
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
         </div>

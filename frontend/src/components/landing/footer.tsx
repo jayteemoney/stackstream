@@ -98,9 +98,9 @@ export function Footer() {
               <Image
                 src="/logo-full.png"
                 alt="StackStream"
-                width={73}
-                height={56}
-                className="h-14 w-auto"
+                width={56}
+                height={44}
+                className="h-11 w-auto"
               />
             </Link>
 

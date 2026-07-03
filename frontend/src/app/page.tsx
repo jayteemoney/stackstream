@@ -19,9 +19,9 @@ export default function LandingPage() {
           <Image
             src="/logo-full.png"
             alt="StackStream"
-            width={62}
-            height={48}
-            className="h-12 w-auto"
+            width={46}
+            height={36}
+            className="h-9 w-auto"
             priority
           />
         </Link>

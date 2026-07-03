@@ -17,16 +17,13 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-surface-0/80 backdrop-blur-md border-b border-border/50">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/logo-mark.png"
+            src="/logo-full.png"
             alt="StackStream"
-            width={32}
-            height={32}
-            className="h-8 w-8 object-contain"
+            width={62}
+            height={48}
+            className="h-12 w-auto"
             priority
           />
-          <span className="text-lg font-bold tracking-tight">
-            Stack<span className="text-brand-400">Stream</span>
-          </span>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/dashboard" className="hidden md:inline text-sm text-zinc-400 hover:text-zinc-200 transition-colors">

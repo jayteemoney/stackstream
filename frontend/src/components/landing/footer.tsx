@@ -96,15 +96,12 @@ export function Footer() {
           <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 w-fit">
               <Image
-                src="/logo-mark.png"
+                src="/logo-full.png"
                 alt="StackStream"
-                width={36}
-                height={36}
-                className="h-9 w-9 object-contain"
+                width={73}
+                height={56}
+                className="h-14 w-auto"
               />
-              <span className="text-lg font-bold tracking-tight text-zinc-100">
-                Stack<span className="text-brand-400">Stream</span>
-              </span>
             </Link>
 
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs">

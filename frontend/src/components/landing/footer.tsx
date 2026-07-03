@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Twitter, Github, Linkedin, Zap, ExternalLink } from "lucide-react";
+import Image from "next/image";
+import { Twitter, Github, Linkedin, ExternalLink } from "lucide-react";
 import { FEEDBACK_URL, EXPLORER_BASE, NETWORK_LABEL } from "@/lib/constants";
 
 const TelegramIcon = () => (
@@ -94,12 +95,13 @@ export function Footer() {
           {/* Brand column */}
           <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 w-fit">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 shadow-lg shadow-brand-500/20">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-zinc-100">
-                Stack<span className="text-brand-400">Stream</span>
-              </span>
+              <Image
+                src="/logo-oval.png"
+                alt="StackStream"
+                width={56}
+                height={44}
+                className="h-11 w-auto"
+              />
             </Link>
 
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs">

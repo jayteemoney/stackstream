@@ -96,7 +96,7 @@ export function Footer() {
           <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 w-fit">
               <Image
-                src="/logo-full.png"
+                src="/logo-oval.png"
                 alt="StackStream"
                 width={56}
                 height={44}

@@ -58,7 +58,7 @@ export function Hero() {
           StackStream turns payroll, grants, and subscriptions into a live stream
           of money. Recipients earn every block and claim whenever they want, and
           senders keep every token that isn&apos;t earned yet. Stream sBTC, STX, or
-          any token on Stacks, settled with Bitcoin finality.
+          any token on Stacks. Settlement inherits Bitcoin finality.
         </motion.p>
 
         {/* CTAs */}

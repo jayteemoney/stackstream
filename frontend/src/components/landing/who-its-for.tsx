@@ -167,7 +167,7 @@ function StreamVisual({ phase }: { phase: number }) {
           <span className="text-sm font-normal text-zinc-500">sBTC</span>
         </div>
         <div className="mt-1 text-xs text-zinc-500">
-          streaming live, settling on Bitcoin every block
+          streaming live every block, secured by Bitcoin finality
         </div>
       </div>
     </div>

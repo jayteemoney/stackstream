@@ -18,8 +18,10 @@
 
 **Voice rules (all channels):** talk to a person, lead with the feeling or problem, one idea per post, plain words, no jargon (no escrow, protocol, SIP-010), clean punctuation, no em dashes. The line we repeat: **real-time money, settled on Bitcoin.**
 
+**Settlement language rule:** never put the every-few-seconds rhythm and Bitcoin settlement in the same clause. The rhythm is how often the stream updates. Bitcoin finality comes when settlement anchors to Bitcoin, on Bitcoin's own schedule. Say "streams update in seconds; settlement inherits Bitcoin finality" for technical readers, or "your balance updates every few seconds, secured by Bitcoin" in social copy. Never say "settling on Bitcoin every few seconds" or "once it lands, it is final."
+
 **Selling points to keep warm (weave in often, never let them go cold):**
-1. Settled on Bitcoin, so once money lands it is final.
+1. Settled on Bitcoin. Once a payment is final, it cannot be reversed.
 2. Real-time, money moves every few seconds.
 3. **Every token, not just one. Full SIP-010 multi-token support.** Stream sBTC, STX, USDA, ALEX, or any token on Stacks. Pay and get paid in what you actually hold. In social copy say "any token"; with developers and in the ecosystem it is fine to say SIP-010 multi-token support.
 
@@ -53,25 +55,25 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 
 **Official X**
 > Most apps pay you later. We pay you as you go.
-> StackStream is money that moves every few seconds, and once it lands, it is final like Bitcoin.
+> StackStream is money that moves every few seconds, secured by Bitcoin. Once a payment settles, it is final.
 > No invoices. No waiting for payday. Just money that flows.
 > In sBTC, STX, or any token you hold. Live on Stacks. Come see it.
 
 **Personal X**
 > I spent months on one simple idea. Getting paid should not mean waiting.
 > So we built StackStream. You open a stream, and the other person earns every few seconds. They take it whenever they want.
-> It settles on Bitcoin, so once it is theirs, it is theirs.
+> It is anchored to Bitcoin, so once a payment settles, it is theirs for good.
 > This is the thing I am proudest of. Let me show you.
 
 **LinkedIn**
 > A quick announcement, and the belief behind it.
 > Paying people should feel like turning on a tap, not waiting for a date on a calendar.
-> With StackStream, a payment becomes a steady stream. Work begins, money begins, a little every few seconds. The person earning it can take it anytime, and the sender stays in control. Every payment settles on Bitcoin, so once it lands, it is final.
+> With StackStream, a payment becomes a steady stream. Work begins, money begins, a little every few seconds. The person earning it can take it anytime, and the sender stays in control. Every payment is anchored to Bitcoin, so once it settles, it is final.
 > If your team or DAO still pays in lumps and waits, there is a calmer way to do it. (link)
 
 **Stacks Forum** — thread: "A new direction for StackStream: real-time money, settled on Bitcoin"
 > Hi all, an update from the StackStream side.
-> We began as a streaming payments tool, and we have sharpened what we stand for. The thing that makes us different here is Bitcoin settlement. After Nakamoto, streams update every few seconds and are final once confirmed, and through sBTC you can stream actual Bitcoin.
+> We began as a streaming payments tool, and we have sharpened what we stand for. The thing that makes us different here is Bitcoin settlement. After Nakamoto, streams update in seconds; settlement inherits Bitcoin finality. And through sBTC you can stream actual Bitcoin.
 > We rebuilt the whole experience around that, value first and mechanics second. Cross-chain payout and private streams are on the roadmap, and we are designing toward them rather than promising dates.
 > I would genuinely value your feedback on both the message and the product. Thank you.
 
@@ -130,7 +132,7 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 **Official X**
 > Here is a real stream running on Stacks.
 > Watch the balance tick up, second by second. The video is not sped up. That is money arriving in real time.
-> Settled on Bitcoin, so once it is yours, it is yours.
+> Anchored to Bitcoin, so once a payment settles, it is yours for good.
 > (60 second demo)
 
 **Personal X**
@@ -139,7 +141,7 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 > This is the moment people get it. Money that moves by itself. (clip)
 
 **Stacks Forum** — thread: "Short demo: a stream accruing in real time on mainnet"
-> Sharing a quick clip of a live stream so people can see the real-time accrual rather than read about it. Balance updates every few seconds, claimable at any point, settling on Bitcoin. Happy to answer anything about how it behaves in edge cases like pause, resume, and cancel. Feedback welcome.
+> Sharing a quick clip of a live stream so people can see the real-time accrual rather than read about it. Balance updates every few seconds and is claimable at any point; settlement inherits Bitcoin finality. Happy to answer anything about how it behaves in edge cases like pause, resume, and cancel. Feedback welcome.
 
 **Grantees Telegram**
 > Dropped a short demo today. This is the part I would love your eyes on, does the real-time feel obvious to you in the first five seconds, or does it need explaining? You are exactly the kind of careful audience I trust on this.
@@ -199,7 +201,7 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 **LinkedIn** — long post
 > Most of us are used to waiting for money. Invoices, net 30, payday at the end of the month. We accept the wait because that is how it has always worked. But the wait is a choice, not a law.
 > StackStream turns a payment into a steady stream. The moment work starts, money starts moving, a little every few seconds, and the person earning it can take it whenever they like. If things change, the sender can pause or stop, and whatever was not earned stays with them. It is fair to both sides.
-> We built it on Stacks so every payment settles with Bitcoin behind it. Once money lands, it is final. No reversals, no doubt.
+> We built it on Stacks so every payment settles with Bitcoin behind it. Once a payment is final, that is it. No reversals, no doubt.
 > If your DAO, team, or business still pays in lumps and waits, there is a calmer way. (link)
 
 **Stacks Forum** — thread: "Why we anchored streaming payments to Bitcoin finality"
@@ -237,7 +239,7 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 
 **Official X**
 > Another real stream, live today.
-> Real money, a real recipient, settling on Bitcoin. Here is the receipt so you can check it yourself.
+> Real money, a real recipient, anchored to Bitcoin. Here is the receipt so you can check it yourself.
 > We like to show our work.
 
 **Personal X**

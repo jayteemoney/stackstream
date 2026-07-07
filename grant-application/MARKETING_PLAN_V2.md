@@ -13,8 +13,10 @@ This version realigns our marketing to a sharper differentiator. The pivot chang
 **Why this and not "DAO payroll":** Streaming mechanics are commoditized. Sablier and Superfluid settle on Ethereum, Streamflow on Solana. None settle on Bitcoin. Bitcoin finality is the one claim no competitor can make, so it leads.
 
 **Two supporting facts that make it real:**
-1. After the Nakamoto upgrade, Stacks blocks settle in about 5 seconds and are as final as Bitcoin once confirmed.
+1. After the Nakamoto upgrade, Stacks blocks arrive about every 5 seconds, so streams update in near real time. Settlement is anchored to Bitcoin, and once anchored it inherits Bitcoin finality.
 2. Through sBTC, you can stream actual Bitcoin, continuously.
+
+**Settlement language rule (applies to every channel):** never fuse the update cadence and Bitcoin settlement into one clause. The ~5 second rhythm is how often *streams update*; *Bitcoin finality* is inherited when Stacks state anchors to Bitcoin, on Bitcoin's own cadence. Approved shapes: "streams update in seconds; settlement inherits Bitcoin finality" (technical audiences), "your balance updates every few seconds, secured by Bitcoin" (social). Never write "settling on Bitcoin every few seconds/every block" or "once it lands, it is final" — crypto Twitter will (correctly) nitpick both.
 
 ---
 

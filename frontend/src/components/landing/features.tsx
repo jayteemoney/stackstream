@@ -72,7 +72,7 @@ export function Features() {
           </h2>
           <p className="mt-3 text-zinc-500 max-w-lg mx-auto">
             Everything you need to pay a team, a contractor, a grantee, or a
-            vendor. Continuously, transparently, and final like Bitcoin.
+            vendor. Continuously, transparently, with Bitcoin-final settlement.
           </p>
         </div>
 

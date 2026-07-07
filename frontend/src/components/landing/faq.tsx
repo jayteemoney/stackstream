@@ -8,7 +8,7 @@ import { FEEDBACK_URL } from "@/lib/constants";
 const faqs = [
   {
     q: "What is StackStream?",
-    a: "A Bitcoin-native payment streaming protocol. Instead of paying people in one lump sum on a payday, you open a stream and funds flow to them every few seconds. It runs on Stacks and settles on Bitcoin, so payments are final and can't be reversed.",
+    a: "A Bitcoin-native payment streaming protocol. Instead of paying people in one lump sum on a payday, you open a stream and funds flow to them every few seconds. It runs on Stacks, and settlement inherits Bitcoin finality, so once a payment is final it can't be reversed.",
   },
   {
     q: "Is it live? Can I use it now?",

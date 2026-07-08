@@ -10,6 +10,7 @@ import daosRouter from "./routes/daos";
 import blocksRouter from "./routes/blocks";
 import tokensRouter from "./routes/tokens";
 import transactionsRouter from "./routes/transactions";
+import statsRouter from "./routes/stats";
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/api/daos", daosRouter);
 app.use("/api/blocks", blocksRouter);
 app.use("/api/tokens", tokensRouter);
 app.use("/api/tx", transactionsRouter);
+app.use("/api/stats", statsRouter);
 
 // Error handler
 app.use(errorHandler);

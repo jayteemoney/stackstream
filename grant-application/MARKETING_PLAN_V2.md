@@ -16,6 +16,53 @@ This version realigns our marketing to a sharper differentiator. The pivot chang
 1. After the Nakamoto upgrade, Stacks blocks arrive about every 5 seconds, so streams update in near real time. Settlement is anchored to Bitcoin, and once anchored it inherits Bitcoin finality.
 2. Through sBTC, you can stream actual Bitcoin, continuously.
 
+---
+
+## North star metric
+
+**The one number: total streams created.** Everything we post is judged by one question: does this give someone a reason to open a stream?
+
+| | |
+|---|---|
+| **Metric** | Total streams created on mainnet (the contract's own counter, `get-stream-nonce`) |
+| **Baseline** | 9 streams, as of Jul 8, 2026 (mainnet block 8,508,895) |
+| **30-day target** | 40 streams by Aug 7, 2026 (about one new stream a day — team to confirm or adjust) |
+| **Where to read it** | `GET /api/stats` on the OpenClaw service returns `streamsCreated` live from the chain. Anyone can verify it against the contract, which is the point. |
+| **Secondary (watch, don't chase)** | `workspacesRegistered` from the same endpoint, and unique sender addresses. |
+
+**Why this metric and not another:**
+- It is **on-chain and verifiable**. We never have to trust our own spreadsheet, and neither does anyone reading our metrics posts.
+- It is **cumulative**, so it never punishes us when a stream completes naturally (unlike "active streams").
+- It **doubles as grant evidence** for M2/M3 proof-of-usage without extra work.
+- "Teams onboarded" is the outcome we want, but it lags and cannot be verified publicly; streams created is its leading indicator.
+
+**Operating rule:** before drafting any post, name how it could move the number (drives a visit, a demo view, or a direct conversation). If it cannot, it needs a different angle or a different week. The Monday metrics post reports the number weekly, honestly, even when it is flat.
+
+## Call to action rule
+
+**Every public post ends with exactly one CTA.** No post ships with nowhere to go.
+
+| Priority | CTA | Use |
+|---|---|---|
+| Primary | **stackstream.xyz** | Default on every post: "Try it: stackstream.xyz" |
+| Secondary | The 60-second demo clip | When the post's job is belief, not action yet |
+| Tertiary | Telegram **t.me/dev_jaytee** | When the ask is "talk to us" (DAO outreach, feedback) |
+
+**Our handles (use these, never improvise):**
+
+| Channel | Handle / link |
+|---|---|
+| Website | https://stackstream.xyz |
+| Official X | @Stackstream0X |
+| Personal X (founder) | @dev_jayteee |
+| Telegram | t.me/dev_jaytee |
+| Discord | dev_jaytee (DM handle — no public server yet; stand one up before using Discord as a post CTA) |
+| LinkedIn (founder) | https://www.linkedin.com/in/jethro-irmiya-a2153427b/ |
+
+**Exceptions:** Stacks Forum and the Grantees Telegram stay soft — those channels are for substance and trust, so the CTA there is at most "link in the thread" or "DM me". Selling hard there costs more than it earns.
+
+---
+
 **Settlement language rule (applies to every channel):** never fuse the update cadence and Bitcoin settlement into one clause. The ~5 second rhythm is how often *streams update*; *Bitcoin finality* is inherited when Stacks state anchors to Bitcoin, on Bitcoin's own cadence. Approved shapes: "streams update in seconds; settlement inherits Bitcoin finality" (technical audiences), "your balance updates every few seconds, secured by Bitcoin" (social). Never write "settling on Bitcoin every few seconds/every block" or "once it lands, it is final" — crypto Twitter will (correctly) nitpick both.
 
 ---

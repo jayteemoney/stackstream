@@ -20,6 +20,10 @@
 
 **Settlement language rule:** never put the every-few-seconds rhythm and Bitcoin settlement in the same clause. The rhythm is how often the stream updates. Bitcoin finality comes when settlement anchors to Bitcoin, on Bitcoin's own schedule. Say "streams update in seconds; settlement inherits Bitcoin finality" for technical readers, or "your balance updates every few seconds, secured by Bitcoin" in social copy. Never say "settling on Bitcoin every few seconds" or "once it lands, it is final."
 
+**North star:** every post is judged by one question, does it give someone a reason to open a stream? The number we track is total streams created (baseline 9 on Jul 8, 2026; target 40 by Aug 7). Pull it live from `GET /api/stats` (`streamsCreated`) before every metrics post. Full definition in `MARKETING_PLAN_V2.md`.
+
+**CTA rule:** every public post ends with exactly one destination. Default is **stackstream.xyz**. Rotate in the 60 second demo clip or Telegram (**t.me/dev_jaytee**) when they fit the ask better. Official X is @Stackstream0X, personal X is @dev_jayteee, LinkedIn is the founder profile. Forum and Grantees Telegram stay soft ("link in the thread", "DM me"), never salesy. Full handle table in `MARKETING_PLAN_V2.md`.
+
 **Selling points to keep warm (weave in often, never let them go cold):**
 1. Settled on Bitcoin. Once a payment is final, it cannot be reversed.
 2. Real-time, money moves every few seconds.
@@ -398,6 +402,16 @@ Forum: 5 substantial threads only. Grantees group: 6 genuine touches. Both kept 
 
 **WhatsApp (status)**
 > Milestone day for StackStream. It is live, and I could not be prouder. Come open your first stream with me.
+
+---
+
+## July schedule (next)
+
+The June run above shipped without CTAs on most X posts; that is fixed by the CTA rule at the top, which applies to everything from here on. The July schedule gets drafted after two inputs land:
+1. The 30 minute engagement review of June's posts, so July is built around the top 2 or 3 formats that actually performed.
+2. The team's decision on segment focus (whether to concentrate outreach on Stacks-native DAOs first).
+
+Two assets July will lean on either way: the 60 second demo video (shot-by-shot script kept in the local ops docs) and the weekly Monday metrics post powered by the live `streamsCreated` number.
 
 ---
 

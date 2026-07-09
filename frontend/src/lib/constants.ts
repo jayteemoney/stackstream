@@ -19,9 +19,10 @@ export const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;
 export const MOCK_TOKEN_CONTRACT = `${CONTRACT_DEPLOYER}.mock-sip010-token`;
 export const SIP010_TRAIT_CONTRACT = `${CONTRACT_DEPLOYER}.sip-010-trait`;
 
-// OpenClaw API
-export const OPENCLAW_API_URL =
-  process.env.NEXT_PUBLIC_OPENCLAW_API_URL ?? "http://localhost:3001";
+// OpenClaw API. Empty string = same origin: the API runs as Next.js route
+// handlers in this app (src/app/api), so no separate backend is needed.
+// Set NEXT_PUBLIC_OPENCLAW_API_URL only to point at an external service.
+export const OPENCLAW_API_URL = process.env.NEXT_PUBLIC_OPENCLAW_API_URL ?? "";
 
 // Hiro API
 export const HIRO_API_BASE = IS_MAINNET

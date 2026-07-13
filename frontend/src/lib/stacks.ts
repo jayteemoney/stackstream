@@ -295,8 +295,15 @@ export function buildClaimAllTx(params: {
   streamId: number;
   tokenContract: string;
   ftName: string;
-  /** Expected claimable amount fetched pre-build (upper bound). */
-  expectedAmount: bigint;
+  /**
+   * Stable upper bound for the payout: deposit − withdrawn (the stream's
+   * remaining escrow). NEVER bound this by the claimable amount — claimable
+   * grows every block, so a bound sampled at build time is already stale
+   * when the tx mines and claim-all aborts by post-condition on any active
+   * stream. Remaining only shrinks (on claims), so it always covers the
+   * payout while still capping outflow at what the stream actually holds.
+   */
+  remainingBalance: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
 
@@ -311,7 +318,7 @@ export function buildClaimAllTx(params: {
     postConditionMode: PostConditionMode.Deny,
     postConditions: [
       Pc.principal(`${mgrAddr}.${mgrName}`)
-        .willSendLte(params.expectedAmount)
+        .willSendLte(params.remainingBalance)
         .ft(params.tokenContract as `${string}.${string}`, params.ftName),
     ],
     network: getNetwork(),

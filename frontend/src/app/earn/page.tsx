@@ -112,7 +112,8 @@ export default function EarnPage() {
                             streamId: stream.id,
                             tokenContract: stream.token,
                             ftName: getTokenConfigByContractId(stream.token).ftName,
-                            expectedAmount: stream.claimable ?? 0n,
+                            remainingBalance:
+                              stream.depositAmount - stream.withdrawnAmount,
                           })
                         );
                         if (result?.confirmed) {

@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@stacks/connect": "^7.0.0",
+    "@stacks/connect": "^8.2.6",
     "@stacks/network": "^7.0.0",
     "@stacks/stacking": "^7.0.0",
     "@stacks/transactions": "^7.2.0",

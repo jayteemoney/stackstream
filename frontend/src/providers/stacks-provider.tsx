@@ -1,41 +1,37 @@
 "use client";
 
 /**
- * Stacks wallet provider using @stacks/connect.
+ * Stacks wallet provider using @stacks/connect v8.
  *
- * For v7+ the library exposes `showConnect` and `openContractCall` directly
- * rather than a React context provider. This wrapper provides auth helpers
- * that integrate with our Zustand wallet store.
+ * v8 replaces the legacy UserSession/showConnect flow with `connect()` +
+ * localStorage-backed address storage, and talks to wallets over the modern
+ * `LeatherProvider`/WBIP JSON-RPC bridge. Leather deprecated the old
+ * `StacksProvider` object, which left the previous `showConnect`/
+ * `openContractCall` calls hanging with no popup.
  *
- * Ref: https://docs.stacks.co/stacks.js/connect
+ * Ref: https://www.npmjs.com/package/@stacks/connect
  */
 
 import { type ReactNode, useEffect, useCallback } from "react";
-import { AppConfig, UserSession } from "@stacks/connect";
 import { useWalletStore } from "@/stores/wallet-store";
-import { IS_MAINNET } from "@/lib/constants";
-
-const appConfig = new AppConfig(["store_write"]);
-export const userSession = new UserSession({ appConfig });
 
 export function StacksProvider({ children }: { children: ReactNode }) {
   const { setAddress, disconnect } = useWalletStore();
 
-  // Rehydrate session on mount
+  // Rehydrate connection on mount from @stacks/connect localStorage
   useEffect(() => {
-    try {
-      if (userSession.isUserSignedIn()) {
-        const userData = userSession.loadUserData();
-        const address = IS_MAINNET
-          ? userData.profile.stxAddress.mainnet
-          : userData.profile.stxAddress.testnet;
-        setAddress(address);
+    (async () => {
+      try {
+        const { isConnected, getLocalStorage } = await import("@stacks/connect");
+        if (isConnected()) {
+          const address = getLocalStorage()?.addresses.stx[0]?.address;
+          if (address) setAddress(address);
+        }
+      } catch {
+        // Stale or incompatible connect data — start fresh
+        disconnect();
       }
-    } catch {
-      // Stale or incompatible session data in localStorage — clear it and start fresh
-      userSession.signUserOut();
-      disconnect();
-    }
+    })();
   }, [setAddress, disconnect]);
 
   return <>{children}</>;
@@ -48,33 +44,26 @@ export function useStacksAuth() {
   const handleConnect = useCallback(async () => {
     setConnecting(true);
     try {
-      const { showConnect } = await import("@stacks/connect");
-      showConnect({
-        appDetails: {
-          name: "StackStream",
-          icon: typeof window !== "undefined" ? `${window.location.origin}/logo.svg` : "/logo.svg",
-        },
-        userSession,
-        onFinish: () => {
-          const userData = userSession.loadUserData();
-          const address = IS_MAINNET
-            ? userData.profile.stxAddress.mainnet
-            : userData.profile.stxAddress.testnet;
-          setAddress(address);
-        },
-        onCancel: () => {
-          setConnecting(false);
-        },
-      });
+      const { connect, getLocalStorage } = await import("@stacks/connect");
+      await connect(); // opens the wallet chooser + approval popup
+      const address = getLocalStorage()?.addresses.stx[0]?.address;
+      if (address) {
+        setAddress(address);
+      } else {
+        setConnecting(false);
+      }
     } catch {
+      // User closed the popup or wallet rejected — back to idle
       setConnecting(false);
     }
   }, [setAddress, setConnecting]);
 
   const handleDisconnect = useCallback(() => {
-    userSession.signUserOut();
+    import("@stacks/connect").then(({ disconnect: walletDisconnect }) => {
+      walletDisconnect();
+    });
     disconnect();
   }, [disconnect]);
 
-  return { connect: handleConnect, disconnect: handleDisconnect, userSession };
+  return { connect: handleConnect, disconnect: handleDisconnect };
 }

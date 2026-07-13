@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PostConditionMode } from "@stacks/transactions";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
+import { isUserCancel, isNoResponse, walletErrorDetail } from "@/lib/wallet-errors";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
 
@@ -48,28 +49,37 @@ export function useStacksTx() {
         // JSON-RPC bridge. The legacy openContractCall/StacksProvider path is
         // deprecated by Leather and silently hangs (no popup, dangling
         // promise) on current wallet versions.
-        const { request, JsonRpcError } = await import("@stacks/connect");
+        const { request } = await import("@stacks/connect");
 
-        const response = await request("stx_callContract", {
-          contract: `${options.contractAddress}.${options.contractName}`,
+        const callParams = {
+          contract:
+            `${options.contractAddress}.${options.contractName}` as `${string}.${string}`,
           functionName: options.functionName,
           functionArgs: options.functionArgs,
           network: options.network,
           postConditions: options.postConditions ?? [],
           postConditionMode:
             options.postConditionMode === PostConditionMode.Allow
-              ? "allow"
-              : "deny",
-        }).catch((err: unknown) => {
-          // -32000 UserRejection / -31001 UserCanceled → treated as cancel
-          if (
-            err instanceof JsonRpcError &&
-            (err.code === -32000 || err.code === -31001)
-          ) {
-            throw new Error("cancelled");
+              ? ("allow" as const)
+              : ("deny" as const),
+        };
+
+        const response = await request("stx_callContract", callParams).catch(
+          async (err: unknown) => {
+            if (isUserCancel(err)) throw new Error("cancelled");
+            if (isNoResponse(err)) {
+              // Extension background worker was asleep and dropped the
+              // request while waking — one automatic retry succeeds.
+              return request("stx_callContract", callParams).catch(
+                (retryErr: unknown) => {
+                  if (isUserCancel(retryErr)) throw new Error("cancelled");
+                  throw retryErr;
+                }
+              );
+            }
+            throw err;
           }
-          throw err;
-        });
+        );
 
         const rawId = response?.txid;
         if (!rawId) throw new Error("Wallet returned no transaction id");
@@ -132,7 +142,7 @@ export function useStacksTx() {
           setStatus("idle");
           return null;
         }
-        setError(err?.message ?? "Transaction failed");
+        setError(walletErrorDetail(err));
         setStatus("error");
         return null;
       }

@@ -20,6 +20,12 @@
 import { type ReactNode, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useWalletStore } from "@/stores/wallet-store";
+import {
+  isUserCancel,
+  isNoResponse,
+  isNoWalletFound,
+  walletErrorDetail,
+} from "@/lib/wallet-errors";
 
 /** Stacks addresses start with S + P/M (mainnet) or T/N (testnet). */
 const STX_ADDRESS_RE = /^S[PMTN]/;
@@ -72,33 +78,51 @@ export function useStacksAuth() {
   const handleConnect = useCallback(async () => {
     setConnecting(true);
     try {
-      const {
-        connect,
-        disconnect: walletDisconnect,
-        JsonRpcError,
-      } = await import("@stacks/connect");
+      const { connect, disconnect: walletDisconnect } = await import(
+        "@stacks/connect"
+      );
 
       // Drop any cached approval/addresses so the wallet is always asked
       // fresh — otherwise a reconnect can silently return the previously
       // approved account even after the user switched accounts in the wallet.
-      walletDisconnect();
+      try {
+        walletDisconnect();
+      } catch {
+        /* nothing cached */
+      }
 
-      const res = await connect({ forceWalletSelect: true }).catch(
-        (err: unknown) => {
-          // User closed the chooser or rejected in the wallet — not an error
-          if (
-            err instanceof JsonRpcError &&
-            (err.code === -32000 || err.code === -31001)
-          ) {
-            return null;
+      const doConnect = () => connect({ forceWalletSelect: true });
+
+      let res;
+      try {
+        res = await doConnect();
+      } catch (err) {
+        if (isUserCancel(err)) {
+          setConnecting(false);
+          return;
+        }
+        if (isNoResponse(err)) {
+          // The extension's background worker was asleep and dropped the
+          // request while waking — one automatic retry succeeds in practice.
+          try {
+            res = await doConnect();
+          } catch (retryErr) {
+            if (isUserCancel(retryErr)) {
+              setConnecting(false);
+              return;
+            }
+            throw retryErr;
           }
+        } else if (isNoWalletFound(err)) {
+          toast.error(
+            "No Stacks wallet detected on this page. Click your wallet extension's icon once to grant it access to this site, then try again.",
+            { duration: 8000 }
+          );
+          setConnecting(false);
+          return;
+        } else {
           throw err;
         }
-      );
-
-      if (!res) {
-        setConnecting(false);
-        return;
       }
 
       // Use the wallet's fresh response (authoritative for the currently
@@ -118,9 +142,9 @@ export function useStacksAuth() {
       );
     } catch (err) {
       console.error("[wallet connect]", err);
-      toast.error(
-        "Couldn't reach the wallet. Unlock the extension, then try again."
-      );
+      toast.error(`Wallet connection failed: ${walletErrorDetail(err)}`, {
+        duration: 8000,
+      });
       setConnecting(false);
     }
   }, [setAddress, setConnecting]);

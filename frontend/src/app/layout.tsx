@@ -3,7 +3,6 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { QueryProvider } from "@/providers/query-provider";
 import { StacksProvider } from "@/providers/stacks-provider";
-import { StaleDeployGuard } from "@/components/stale-deploy-guard";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -29,7 +28,6 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased bg-surface-0 text-zinc-100`}
       >
         <QueryProvider>
-          <StaleDeployGuard />
           <StacksProvider>
             {children}
             <Toaster

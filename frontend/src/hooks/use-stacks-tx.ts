@@ -4,16 +4,8 @@ import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PostConditionMode } from "@stacks/transactions";
-// Static import on purpose: keeps the signing path out of lazy chunks that
-// deploys invalidate under open tabs (see stacks-provider.tsx).
-import { request } from "@stacks/connect";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
-import {
-  isUserCancel,
-  isNoResponse,
-  isStaleChunk,
-  walletErrorDetail,
-} from "@/lib/wallet-errors";
+import { isUserCancel, isNoResponse, walletErrorDetail } from "@/lib/wallet-errors";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
 
@@ -57,6 +49,8 @@ export function useStacksTx() {
         // JSON-RPC bridge. The legacy openContractCall/StacksProvider path is
         // deprecated by Leather and silently hangs (no popup, dangling
         // promise) on current wallet versions.
+        const { request } = await import("@stacks/connect");
+
         const callParams = {
           contract:
             `${options.contractAddress}.${options.contractName}` as `${string}.${string}`,
@@ -146,13 +140,6 @@ export function useStacksTx() {
         toast.dismiss(toastId);
         if (err?.message === "cancelled") {
           setStatus("idle");
-          return null;
-        }
-        if (isStaleChunk(err)) {
-          // A deploy replaced the bundle under this open tab — reload onto
-          // the new build instead of surfacing module internals.
-          toast.info("StackStream was updated — refreshing…");
-          setTimeout(() => window.location.reload(), 800);
           return null;
         }
         setError(walletErrorDetail(err));

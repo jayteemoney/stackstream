@@ -9,11 +9,6 @@
  * `StacksProvider` object, which left the previous `showConnect`/
  * `openContractCall` calls hanging with no popup.
  *
- * The library is imported STATICALLY on purpose: it ships in the initial
- * bundle (~10 KB gz), so the wallet path can never lose its lazy chunk when
- * a deploy replaces the hashed bundle files under an open tab ("module
- * factory is not available").
- *
  * Connect is deliberately stateless-first: we clear any cached approval and
  * force the wallet chooser on every connect, so switching accounts in the
  * wallet (e.g. sender -> recipient) always takes effect. Cached data made
@@ -23,19 +18,12 @@
  */
 
 import { type ReactNode, useEffect, useCallback } from "react";
-import {
-  connect,
-  disconnect as walletDisconnect,
-  isConnected,
-  getLocalStorage,
-} from "@stacks/connect";
 import { toast } from "sonner";
 import { useWalletStore } from "@/stores/wallet-store";
 import {
   isUserCancel,
   isNoResponse,
   isNoWalletFound,
-  isStaleChunk,
   walletErrorDetail,
 } from "@/lib/wallet-errors";
 
@@ -47,34 +35,37 @@ export function StacksProvider({ children }: { children: ReactNode }) {
 
   // Rehydrate connection on mount from @stacks/connect localStorage
   useEffect(() => {
-    try {
-      // Purge pre-v8 leftovers. Returning visitors carry the legacy
-      // UserSession blob, and our persisted store may claim "connected"
-      // from that era — without a matching v8 session the UI would lie
-      // and wallet actions would misbehave.
+    (async () => {
       try {
-        localStorage.removeItem("blockstack-session");
-        localStorage.removeItem("blockstack-gaia-hub-config");
-      } catch {
-        /* storage unavailable — nothing to clean */
-      }
-
-      if (isConnected()) {
-        const stx = getLocalStorage()?.addresses.stx.find((a) =>
-          STX_ADDRESS_RE.test(a.address)
-        );
-        if (stx) {
-          setAddress(stx.address);
-          return;
+        // Purge pre-v8 leftovers. Returning visitors carry the legacy
+        // UserSession blob, and our persisted store may claim "connected"
+        // from that era — without a matching v8 session the UI would lie
+        // and wallet actions would misbehave.
+        try {
+          localStorage.removeItem("blockstack-session");
+          localStorage.removeItem("blockstack-gaia-hub-config");
+        } catch {
+          /* storage unavailable — nothing to clean */
         }
+
+        const { isConnected, getLocalStorage } = await import("@stacks/connect");
+        if (isConnected()) {
+          const stx = getLocalStorage()?.addresses.stx.find((a) =>
+            STX_ADDRESS_RE.test(a.address)
+          );
+          if (stx) {
+            setAddress(stx.address);
+            return;
+          }
+        }
+        // No live v8 session: make the UI agree (clears any stale
+        // persisted "connected" state from before the migration).
+        disconnect();
+      } catch {
+        // Stale or incompatible connect data — start fresh
+        disconnect();
       }
-      // No live v8 session: make the UI agree (clears any stale
-      // persisted "connected" state from before the migration).
-      disconnect();
-    } catch {
-      // Stale or incompatible connect data — start fresh
-      disconnect();
-    }
+    })();
   }, [setAddress, disconnect]);
 
   return <>{children}</>;
@@ -87,6 +78,10 @@ export function useStacksAuth() {
   const handleConnect = useCallback(async () => {
     setConnecting(true);
     try {
+      const { connect, disconnect: walletDisconnect } = await import(
+        "@stacks/connect"
+      );
+
       // Drop any cached approval/addresses so the wallet is always asked
       // fresh — otherwise a reconnect can silently return the previously
       // approved account even after the user switched accounts in the wallet.
@@ -147,13 +142,6 @@ export function useStacksAuth() {
       );
     } catch (err) {
       console.error("[wallet connect]", err);
-      if (isStaleChunk(err)) {
-        // A deploy replaced the bundle under this open tab — reload onto
-        // the new build instead of surfacing module internals.
-        toast.info("StackStream was updated — refreshing…");
-        setTimeout(() => window.location.reload(), 800);
-        return;
-      }
       toast.error(`Wallet connection failed: ${walletErrorDetail(err)}`, {
         duration: 8000,
       });
@@ -162,11 +150,9 @@ export function useStacksAuth() {
   }, [setAddress, setConnecting]);
 
   const handleDisconnect = useCallback(() => {
-    try {
+    import("@stacks/connect").then(({ disconnect: walletDisconnect }) => {
       walletDisconnect();
-    } catch {
-      /* nothing cached */
-    }
+    });
     disconnect();
   }, [disconnect]);
 

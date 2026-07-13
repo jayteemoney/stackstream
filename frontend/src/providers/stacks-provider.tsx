@@ -24,6 +24,7 @@ import {
   isUserCancel,
   isNoResponse,
   isNoWalletFound,
+  isStaleChunk,
   walletErrorDetail,
 } from "@/lib/wallet-errors";
 
@@ -142,6 +143,13 @@ export function useStacksAuth() {
       );
     } catch (err) {
       console.error("[wallet connect]", err);
+      if (isStaleChunk(err)) {
+        // A deploy replaced the bundle files under this open tab — reload
+        // onto the current build instead of surfacing module internals.
+        toast.info("StackStream was updated — refreshing…");
+        setTimeout(() => window.location.reload(), 800);
+        return;
+      }
       toast.error(`Wallet connection failed: ${walletErrorDetail(err)}`, {
         duration: 8000,
       });

@@ -45,3 +45,14 @@ export function walletErrorDetail(err: unknown): string {
   const msg = e.message?.slice(0, 140) ?? "Unknown error";
   return e.code !== undefined ? `${msg} (code ${e.code})` : msg;
 }
+
+/**
+ * A lazily-loaded chunk vanished because a new deploy replaced the hashed
+ * bundle files while this tab was still running the old build. The only
+ * correct recovery is a one-time page reload onto the new build.
+ */
+export function isStaleChunk(err: unknown): boolean {
+  return /module factory|ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(
+    asErrorLike(err).message ?? ""
+  );
+}

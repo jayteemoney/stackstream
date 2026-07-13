@@ -5,7 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PostConditionMode } from "@stacks/transactions";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
-import { isUserCancel, isNoResponse, walletErrorDetail } from "@/lib/wallet-errors";
+import {
+  isUserCancel,
+  isNoResponse,
+  isStaleChunk,
+  walletErrorDetail,
+} from "@/lib/wallet-errors";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
 
@@ -140,6 +145,13 @@ export function useStacksTx() {
         toast.dismiss(toastId);
         if (err?.message === "cancelled") {
           setStatus("idle");
+          return null;
+        }
+        if (isStaleChunk(err)) {
+          // A deploy replaced the bundle files under this open tab — reload
+          // onto the current build instead of surfacing module internals.
+          toast.info("StackStream was updated — refreshing…");
+          setTimeout(() => window.location.reload(), 800);
           return null;
         }
         setError(walletErrorDetail(err));

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { userSession } from "@/providers/stacks-provider";
+import { PostConditionMode } from "@stacks/transactions";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
@@ -44,21 +44,37 @@ export function useStacksTx() {
       const toastId = toast.loading("Confirm the transaction in your wallet…");
 
       try {
-        const { openContractCall } = await import("@stacks/connect");
+        // v8 request() talks to the wallet over the modern LeatherProvider
+        // JSON-RPC bridge. The legacy openContractCall/StacksProvider path is
+        // deprecated by Leather and silently hangs (no popup, dangling
+        // promise) on current wallet versions.
+        const { request, JsonRpcError } = await import("@stacks/connect");
 
-        // Wait for user to sign in Leather
-        const id = await new Promise<string>((resolve, reject) => {
-          openContractCall({
-            ...options,
-            userSession,
-            onFinish: (data: any) => {
-              resolve(data.txId);
-            },
-            onCancel: () => {
-              reject(new Error("cancelled"));
-            },
-          } as any);
+        const response = await request("stx_callContract", {
+          contract: `${options.contractAddress}.${options.contractName}`,
+          functionName: options.functionName,
+          functionArgs: options.functionArgs,
+          network: options.network,
+          postConditions: options.postConditions ?? [],
+          postConditionMode:
+            options.postConditionMode === PostConditionMode.Allow
+              ? "allow"
+              : "deny",
+        }).catch((err: unknown) => {
+          // -32000 UserRejection / -31001 UserCanceled → treated as cancel
+          if (
+            err instanceof JsonRpcError &&
+            (err.code === -32000 || err.code === -31001)
+          ) {
+            throw new Error("cancelled");
+          }
+          throw err;
         });
+
+        const rawId = response?.txid;
+        if (!rawId) throw new Error("Wallet returned no transaction id");
+        // Hiro's /extended/v1/tx/{id} expects the 0x-prefixed form
+        const id = rawId.startsWith("0x") ? rawId : `0x${rawId}`;
 
         setTxId(id);
         setStatus("confirming");

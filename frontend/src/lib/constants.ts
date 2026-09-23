@@ -124,8 +124,8 @@ const MAINNET_TOKENS: readonly TokenConfig[] = [
     symbol: "sBTC",
     name: "Stacks BTC",
     decimals: 8,
-    contractId: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-sbtc",
-    ftName: "sbtc",
+    contractId: "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token",
+    ftName: "sbtc-token",
     icon: "/bitcoin.svg",
     description: "Native Bitcoin on Stacks — the flagship streaming token",
   },
@@ -143,7 +143,7 @@ const MAINNET_TOKENS: readonly TokenConfig[] = [
     name: "ALEX",
     decimals: 8,
     contractId: "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex",
-    ftName: "token-alex",
+    ftName: "alex",
     icon: "/alex.svg",
     description: "ALEX DeFi protocol token",
   },
@@ -184,7 +184,7 @@ export const SUPPORTED_TOKENS: readonly TokenConfig[] = IS_MAINNET
 export const DEFAULT_TOKEN = SUPPORTED_TOKENS[0];
 
 /**
- * Lookup a TokenConfig by its on-chain contract identifier (e.g. "SP3K8...token-sbtc").
+ * Lookup a TokenConfig by its on-chain contract identifier (e.g. "SM3VDX...sbtc-token").
  * Falls back to DEFAULT_TOKEN when not found so callers always get a non-null
  * record. Used by transaction builders to derive the ftName for post-conditions.
  */

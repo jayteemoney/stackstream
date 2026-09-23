@@ -220,7 +220,7 @@ export async function isRegisteredDao(admin: string): Promise<boolean> {
 export function buildCreateStreamTx(params: {
   recipient: string;
   tokenContract: string;
-  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
   ftName: string;
   depositAmount: bigint;
   startBlock: number;
@@ -380,7 +380,7 @@ export function buildCancelStreamTx(params: {
 export function buildTopUpStreamTx(params: {
   streamId: number;
   tokenContract: string;
-  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
   ftName: string;
   amount: bigint;
   senderAddress: string;
@@ -473,7 +473,7 @@ export async function getCurrentBlockHeight(): Promise<number> {
 export async function getTokenBalance(
   address: string,
   tokenContract: string,
-  /** Fungible token asset name inside the contract (e.g. "sbtc", "mock-sbtc", "usda") */
+  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
   ftName: string
 ): Promise<bigint> {
   if (!address) return 0n;

@@ -48,8 +48,8 @@ const features = [
     icon: Coins,
     title: "Stream any asset",
     points: [
-      "sBTC, STX, USDA, ALEX, or any SIP-010 token",
-      "Stream real Bitcoin, by the second",
+      "sBTC, USDA, ALEX, xBTC, or any SIP-010 token",
+      "Stream Bitcoin-backed sBTC, block by block",
     ],
   },
   {

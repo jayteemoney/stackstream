@@ -43,7 +43,7 @@ export function Hero() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
         >
-          <span className="text-zinc-100">Pay by the second.</span>
+          <span className="text-zinc-100">Pay by the block.</span>
           <br />
           <span className="gradient-text">Settled on Bitcoin.</span>
         </motion.h1>
@@ -57,8 +57,8 @@ export function Hero() {
         >
           StackStream turns payroll, grants, and subscriptions into a live stream
           of money. Recipients earn every block and claim whenever they want, and
-          senders keep every token that isn&apos;t earned yet. Stream sBTC, STX, or
-          any token on Stacks. Settlement inherits Bitcoin finality.
+          senders keep every token that isn&apos;t earned yet. Stream sBTC or any
+          SIP-010 token on Stacks. Settlement inherits Bitcoin finality.
         </motion.p>
 
         {/* CTAs */}

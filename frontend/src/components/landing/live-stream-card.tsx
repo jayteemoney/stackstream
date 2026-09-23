@@ -9,7 +9,7 @@ const DURATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const RATE_PER_SECOND = DEPOSIT / DURATION_SECONDS; // ~0.0000000386 sBTC/sec
 const BASE_EARNED = 0.05734829; // ~57% streamed
 
-const TOKENS = ["sBTC", "STX", "USDA", "ALEX"];
+const TOKENS = ["sBTC", "USDA", "ALEX", "xBTC"];
 
 export function LiveStreamCard() {
   // Start from the same value on server and first client paint to avoid a
@@ -81,13 +81,13 @@ export function LiveStreamCard() {
 
       {/* Friendly caption */}
       <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-        This is real money landing every second. No invoice, no waiting for
+        This is real money landing every block. No invoice, no waiting for
         payday, and they can cash out the moment they want.
       </p>
 
       {/* Any token */}
       <div className="mt-5 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-4">
-        <span className="mr-1 text-xs text-zinc-500">Stream any token:</span>
+        <span className="mr-1 text-xs text-zinc-500">Stream any SIP-010 token:</span>
         {TOKENS.map((t) => (
           <span
             key={t}

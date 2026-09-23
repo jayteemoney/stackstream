@@ -122,12 +122,12 @@ export interface TokenConfig {
 const MAINNET_TOKENS: readonly TokenConfig[] = [
   {
     symbol: "sBTC",
-    name: "Stacks BTC",
+    name: "sBTC",
     decimals: 8,
     contractId: "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token",
     ftName: "sbtc-token",
     icon: "/bitcoin.svg",
-    description: "Native Bitcoin on Stacks — the flagship streaming token",
+    description: "1:1 Bitcoin-backed asset on Stacks — the flagship streaming token",
   },
   {
     symbol: "USDA",
@@ -140,7 +140,7 @@ const MAINNET_TOKENS: readonly TokenConfig[] = [
   },
   {
     symbol: "ALEX",
-    name: "ALEX",
+    name: "ALEX Token",
     decimals: 8,
     contractId: "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex",
     ftName: "alex",

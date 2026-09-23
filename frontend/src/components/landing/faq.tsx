@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Which tokens can I stream?",
-    a: "sBTC, STX, USDA, ALEX, xBTC, or any SIP-010 token. If it follows the SIP-010 standard on Stacks, you can stream it by the second.",
+    a: "sBTC, USDA, ALEX, xBTC, or any SIP-010 token. If it follows the SIP-010 standard on Stacks, you can stream it block by block. Native STX isn't a SIP-010 token, so it can't be streamed directly.",
   },
   {
     q: "Is my money safe while it's streaming?",

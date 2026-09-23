@@ -43,7 +43,7 @@ const segments = [
       "Share your address, agree an amount and a length — done",
       "Balance ticks up live while you build; pull it anytime",
       "No invoice, no chasing, no 30-day wait",
-      "Get paid in sBTC, STX, or any token you choose",
+      "Get paid in sBTC or any SIP-010 token you choose",
     ],
   },
   {
@@ -53,7 +53,7 @@ const segments = [
     points: [
       "Stream a grant across the whole project, not one lump sum",
       "Builders earn steadily as they ship",
-      "Unearned funds stay in your wallet to pause or pull back",
+      "Unearned funds stay yours: pause the stream or cancel to pull them back",
       "No escrow agent, no awkward refunds — we fund our work this way",
     ],
   },
@@ -66,7 +66,7 @@ const steps = [
     headline: "Set it up once",
     points: [
       "Choose who you are paying",
-      "Pick any token — sBTC, STX, or your own",
+      "Pick a token — sBTC, USDA, or any SIP-010 token",
       "Set the amount and how long it runs",
     ],
   },

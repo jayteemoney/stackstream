@@ -96,6 +96,29 @@ function parseStreamData(raw: Record<string, any>): StreamData {
   };
 }
 
+// SIP-010 decimals, read from the token contract itself so any token formats
+// correctly, not only the ones the app lists. Decimals never change for a
+// deployed token, so cache per warm instance. Returns null if the call fails;
+// callers then omit formatted amounts rather than guess a wrong scale.
+const decimalsCache = new Map<string, number>();
+
+export async function getTokenDecimals(
+  tokenContract: string
+): Promise<number | null> {
+  const hit = decimalsCache.get(tokenContract);
+  if (hit !== undefined) return hit;
+  try {
+    const result = await callReadOnly(tokenContract, "get-decimals");
+    if (!result.success) return null;
+    const decimals = Number(result.value.value);
+    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 38) return null;
+    decimalsCache.set(tokenContract, decimals);
+    return decimals;
+  } catch {
+    return null;
+  }
+}
+
 export async function getStream(streamId: number): Promise<StreamData | null> {
   const result = await callReadOnly(STREAM_MANAGER_CONTRACT, "get-stream", [
     uintCV(streamId),

@@ -257,7 +257,10 @@ A stream looks like this. Amounts are strings in the token's smallest unit.
   "remaining": "957223",
   "refundable": "1",
   "currentBlock": 9053473,
-  "progress": 100
+  "progress": 100,
+  "tokenDecimals": 6,
+  "depositFormatted": "1.20",
+  "claimableFormatted": "0.957222"
 }
 ```
 
@@ -269,8 +272,10 @@ A stream looks like this. Amounts are strings in the token's smallest unit.
 | `remaining` | Still held by the contract for this stream |
 | `refundable` | What would return to the sender on cancel now |
 | `progress` | Percent of the stream's duration elapsed |
+| `tokenDecimals` | The token's decimals, read from the token contract |
+| `depositFormatted`, `claimableFormatted` | Human-readable amounts using `tokenDecimals`. `null` if decimals could not be read |
 
-Convert amounts yourself using the token's decimals from the table above. Do not rely on the `…Formatted` fields.
+For your own calculations, use the raw amounts with `tokenDecimals`.
 
 Errors return JSON with an `error` field: `400` for a malformed ID or address, `404` when not found, and `502` when the upstream blockchain API is unavailable.
 

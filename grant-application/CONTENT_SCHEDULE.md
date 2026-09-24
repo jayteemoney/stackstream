@@ -8,7 +8,7 @@
 
 | Fact | Value | Source |
 |---|---|---|
-| Streams created on mainnet | **11** | `stackstream.xyz/api/stats`, Sep 21, 10:00 UTC |
+| Streams created on mainnet | **11** | `stackstream.xyz/api/stats`, Sep 24, 13:50 UTC |
 | Organisations registered | **0** | same |
 | Tests | **125, all passing**, across 2 test files, including property-based fuzz tests | `npx vitest run`, verified Sep 15 |
 | Security | Independent paid bounty audit before mainnet. Zero critical findings, every real bug fixed in v1.0.0-rc2 | `audits/AUDIT_REPORT_v1.0.0.md` |
@@ -131,7 +131,7 @@ Follow-ups at three and ten days, then stop.
 | 7 | Sun Sep 20 | Money that moves like water (skipped) | E | ✓ | ✓ |  |  |  |  | ✓ |
 | 8 | Mon Sep 21 | The number, week 2 (posted) | A | ✓ | ✓ |  |  |  |  | ✓ |
 | 9 | Tue Sep 22 | You are never locked in (posted) | B | ✓ | ✓ |  |  |  |  | ✓ |
-| 10 | Wed Sep 23 | A real transaction | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
+| 10 | Wed Sep 23 | A real transaction (posted) | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
 | 11 | Thu Sep 24 | What if nobody claims it? | D | ✓ | ✓ |  |  |  |  | ✓ |
 | 12 | Fri Sep 25 | Grants that release as work ships | E, B | ✓ | ✓ | ✓ |  |  | ✓ | ✓ |
 | 13 | Sat Sep 26 | The number nobody wants to post | F | ✓ | ✓ |  |  |  |  | ✓ |
@@ -385,7 +385,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 10, Wed Sep 23: A real transaction
+### Day 10, Wed Sep 23: A real transaction (posted)
 
 > `SS_D10_proof-card` (C), precise terms allowed · Outreach: Mithil Thakore · Use a real mainnet stream and label it if it is ours · Explorer link in the first reply
 
@@ -420,7 +420,7 @@ Follow-ups at three and ten days, then stop.
 
 ### Day 11, Thu Sep 24: What if nobody claims it?
 
-> `SS_D11_nobody-claims` (D) · Follow-ups: Tycho, Bitflow, Rena
+> `SS_D11_nobody-claims` (D) · Outreach: reply to Zero Authority to book the call. No follow-ups due (Tycho Sep 26, Bitflow Sep 25, Rena not chased)
 
 **Official X**
 > What if the person you pay never claims?
@@ -561,15 +561,15 @@ Follow-ups at three and ten days, then stop.
 > `SS_D16_any-token` (B) · Outreach: Andre Serrano
 
 **Official X**
-> Not an STX-only tool.
-> Stream sBTC, STX, USDA, ALEX, or any token on Stacks. Pay in what your treasury holds, and get paid in what you actually want.
+> Not a one-token tool.
+> Stream sBTC, USDA, ALEX, xBTC, or any SIP-010 token on Stacks. Pay in what your treasury holds, and get paid in what you actually want.
 > Including real Bitcoin, through sBTC.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **Personal X**
-> The most common wrong assumption: "so it only streams STX?"
-> No, any token on Stacks. My favourite is sBTC: someone paid in real Bitcoin, continuously, claiming it themselves.
+> The most common wrong assumption: "so it only streams one token?"
+> No, any SIP-010 token on Stacks. My favourite is sBTC: someone paid in real Bitcoin, continuously, claiming it themselves.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 

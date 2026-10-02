@@ -232,6 +232,11 @@ function ResultRow({
         {unusable && token.unusableReason && (
           <div className="mt-1 text-[11px] text-amber-500/80">{token.unusableReason}</div>
         )}
+        {token.warnings?.map((warning) => (
+          <div key={warning} className="mt-1 text-[11px] text-zinc-500">
+            {warning}
+          </div>
+        ))}
       </div>
     </button>
   );
@@ -646,6 +651,16 @@ export function TokenSelector({ value, onChange, disabled }: TokenSelectorProps)
               <Principal contractId={confirming.impersonates} />
             </div>
           )}
+
+          {confirming.warnings?.length ? (
+            <ul className="space-y-1">
+              {confirming.warnings.map((warning) => (
+                <li key={warning} className="text-[11px] text-zinc-400">
+                  {warning}
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           <div className="flex gap-2">
             <Button

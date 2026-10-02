@@ -7,8 +7,8 @@ import { useRecipientStreams } from "@/hooks/use-streams";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
-import { buildClaimAllTx } from "@/lib/stacks";
-import { getTokenConfigByContractId } from "@/lib/constants";
+import { buildClaimAllTx, requireTokenMetadata, UnresolvableTokenError } from "@/lib/stacks";
+import { useTokensMetadata } from "@/hooks/use-token-metadata";
 import type { StreamData } from "@/lib/stacks";
 import { ClaimDialog } from "@/components/stream/claim-dialog";
 import { formatTxError } from "@/lib/utils";
@@ -22,6 +22,9 @@ export default function EarnStreamsPage() {
   useBlockHeight();
   const { execute, isPending, isConfirming } = useStacksTx();
   const [claimTarget, setClaimTarget] = useState<{ id: number; stream: StreamData; claimable: bigint } | null>(null);
+  // One resolution per distinct token, not per stream. Streams whose token
+  // cannot be verified are simply absent here, and their claim refuses below.
+  const tokensById = useTokensMetadata(streams.map((s) => s.token));
 
   if (!isConnected) {
     return (
@@ -66,20 +69,33 @@ export default function EarnStreamsPage() {
           streamed={stream.streamed}
           actionLoading={isPending || isConfirming}
           onClaim={async () => {
-            const result = await execute(
-              buildClaimAllTx({
-                streamId: stream.id,
-                tokenContract: stream.token,
-                ftName: getTokenConfigByContractId(stream.token).ftName,
-                remainingBalance:
-                  stream.depositAmount - stream.withdrawnAmount,
-              })
-            );
-            if (result?.confirmed) {
-              toast.success("Tokens claimed!");
-              refetch();
-            } else if (result && !result.confirmed) {
-              toast.error(formatTxError("Failed to claim", result));
+            // Claiming moves tokens out of the manager, so the post-condition
+            // has to name the exact asset. If it can't be proven, refuse rather
+            // than guess: a wrong asset name makes the wallet reject the tx with
+            // an unexplained "post-condition was not met".
+            try {
+              const token = tokensById[stream.token] ?? (await requireTokenMetadata(stream.token));
+              const result = await execute(
+                buildClaimAllTx({
+                  streamId: stream.id,
+                  tokenContract: stream.token,
+                  token,
+                  remainingBalance:
+                    stream.depositAmount - stream.withdrawnAmount,
+                })
+              );
+              if (result?.confirmed) {
+                toast.success("Tokens claimed!");
+                refetch();
+              } else if (result && !result.confirmed) {
+                toast.error(formatTxError("Failed to claim", result));
+              }
+            } catch (err) {
+              toast.error(
+                err instanceof UnresolvableTokenError
+                  ? err.message
+                  : formatTxError("Failed to claim", undefined, err)
+              );
             }
           }}
           onClaimPartial={() =>

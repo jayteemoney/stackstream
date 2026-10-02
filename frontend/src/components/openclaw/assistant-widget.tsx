@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OPENCLAW_API_URL, DEFAULT_TOKEN } from "@/lib/constants";
+import { OPENCLAW_API_URL, unresolvableTokenLabel } from "@/lib/constants";
 import { formatTokenAmount, getStreamStatusLabel, getStreamStatusColor } from "@/lib/utils";
 import { MessageCircle, X, Search, Loader2, Zap, Hash, User, Building2 } from "lucide-react";
 
@@ -25,6 +25,31 @@ async function fetchApi(path: string) {
   return res.json();
 }
 
+/**
+ * Render an amount the API already formatted, falling back to local formatting
+ * *only* when the API supplied the token's decimals.
+ *
+ * The API response has no `formatted.deposit` field — reading that returned
+ * undefined, so every amount silently fell through to the old 8-decimal default
+ * and was labelled with DEFAULT_TOKEN. A 6-decimal stream therefore displayed
+ * at 1/100th of its real value. When decimals are genuinely unavailable we say
+ * so rather than showing a number we cannot vouch for.
+ */
+function formatApiAmount(
+  formatted: string | null | undefined,
+  raw: unknown,
+  decimals: unknown
+): string {
+  if (typeof formatted === "string" && formatted.length > 0) return formatted;
+  if (typeof decimals === "number" && Number.isInteger(decimals)) {
+    const value = typeof raw === "bigint" || typeof raw === "number" || typeof raw === "string"
+      ? BigInt(raw as string | number | bigint)
+      : 0n;
+    return formatTokenAmount(value, decimals);
+  }
+  return "—";
+}
+
 function StreamResult({ data }: { data: any }) {
   return (
     <div className="space-y-2 text-xs">
@@ -41,11 +66,13 @@ function StreamResult({ data }: { data: any }) {
         <div className="font-mono text-zinc-300 truncate">{data.recipient?.slice(0, 8)}...</div>
         <div>Deposited</div>
         <div className="font-mono text-zinc-300">
-          {data.formatted?.deposit ?? formatTokenAmount(data.depositAmount ?? data["deposit-amount"] ?? 0)} {DEFAULT_TOKEN.symbol}
+          {formatApiAmount(data.depositFormatted, data.depositAmount ?? data["deposit-amount"], data.tokenDecimals)}{" "}
+          {data.tokenLabel ?? unresolvableTokenLabel(data.token ?? "")}
         </div>
         <div>Claimable</div>
         <div className="font-mono text-emerald-400">
-          {data.formatted?.claimable ?? formatTokenAmount(data.claimable ?? 0)} {DEFAULT_TOKEN.symbol}
+          {formatApiAmount(data.claimableFormatted, data.claimable, data.tokenDecimals)}{" "}
+          {data.tokenLabel ?? unresolvableTokenLabel(data.token ?? "")}
         </div>
         {data.progress !== undefined && (
           <>
@@ -94,7 +121,12 @@ function DaoResult({ data }: { data: any }) {
         <div className="font-mono text-zinc-300">{data.totalStreamsCreated ?? data["total-streams-created"] ?? 0}</div>
         <div>Total deposited</div>
         <div className="font-mono text-zinc-300">
-          {formatTokenAmount(data.totalDeposited ?? data["total-deposited"] ?? 0)} {DEFAULT_TOKEN.symbol}
+          {data.totalDepositedFormatted ?? "—"}
+          {data.totalDepositedFormatted == null && (
+            <span className="ml-1 text-zinc-500">
+              (no single-token total)
+            </span>
+          )}
         </div>
       </div>
     </div>

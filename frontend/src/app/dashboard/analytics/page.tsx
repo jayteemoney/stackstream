@@ -9,7 +9,8 @@ import { useSenderStreams } from "@/hooks/use-streams";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { formatTokenAmount, getStreamProgress, pickPrimaryToken } from "@/lib/utils";
-import { STREAM_STATUS, BLOCKS_PER_DAY, getTokenConfigByContractId } from "@/lib/constants";
+import { STREAM_STATUS, BLOCKS_PER_DAY, unresolvableTokenLabel } from "@/lib/constants";
+import { useTokenMetadata, useTokensMetadata } from "@/hooks/use-token-metadata";
 import { useAppStore } from "@/stores/app-store";
 import { BarChart3, Zap, TrendingDown, Clock, Coins } from "lucide-react";
 
@@ -18,6 +19,14 @@ export default function AnalyticsPage() {
   const { streams, isLoading } = useSenderStreams();
   useBlockHeight();
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
+
+  const { primaryTokenId, primaryStreams, otherCount } = pickPrimaryToken(streams);
+  const { token: primaryToken } = useTokenMetadata(primaryTokenId ?? "");
+  // The per-stream table can span tokens, so resolve each distinct one.
+  const tokensById = useTokensMetadata(streams.map((s) => s.token));
+  const primaryDecimals = primaryToken?.decimals;
+  const primarySymbol =
+    primaryToken?.symbol ?? (primaryTokenId ? unresolvableTokenLabel(primaryTokenId) : "");
 
   if (!isConnected) {
     return (
@@ -30,7 +39,6 @@ export default function AnalyticsPage() {
   }
 
   const active = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
-  const { token: primaryToken, primaryStreams, otherCount } = pickPrimaryToken(streams);
   const totalDeposited = primaryStreams.reduce((a, s) => a + s.depositAmount, 0n);
   const totalWithdrawn = primaryStreams.reduce((a, s) => a + s.withdrawnAmount, 0n);
   const totalRemaining = totalDeposited - totalWithdrawn;
@@ -41,7 +49,10 @@ export default function AnalyticsPage() {
   const burnRatePerBlockRaw = primaryStreams
     .filter((s) => s.status === STREAM_STATUS.ACTIVE)
     .reduce((a, s) => a + Number(s.ratePerBlock) / 1e12, 0);
-  const burnRatePerDay = burnRatePerBlockRaw * BLOCKS_PER_DAY / Math.pow(10, primaryToken.decimals);
+  const burnRatePerDay =
+    primaryDecimals === undefined
+      ? 0
+      : (burnRatePerBlockRaw * BLOCKS_PER_DAY) / Math.pow(10, primaryDecimals);
 
   // Funds utilization
   const utilization =
@@ -62,18 +73,22 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label="Total Value Locked"
-              value={`${formatTokenAmount(totalRemaining, primaryToken.decimals)}`}
+              value={
+                primaryDecimals === undefined
+                  ? "—"
+                  : formatTokenAmount(totalRemaining, primaryDecimals)
+              }
               sub={
                 otherCount > 0
-                  ? `${primaryToken.symbol} (+${otherCount} in other tokens)`
-                  : `${primaryToken.symbol} in streams`
+                  ? `${primarySymbol} (+${otherCount} in other tokens)`
+                  : `${primarySymbol} in streams`
               }
               icon={<Coins className="h-4 w-4" />}
             />
             <StatCard
               label="Burn Rate"
-              value={`${burnRatePerDay.toFixed(4)}`}
-              sub={`${primaryToken.symbol} / day`}
+              value={primaryDecimals === undefined ? "—" : burnRatePerDay.toFixed(4)}
+              sub={`${primarySymbol} / day`}
               icon={<TrendingDown className="h-4 w-4" />}
               trend="down"
             />
@@ -131,7 +146,7 @@ export default function AnalyticsPage() {
                         blockHeight,
                         s.totalPausedDuration
                       );
-                      const tokenConfig = getTokenConfigByContractId(s.token);
+                      const rowToken = tokensById[s.token];
                       return (
                         <tr key={s.id} className="hover:bg-surface-2 transition-colors">
                           <td className="py-3 pr-4 font-mono text-xs text-zinc-400">
@@ -141,13 +156,13 @@ export default function AnalyticsPage() {
                             {s.recipient.slice(0, 8)}...
                           </td>
                           <td className="py-3 pr-4 text-xs text-zinc-400">
-                            {tokenConfig.symbol}
+                            {rowToken?.symbol ?? unresolvableTokenLabel(s.token)}
                           </td>
                           <td className="py-3 pr-4 text-zinc-200">
-                            {formatTokenAmount(s.depositAmount, tokenConfig.decimals)}
+                            {rowToken ? formatTokenAmount(s.depositAmount, rowToken.decimals) : "—"}
                           </td>
                           <td className="py-3 pr-4 text-zinc-200">
-                            {formatTokenAmount(s.withdrawnAmount, tokenConfig.decimals)}
+                            {rowToken ? formatTokenAmount(s.withdrawnAmount, rowToken.decimals) : "—"}
                           </td>
                           <td className="py-3 w-40">
                             <Progress value={progress} size="sm" />

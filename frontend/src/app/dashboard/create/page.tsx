@@ -16,6 +16,8 @@ import {
   DURATION_UNITS,
   EXPLORER_BASE,
   BLOCKS_PER_HOUR,
+  toRawAmount,
+  fromRawAmount,
   type DurationUnit,
   type TokenConfig,
 } from "@/lib/constants";
@@ -36,10 +38,7 @@ export default function CreateStreamPage() {
   const [selectedToken, setSelectedToken] = useState<TokenConfig>(DEFAULT_TOKEN);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { balance, isLoading: isBalanceLoading } = useTokenBalance(
-    selectedToken.contractId,
-    selectedToken.ftName,
-  );
+  const { balance, isLoading: isBalanceLoading } = useTokenBalance(selectedToken);
 
   if (!isConnected) {
     return (
@@ -53,20 +52,29 @@ export default function CreateStreamPage() {
 
   const unitConfig = DURATION_UNITS.find((u) => u.value === durationUnit)!;
   const durationBlocks = Math.max(1, Math.round(parseFloat(durationValue || "0") * unitConfig.blocksPerUnit));
-  // Use the selected token's decimals for raw unit conversion
-  const tokenMultiplier = Math.pow(10, selectedToken.decimals);
-  const amountRaw = Math.round(parseFloat(amount || "0") * tokenMultiplier);
-  const ratePerBlock = durationBlocks > 0 ? amountRaw / durationBlocks : 0;
+  // Exact string→bigint conversion. parseFloat(amount) * 10**decimals loses
+  // precision above 2^53 raw units and silently rounds, so the deposited
+  // amount can differ from what the user typed. Returns null on a malformed
+  // amount, which validate() reports rather than quietly sending 0.
+  const amountRaw = toRawAmount(amount || "0", selectedToken.decimals);
+  // ratePerBlock is display-only and intentionally stays in float, since the
+  // on-chain stream rate is derived integer division in the contract, not the
+  // raw total divided by blocks.
+  const ratePerBlock = durationBlocks > 0 && amountRaw ? Number(amountRaw) / durationBlocks : 0;
+  const displayPerBlock = BigInt(Math.max(1, Math.floor(ratePerBlock)));
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
     if (!recipient || !recipient.startsWith("S")) errs.recipient = "Enter a valid Stacks address";
     if (recipient === address) errs.recipient = "Cannot stream to yourself";
     if (!amount || parseFloat(amount) <= 0) errs.amount = "Enter a positive amount";
+    else if (amountRaw === null) {
+      errs.amount = "Enter a valid amount (digits and up to one decimal point)";
+    }
     // Pre-flight balance check. The on-chain ft-transfer? inside create-stream
     // returns (err u1) if the wallet is short — catch it here so users don't
     // burn gas on a doomed tx.
-    else if (BigInt(amountRaw) > balance) {
+    else if (amountRaw > balance) {
       errs.amount = `Insufficient ${selectedToken.symbol} balance. You have ${formatTokenAmount(balance, selectedToken.decimals)} ${selectedToken.symbol}.`;
     }
     if (!durationValue || parseFloat(durationValue) <= 0) errs.duration = "Enter a positive duration";
@@ -77,7 +85,7 @@ export default function CreateStreamPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate() || !address) return;
+    if (!validate() || !address || amountRaw === null) return;
 
     // Fetch the latest block height right before submitting to avoid stale data.
     // Nakamoto Stacks blocks tick every ~5s, so a small buffer is not enough —
@@ -96,8 +104,8 @@ export default function CreateStreamPage() {
     const txOptions = buildCreateStreamTx({
       recipient,
       tokenContract: selectedToken.contractId,
-      ftName: selectedToken.ftName,
-      depositAmount: BigInt(amountRaw),
+      token: selectedToken,
+      depositAmount: amountRaw,
       startBlock: latestBlock + 120,
       durationBlocks,
       memo: memo || undefined,
@@ -169,13 +177,13 @@ export default function CreateStreamPage() {
             <Input
               label={`Total Amount (${selectedToken.symbol})`}
               type="number"
-              step={`${1 / tokenMultiplier}`}
+              step="any"
               min="0"
               placeholder="1.0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               error={errors.amount}
-              hint={amountRaw > 0 ? `${amountRaw.toLocaleString()} raw units (${selectedToken.decimals} decimals)` : undefined}
+              hint={amountRaw !== null && amountRaw > 0n ? `${amountRaw.toLocaleString()} raw units (${selectedToken.decimals} decimals)` : undefined}
               disabled={isSubmitting}
             />
             {address && (
@@ -189,7 +197,7 @@ export default function CreateStreamPage() {
                 {balance > 0n && !isSubmitting && (
                   <button
                     type="button"
-                    onClick={() => setAmount((Number(balance) / tokenMultiplier).toString())}
+                    onClick={() => setAmount(fromRawAmount(balance, selectedToken.decimals))}
                     className="text-brand-400 hover:text-brand-300 underline"
                   >
                     Use max
@@ -243,7 +251,7 @@ export default function CreateStreamPage() {
           />
 
           {/* Preview */}
-          {amountRaw > 0 && durationBlocks > 0 && !isConfirming && status !== "success" && (
+          {amountRaw !== null && amountRaw > 0n && durationBlocks > 0 && !isConfirming && status !== "success" && (
             <div className="rounded-xl border border-border bg-surface-0 p-4 space-y-2">
               <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
                 <Info className="h-3 w-3" /> Stream Preview
@@ -253,9 +261,9 @@ export default function CreateStreamPage() {
                   <p className="text-zinc-500 text-xs">Rate per hour</p>
                   <p
                     className="text-zinc-200 font-mono"
-                    title={`${ratePerBlock.toLocaleString()} raw units per block`}
+                    title={`${displayPerBlock.toLocaleString()} raw units per block`}
                   >
-                    {formatTokenAmount(ratePerBlock * BLOCKS_PER_HOUR, selectedToken.decimals)} {selectedToken.symbol}
+                    {formatTokenAmount(displayPerBlock * BigInt(BLOCKS_PER_HOUR), selectedToken.decimals)} {selectedToken.symbol}
                   </p>
                 </div>
                 <div>

@@ -48,7 +48,7 @@ export function Header() {
           {isConnected && !isLoading && !IS_MAINNET && (
             <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-zinc-400">
               <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              <span className="font-mono tabular-nums">{formatTokenAmount(balance)}</span>
+              <span className="font-mono tabular-nums">{formatTokenAmount(balance, DEFAULT_TOKEN.decimals)}</span>
               <span className="hidden sm:inline text-zinc-600 text-xs">{DEFAULT_TOKEN.symbol}</span>
             </div>
           )}

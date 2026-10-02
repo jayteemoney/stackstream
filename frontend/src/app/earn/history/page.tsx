@@ -8,7 +8,8 @@ import { useRecipientStreams } from "@/hooks/use-streams";
 import { useWalletStore } from "@/stores/wallet-store";
 import { formatTokenAmount, truncateAddress, getStreamStatusLabel, formatStreamWindow } from "@/lib/utils";
 import { Clock } from "lucide-react";
-import { getTokenConfigByContractId } from "@/lib/constants";
+import { unresolvableTokenLabel } from "@/lib/constants";
+import { useTokensMetadata } from "@/hooks/use-token-metadata";
 import { useAppStore } from "@/stores/app-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 
@@ -17,6 +18,9 @@ export default function HistoryPage() {
   const { streams, isLoading } = useRecipientStreams();
   useBlockHeight();
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
+  // History rows span tokens, so resolve each distinct one rather than
+  // assuming the curated list covers them.
+  const tokensById = useTokensMetadata(streams.map((s) => s.token));
 
   if (!isConnected) {
     return (
@@ -74,7 +78,7 @@ export default function HistoryPage() {
           </thead>
           <tbody className="divide-y divide-border">
             {streamsWithHistory.map((s) => {
-              const tokenConfig = getTokenConfigByContractId(s.token);
+              const tokenConfig = tokensById[s.token];
               return (
                 <tr key={s.id} className="hover:bg-surface-2 transition-colors">
                   <td className="py-3 pr-4">
@@ -86,10 +90,14 @@ export default function HistoryPage() {
                     </span>
                   </td>
                   <td className="py-3 pr-4 text-zinc-200">
-                    {formatTokenAmount(s.depositAmount, tokenConfig.decimals)} {tokenConfig.symbol}
+                    {tokenConfig
+                      ? `${formatTokenAmount(s.depositAmount, tokenConfig.decimals)} ${tokenConfig.symbol}`
+                      : `— ${unresolvableTokenLabel(s.token)}`}
                   </td>
                   <td className="py-3 pr-4 text-emerald-400 font-medium">
-                    {formatTokenAmount(s.withdrawnAmount, tokenConfig.decimals)} {tokenConfig.symbol}
+                    {tokenConfig
+                      ? `${formatTokenAmount(s.withdrawnAmount, tokenConfig.decimals)} ${tokenConfig.symbol}`
+                      : `— ${unresolvableTokenLabel(s.token)}`}
                   </td>
                   <td className="py-3 pr-4">
                     <Badge variant={streamStatusToBadge(s.status)}>

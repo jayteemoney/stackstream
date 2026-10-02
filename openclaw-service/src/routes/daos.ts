@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { getDao, getDaoCount } from "../stacks-client";
 import { validateParams, adminParam } from "../middleware/validate";
-import { formatTokenAmount } from "../utils";
 
 const router = Router();
 
@@ -25,7 +24,16 @@ router.get("/:admin", validateParams(adminParam), async (req, res, next) => {
     }
     res.json({
       ...dao,
-      totalDepositedFormatted: formatTokenAmount(dao.totalDeposited),
+      // No `totalDepositedFormatted`.
+      //
+      // stream-factory increments `total-deposited` by the raw deposit of every
+      // tracked stream regardless of token, and the `daos` map has no token key.
+      // Summing 1e8-scale sBTC raw units with 1e6-scale USDA raw units yields a
+      // number that is not an amount of anything, so there is no correct single
+      // rendering. This route previously emitted one at 8 decimals, which was
+      // confidently wrong. Fixing it properly needs a contract change; until
+      // then consumers get the raw integer plus this flag.
+      totalDepositedIsCrossTokenAggregate: true,
     });
   } catch (err) {
     next(err);

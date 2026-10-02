@@ -1,7 +1,14 @@
-/** Format a micro-token amount (8 decimals for sBTC) into a human-readable string */
+/**
+ * Format a raw SIP-010 amount.
+ *
+ * `decimals` is required. The previous `= 8` default meant a caller that
+ * forgot it published 6-decimal amounts (USDA) at 1/100th of their real value —
+ * a 1.2 USDA deposit reported as "0.012". Requiring the argument makes that a
+ * type error rather than a silently wrong number in a financial API.
+ */
 export function formatTokenAmount(
   amount: bigint | number,
-  decimals = 8,
+  decimals: number,
   displayDecimals = 6
 ): string {
   const num = typeof amount === "number" ? amount : Number(amount);

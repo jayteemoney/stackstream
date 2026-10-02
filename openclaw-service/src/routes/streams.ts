@@ -10,6 +10,9 @@ import {
   getRecipientStreams,
   getStreamNonce,
   getCurrentBlockHeight,
+  getTokenDecimals,
+  getTokenSymbol,
+  tokenDisplayLabel,
 } from "../stacks-client";
 import { getStreamStatusLabel, formatTokenAmount, getStreamProgress } from "../utils";
 import { validateParams, streamIdParam, addressParam } from "../middleware/validate";
@@ -66,14 +69,25 @@ router.get("/:id", validateParams(streamIdParam), async (req, res, next) => {
       return;
     }
 
-    const [claimable, streamed, remaining, refundable, currentBlock] =
-      await Promise.all([
-        getClaimableBalance(id),
-        getStreamedAmount(id),
-        getRemainingBalance(id),
-        getRefundableAmount(id),
-        getCurrentBlockHeight(),
-      ]);
+    const [
+      claimable,
+      streamed,
+      remaining,
+      refundable,
+      currentBlock,
+      decimals,
+      symbol,
+    ] = await Promise.all([
+      getClaimableBalance(id),
+      getStreamedAmount(id),
+      getRemainingBalance(id),
+      getRefundableAmount(id),
+      getCurrentBlockHeight(),
+      // Read the token's own decimals. Assuming 8 is what made a 1.2 USDA
+      // deposit report as "0.012".
+      getTokenDecimals(stream.token),
+      getTokenSymbol(stream.token),
+    ]);
 
     const progress = getStreamProgress(
       stream.startBlock,
@@ -92,8 +106,20 @@ router.get("/:id", validateParams(streamIdParam), async (req, res, next) => {
       refundable,
       currentBlock,
       progress: Math.round(progress * 100) / 100,
-      depositFormatted: formatTokenAmount(stream.depositAmount),
-      claimableFormatted: claimable !== null ? formatTokenAmount(claimable) : null,
+      tokenDecimals: decimals,
+      // Always a string, and always this token's own label.
+      tokenLabel: tokenDisplayLabel(stream.token, symbol),
+      tokenSymbol: symbol,
+      // null rather than a guess when decimals are unavailable. A consumer that
+      // formats these itself has tokenDecimals to work from.
+      depositFormatted:
+        decimals !== null
+          ? formatTokenAmount(stream.depositAmount, decimals)
+          : null,
+      claimableFormatted:
+        decimals !== null && claimable !== null
+          ? formatTokenAmount(claimable, decimals)
+          : null,
     });
   } catch (err) {
     next(err);

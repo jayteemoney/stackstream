@@ -74,6 +74,14 @@ export interface DiscoveredToken {
   impersonates?: ContractId;
   /** Why this token is unusable, when `trust` is "unusable". */
   unusableReason?: string;
+  /**
+   * Non-blocking cautions, shown next to the token.
+   *
+   * These deliberately do NOT prevent selection. A team deploying a token today
+   * must not hit a wall because its registry row is incomplete, and an indexer
+   * lagging a fresh mint is a fact about the indexer, not about the token.
+   */
+  warnings?: readonly string[];
 }
 
 // ============================================================================
@@ -92,6 +100,24 @@ const TRUST_RANK: Record<TokenTrust, number> = {
   unverified: 1,
   impersonator: 2,
   unusable: 3,
+};
+
+/**
+ * Trust level that is never offered for selection.
+ *
+ * "unusable" is not a trust judgement, it is the absence of an identity. There
+ * is nothing to warn about when there is no asset name: the row cannot name the
+ * contract it claims to be, so no amount of confirmation makes it safe to put
+ * in a post-condition. Every other shortcoming is a warning.
+ *
+ * Note what is deliberately NOT here: a missing symbol, and a reported supply
+ * of zero. Neither can misroute funds. A wrong asset name or decimals is the
+ * thing that moves money, and that is settled by the chain resolver in
+ * `verifySelection`, never by a listing.
+ */
+const UNUSABLE: Pick<DiscoveredToken, "trust" | "unusableReason"> = {
+  trust: "unusable",
+  unusableReason: "No asset name — this listing cannot identify the token it describes",
 };
 
 /** Raw row shape from `/metadata/v1/ft`. Every field may be absent or empty. */
@@ -205,7 +231,7 @@ export function parseAssetIdentifier(
  */
 export function normalizeRegistryRow(row: RegistryRow): Omit<
   DiscoveredToken,
-  "trust" | "impersonates" | "unusableReason"
+  "trust" | "impersonates" | "unusableReason" | "warnings"
 > | null {
   const principal = row.contract_principal?.trim();
   if (!principal || !isValidContractId(principal)) return null;
@@ -268,31 +294,53 @@ export function isConfirmedEmpty(token: Pick<DiscoveredToken, "totalSupply">): b
  * that reuses a curated symbol but is not that token is the impersonation case
  * we care most about — that is exactly how `buttcoin-stxcity` presents itself.
  *
- * "unusable" is deliberately limited to tokens that genuinely cannot receive a
- * stream: no identity, or a confirmed empty supply. Unknown supply is NOT
- * unusable. Everything else is merely "unverified", because a team deploying a
- * token today must not hit a wall.
+ * POLICY: warn, never block. An incomplete listing is a fact about the
+ * indexer's record of the token, not proof that the token is unsafe to stream.
+ *
+ *   - No asset name is the sole exception, because it is not a warning, it is an
+ *     identity. See `UNUSABLE`.
+ *   - A missing symbol is a warning. The asset name and decimals still come from
+ *     the chain, so a token that publishes no ticker is fully streamable; the
+ *     chain resolver can supply the symbol from `get-symbol`.
+ *   - A reported supply of zero is a warning. Supply is a hint, it lags, and a
+ *     transfer that cannot execute fails loudly on-chain and costs a fee. It
+ *     cannot send funds to the wrong place. Blocking here would also fail the
+ *     exact case this feature exists to serve: a team whose token was deployed
+ *     minutes ago and has not been indexed with a supply yet.
+ *
+ * The one thing that does move money — asset name and decimals — is settled on
+ * chain in `verifySelection`, after this function runs. Classification decides
+ * what the user is *told*; verification decides what they can *spend*.
  */
 export function classifyToken(
   token: Pick<DiscoveredToken, "contractId" | "symbol" | "totalSupply" | "assetName">,
   curatedIds: readonly ContractId[],
   curatedSymbols: ReadonlyMap<string, ContractId>,
-): Pick<DiscoveredToken, "trust" | "impersonates" | "unusableReason"> {
+): Pick<DiscoveredToken, "trust" | "impersonates" | "unusableReason" | "warnings"> {
   if (curatedIds.includes(token.contractId)) return { trust: "curated" };
 
-  if (!token.symbol || !token.assetName) {
-    return { trust: "unusable", unusableReason: "No verified symbol or asset name" };
+  if (!token.assetName) return { ...UNUSABLE };
+
+  const warnings: string[] = [];
+  if (!token.symbol) {
+    warnings.push("This listing publishes no ticker. The symbol is read from the contract.");
   }
   if (isConfirmedEmpty(token)) {
-    return { trust: "unusable", unusableReason: "No supply — this token cannot receive a stream" };
+    warnings.push(
+      "This listing reports no supply. It may just be unindexed — the transfer will fail if the contract cannot move it.",
+    );
   }
 
-  const canonical = curatedSymbols.get(token.symbol.toLowerCase());
+  const canonical = token.symbol ? curatedSymbols.get(token.symbol.toLowerCase()) : undefined;
   if (canonical && canonical !== token.contractId) {
-    return { trust: "impersonator", impersonates: canonical };
+    return {
+      trust: "impersonator",
+      impersonates: canonical,
+      ...(warnings.length ? { warnings } : {}),
+    };
   }
 
-  return { trust: "unverified" };
+  return warnings.length ? { trust: "unverified", warnings } : { trust: "unverified" };
 }
 
 /**
@@ -303,7 +351,7 @@ export function classifyToken(
  * receive a stream should never sit above a real one.
  */
 export function classifyAll(
-  rows: readonly Omit<DiscoveredToken, "trust" | "impersonates" | "unusableReason">[],
+  rows: readonly Omit<DiscoveredToken, "trust" | "impersonates" | "unusableReason" | "warnings">[],
   curatedIds: readonly ContractId[],
   curatedSymbols: ReadonlyMap<string, ContractId>,
 ): DiscoveredToken[] {
@@ -446,6 +494,10 @@ export async function verifySelection(
 ): Promise<VerifiedSelection> {
   const impersonates = discovered.impersonates;
 
+  // `warnings` are deliberately not consulted here. They describe the listing,
+  // not the asset, and the asset is what this function is about to prove. Only
+  // a missing identity short-circuits, and only because there is nothing to
+  // resolve.
   if (discovered.trust === "unusable") {
     return {
       status: "unverifiable",
@@ -498,7 +550,7 @@ export async function verifySelection(
 /** A normalized registry row, before trust classification. */
 export type RegistryCandidate = Omit<
   DiscoveredToken,
-  "trust" | "impersonates" | "unusableReason"
+  "trust" | "impersonates" | "unusableReason" | "warnings"
 >;
 
 /**

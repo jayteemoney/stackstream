@@ -251,21 +251,10 @@ describe("classifyToken", () => {
     ).toBe("curated");
   });
 
-  it("marks tokens that cannot receive a stream as unusable", () => {
-    expect(
-      classifyToken(
-        { contractId: NEW_TOKEN, symbol: "", totalSupply: "1", assetName: "nt" },
-        CURATED_IDS,
-        CURATED_SYMBOLS,
-      ).trust,
-    ).toBe("unusable");
-    expect(
-      classifyToken(
-        { contractId: NEW_TOKEN, symbol: "NEW", totalSupply: "0", assetName: "nt" },
-        CURATED_IDS,
-        CURATED_SYMBOLS,
-      ).trust,
-    ).toBe("unusable");
+  it("marks only a token with no identity as unusable", () => {
+    // No asset name means the row cannot say which asset it is describing.
+    // There is nothing to warn about and nothing to resolve, so this is the one
+    // case that is not offered for selection.
     expect(
       classifyToken(
         { contractId: NEW_TOKEN, symbol: "NEW", totalSupply: "1000", assetName: "" },
@@ -273,6 +262,57 @@ describe("classifyToken", () => {
         CURATED_SYMBOLS,
       ).trust,
     ).toBe("unusable");
+  });
+
+  it("warns but never blocks on a missing ticker", () => {
+    // The symbol is display metadata; asset name and decimals come from the
+    // chain, so a token that publishes no ticker is fully streamable.
+    const result = classifyToken(
+      { contractId: NEW_TOKEN, symbol: "", totalSupply: "1", assetName: "nt" },
+      CURATED_IDS,
+      CURATED_SYMBOLS,
+    );
+    expect(result.trust).toBe("unverified");
+    expect(result.warnings).toHaveLength(1);
+    expect(result.unusableReason).toBeUndefined();
+  });
+
+  it("warns but never blocks on a reported supply of zero", () => {
+    // Supply is a hint that lags. Blocking here would fail the exact case this
+    // feature exists to serve: a token deployed minutes ago whose registry row
+    // has no supply yet.
+    const result = classifyToken(
+      { contractId: NEW_TOKEN, symbol: "NEW", totalSupply: "0", assetName: "nt" },
+      CURATED_IDS,
+      CURATED_SYMBOLS,
+    );
+    expect(result.trust).toBe("unverified");
+    expect(result.warnings).toHaveLength(1);
+    expect(result.unusableReason).toBeUndefined();
+  });
+
+  it("does not mistake a missing ticker for a curated-symbol impersonation", () => {
+    // Guard against the empty string matching an empty curated symbol key.
+    const result = classifyToken(
+      { contractId: NEW_TOKEN, symbol: "", totalSupply: "1", assetName: "nt" },
+      CURATED_IDS,
+      CURATED_SYMBOLS,
+    );
+    expect(result.trust).not.toBe("impersonator");
+    expect(result.impersonates).toBeUndefined();
+  });
+
+  it("still separates an impersonator that is also incomplete", () => {
+    // Both signals are reported; the impersonation must not be masked by the
+    // missing ticker.
+    const result = classifyToken(
+      { contractId: FAKE_SBTC, symbol: "sBTC", totalSupply: "0", assetName: "sBTC" },
+      CURATED_IDS,
+      CURATED_SYMBOLS,
+    );
+    expect(result.trust).toBe("impersonator");
+    expect(result.impersonates).toBe(SBTC);
+    expect(result.warnings).toHaveLength(1);
   });
 
   it("keeps a brand-new team token selectable — warn, never block", () => {
@@ -390,10 +430,13 @@ describe("verifySelection", () => {
     expect(out.resolved).toBeNull();
   });
 
-  it("never calls the resolver for an unusable token", async () => {
+  it("never calls the resolver for a token with no identity", async () => {
     let called = false;
     const out = await verifySelection(
-      discovered({ trust: "unusable", unusableReason: "No supply — cannot receive a stream" }),
+      discovered({
+        trust: "unusable",
+        unusableReason: "No asset name — this listing cannot identify the token it describes",
+      }),
       CURATED_IDS,
       CURATED_SYMBOLS,
       async () => {
@@ -403,7 +446,29 @@ describe("verifySelection", () => {
     );
     expect(called).toBe(false);
     expect(out.status).toBe("unverifiable");
-    expect(out.reason).toBe("No supply — cannot receive a stream");
+  });
+
+  it("verifies normally when the token only carries warnings", async () => {
+    // The policy in one assertion: warnings describe the listing, so they must
+    // not change the verification outcome. A warned token that the chain
+    // proves is still proven.
+    const out = await verifySelection(
+      discovered({
+        symbol: "",
+        trust: "unverified",
+        warnings: ["This listing publishes no ticker."],
+      }),
+      CURATED_IDS,
+      CURATED_SYMBOLS,
+      stubResolved({
+        contractId: NEW_TOKEN,
+        assetName: "nt",
+        decimals: 6,
+        symbol: "NT",
+      }),
+    );
+    expect(out.status).toBe("verified");
+    expect(out.resolved?.assetName).toBe("nt");
   });
 
   it("carries impersonation forward even when the chain verifies the contract", async () => {

@@ -96,100 +96,81 @@ export const MAX_STREAMS_PER_USER = 100;
 // Token Configuration
 // ============================================================================
 
-/** Shape of every token entry used throughout the UI */
-export interface TokenConfig {
-  symbol: string;
-  name: string;
-  decimals: number;
-  contractId: string;
-  /** Fungible token name inside the contract — used for post-conditions */
-  ftName: string;
-  icon: string;
-  description: string;
+/**
+ * Token metadata is defined in `token-metadata.ts` (pure + testable) and
+ * resolved from chain in `token-metadata-client.ts`. Re-exported here so the
+ * existing `@/lib/constants` import surface keeps working.
+ */
+export {
+  getCuratedToken,
+  getCuratedTokens,
+  registerCuratedToken,
+  isValidAssetName,
+  isValidContractId,
+  isValidDecimals,
+  toRawAmount,
+  fromRawAmount,
+  unresolvableTokenLabel,
+  type ResolvedToken,
+  type TokenConfig,
+} from "./token-metadata";
+
+import { getCuratedTokens, registerCuratedToken } from "./token-metadata";
+import type { TokenConfig } from "./token-metadata";
+
+// The mock testnet token's contract id depends on the deployer address, so it
+// is registered here rather than hardcoded in token-metadata.ts (which this
+// file already imports from, and which must not import back).
+if (!IS_MAINNET) {
+  registerCuratedToken({
+    contractId: MOCK_TOKEN_CONTRACT,
+    assetName: "mock-sbtc",
+    decimals: 8,
+    symbol: "msBTC",
+    name: "Mock sBTC",
+    curated: true,
+    icon: "/bitcoin.svg",
+    description: "Testnet mock token with public faucet",
+  });
 }
 
 /**
- * Real mainnet SIP-010 tokens supported by StackStream.
+ * Tokens the UI offers in the create-stream selector.
  *
- * Contract IDs reflect Stacks mainnet as of Epoch 3.0 / Q1 2026.
- * Verify addresses on Stacks Explorer before deploying if significant time
- * has passed since this file was last updated.
- *
- * Adding a new token: append an entry here and supply an icon in /public/.
- * The protocol itself is permissionless — any SIP-010 token can be streamed;
- * this list controls what the frontend surfaces in the token selector.
+ * This is a UI seed list, NOT a protocol allowlist. `stream-manager.clar` takes
+ * any `(token <sip-010-trait>)`, so any SIP-010 token can be streamed; streams
+ * in tokens outside this list still resolve and function correctly, they just
+ * don't appear in this dropdown. Display metadata (name, description, icon)
+ * cannot be read off-chain, which is the only reason the list exists.
  */
-const MAINNET_TOKENS: readonly TokenConfig[] = [
-  {
-    symbol: "sBTC",
-    name: "sBTC",
-    decimals: 8,
-    contractId: "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token",
-    ftName: "sbtc-token",
-    icon: "/bitcoin.svg",
-    description: "1:1 Bitcoin-backed asset on Stacks — the flagship streaming token",
-  },
-  {
-    symbol: "USDA",
-    name: "USDA",
-    decimals: 6,
-    contractId: "SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token",
-    ftName: "usda",
-    icon: "/usda.svg",
-    description: "Arkadiko USD stablecoin — ideal for stable payroll streams",
-  },
-  {
-    symbol: "ALEX",
-    name: "ALEX Token",
-    decimals: 8,
-    contractId: "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex",
-    ftName: "alex",
-    icon: "/alex.svg",
-    description: "ALEX DeFi protocol token",
-  },
-  {
-    symbol: "xBTC",
-    name: "Wrapped Bitcoin",
-    decimals: 8,
-    contractId: "SP3DX3H4FEYZJZ586MFBS25ZW3HZDMEW92260R2PR.Wrapped-Bitcoin",
-    ftName: "wrapped-bitcoin",
-    icon: "/bitcoin.svg",
-    description: "Tokenized Bitcoin on Stacks",
-  },
-];
-
-/** Testnet tokens — mock only, faucet available */
-const TESTNET_TOKENS: readonly TokenConfig[] = [
-  {
-    symbol: "msBTC",
-    name: "Mock sBTC",
-    decimals: 8,
-    contractId: MOCK_TOKEN_CONTRACT,
-    ftName: "mock-sbtc",
-    icon: "/bitcoin.svg",
-    description: "Testnet mock token with public faucet",
-  },
-];
+export const SUPPORTED_TOKENS = getCuratedTokens();
 
 /**
- * Network-aware supported token list.
- * Mainnet: 4 real SIP-010 tokens (sBTC, USDA, ALEX, xBTC).
- * Testnet: 1 mock token with faucet for development.
+ * Default token for the create-stream form (first in the selector).
+ *
+ * Only ever a *seed*. Never use this to resolve the token of an existing
+ * stream — a stream in an unlisted token is not this token, and using it as a
+ * fallback is what produced wrong asset names in post-conditions.
  */
-export const SUPPORTED_TOKENS: readonly TokenConfig[] = IS_MAINNET
-  ? MAINNET_TOKENS
-  : TESTNET_TOKENS;
-
-/** Default token for the create stream form (first in list) */
 export const DEFAULT_TOKEN = SUPPORTED_TOKENS[0];
 
 /**
- * Lookup a TokenConfig by its on-chain contract identifier (e.g. "SM3VDX...sbtc-token").
- * Falls back to DEFAULT_TOKEN when not found so callers always get a non-null
- * record. Used by transaction builders to derive the ftName for post-conditions.
+ * Curated lookup by exact contract id, e.g. "SM3VDX...sbtc-token".
+ *
+ * Returns null when the contract is not curated. Callers MUST handle null:
+ *
+ *   - Display: show the contract name, or resolve via `useTokenMetadata`.
+ *   - Transaction building: refuse. A substituted default yields a
+ *     post-condition naming an asset the transaction never touches, which the
+ *     wallet rejects with "a post-condition was not met" — a failure that
+ *     gives the user no clue about the real cause.
+ *
+ * This function previously returned DEFAULT_TOKEN on a miss. That silently
+ * mislabelled every unlisted token as sBTC, reported 6-decimal balances at an
+ * 8-decimal scale (100x wrong), and broke claim/cancel/top-up post-conditions.
  */
-export function getTokenConfigByContractId(contractId: string): TokenConfig {
-  return SUPPORTED_TOKENS.find((t) => t.contractId === contractId) ?? DEFAULT_TOKEN;
+export function getTokenConfigByContractId(contractId: string): TokenConfig | null {
+  return SUPPORTED_TOKENS.find((t) => t.contractId === contractId) ?? null;
 }
 
 /** Polling interval for balance updates (ms) */

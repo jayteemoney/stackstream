@@ -238,6 +238,72 @@ export async function getCurrentBlockHeight(): Promise<number> {
   return data.stacks_tip_height;
 }
 
+// SIP-010 metadata, read from the token contract rather than assumed. The
+// protocol is permissionless, so no hardcoded token table is complete: a caller
+// that assumes 8 decimals misreports every 6-decimal token by 100x.
+//
+// Decimals never change for a deployed token, so cache per warm instance.
+// Returns null on failure — callers then omit the formatted field rather than
+// publish a number at an unknown scale.
+const tokenDecimalsCache = new Map<string, number>();
+const tokenSymbolCache = new Map<string, string>();
+
+export async function getTokenDecimals(
+  tokenContract: string
+): Promise<number | null> {
+  const hit = tokenDecimalsCache.get(tokenContract);
+  if (hit !== undefined) return hit;
+  try {
+    // get-decimals resolves as { value: { value: <uint> } } — reading
+    // result.value directly yields the wrapper object and Number(...) gives NaN,
+    // which previously propagated as a null scale.
+    const result = await callReadOnly(tokenContract, "get-decimals");
+    const decimals = Number(
+      (result as { value?: { value?: unknown } })?.value?.value
+    );
+    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 38) return null;
+    tokenDecimalsCache.set(tokenContract, decimals);
+    return decimals;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A display label for a token, preferring the on-chain symbol and falling back
+ * to the contract's own name component. Never substitutes another token's
+ * symbol — a plausible label on the wrong token is worse than a raw contract
+ * name.
+ */
+export function tokenDisplayLabel(
+  tokenContract: string,
+  symbol: string | null
+): string {
+  if (symbol) return symbol;
+  const contractName = tokenContract.split(".")[1];
+  return contractName && contractName.length > 0 ? contractName : tokenContract;
+}
+
+export async function getTokenSymbol(
+  tokenContract: string
+): Promise<string | null> {
+  const hit = tokenSymbolCache.get(tokenContract);
+  if (hit !== undefined) return hit;
+  try {
+    // cvToJSON wraps `(response (string-ascii ...))` the same way it wraps
+    // `(response uint ...)` — as { value: { type, value } } — so the string is
+    // at value.value. Reading value directly returns the wrapper object.
+    const result = await callReadOnly(tokenContract, "get-symbol");
+    const raw = (result as { value?: { value?: unknown } })?.value?.value;
+    const symbol = typeof raw === "string" ? raw.trim() : "";
+    if (!symbol || symbol.length > 32) return null;
+    tokenSymbolCache.set(tokenContract, symbol);
+    return symbol;
+  } catch {
+    return null;
+  }
+}
+
 export async function getTokenBalance(
   address: string,
   tokenContract: string

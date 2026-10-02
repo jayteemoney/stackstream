@@ -26,6 +26,8 @@ import {
   MOCK_TOKEN_CONTRACT,
   IS_MAINNET,
 } from "./constants";
+import { resolveTokenMetadata } from "./token-metadata-client";
+import { isValidContractId, type ResolvedToken } from "./token-metadata";
 
 // ============================================================================
 // Network helpers
@@ -64,6 +66,53 @@ async function callReadOnly(
     network: getNetwork(),
   });
   return cvToJSON(result);
+}
+
+// ============================================================================
+// Token metadata guard
+// ============================================================================
+
+/**
+ * Thrown when a stream's token metadata cannot be proven from the chain.
+ *
+ * Every post-condition builder below runs through this. The alternative —
+ * falling back to a default token — produces a post-condition that names an
+ * asset the transaction never touches, so the wallet rejects the transaction
+ * with "a post-condition was not met (token transfer rejected)". The user has
+ * no way to act on that, and the real cause (unknown token metadata) never
+ * surfaces. Refusing up front, with the contract named, is the only honest
+ * failure mode.
+ *
+ * Callers should catch `UnresolvableTokenError` and show its message.
+ */
+export class UnresolvableTokenError extends Error {
+  readonly contractId: string;
+
+  constructor(contractId: string) {
+    super(
+      `Token metadata for ${contractId} could not be read from the chain. ` +
+        `Its SIP-010 asset name is ambiguous or its contract did not respond, ` +
+        `so StackStream cannot build a safe post-condition for it. ` +
+        `Try again shortly, or use one of the tokens in the selector.`
+    );
+    this.name = "UnresolvableTokenError";
+    this.contractId = contractId;
+  }
+}
+
+/**
+ * Resolve the metadata a post-condition needs, or throw.
+ *
+ * The builders are synchronous and must not be, so callers resolve up front
+ * and pass `token` in. This helper exists for the call sites that build
+ * transactions inline.
+ */
+export async function requireTokenMetadata(
+  contractId: string
+): Promise<ResolvedToken> {
+  const token = await resolveTokenMetadata(contractId);
+  if (!token) throw new UnresolvableTokenError(contractId);
+  return token;
 }
 
 // ============================================================================
@@ -220,8 +269,12 @@ export async function isRegisteredDao(admin: string): Promise<boolean> {
 export function buildCreateStreamTx(params: {
   recipient: string;
   tokenContract: string;
-  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
-  ftName: string;
+  /**
+   * Proven token metadata. Obtain via `requireTokenMetadata` so the
+   * `define-fungible-token` name used in the post-condition is read from the
+   * chain rather than assumed.
+   */
+  token: ResolvedToken;
   depositAmount: bigint;
   startBlock: number;
   durationBlocks: number;
@@ -229,7 +282,6 @@ export function buildCreateStreamTx(params: {
   senderAddress: string;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
-  const [tokenAddr, tokenName] = splitContract(params.tokenContract);
 
   const functionArgs: ClarityValue[] = [
     principalCV(params.recipient),
@@ -253,7 +305,10 @@ export function buildCreateStreamTx(params: {
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.depositAmount)
-        .ft(`${tokenAddr}.${tokenName}`, params.ftName),
+        .ft(
+          params.tokenContract as `${string}.${string}`,
+          params.token.assetName
+        ),
     ],
     network: getNetwork(),
   };
@@ -267,7 +322,8 @@ export function buildCreateStreamTx(params: {
 export function buildClaimTx(params: {
   streamId: number;
   tokenContract: string;
-  ftName: string;
+  /** Proven token metadata — see `buildCreateStreamTx`. */
+  token: ResolvedToken;
   amount: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
@@ -285,7 +341,10 @@ export function buildClaimTx(params: {
     postConditions: [
       Pc.principal(`${mgrAddr}.${mgrName}`)
         .willSendLte(params.amount)
-        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+        .ft(
+          params.tokenContract as `${string}.${string}`,
+          params.token.assetName
+        ),
     ],
     network: getNetwork(),
   };
@@ -294,7 +353,8 @@ export function buildClaimTx(params: {
 export function buildClaimAllTx(params: {
   streamId: number;
   tokenContract: string;
-  ftName: string;
+  /** Proven token metadata — see `buildCreateStreamTx`. */
+  token: ResolvedToken;
   /**
    * Stable upper bound for the payout: deposit − withdrawn (the stream's
    * remaining escrow). NEVER bound this by the claimable amount — claimable
@@ -319,7 +379,10 @@ export function buildClaimAllTx(params: {
     postConditions: [
       Pc.principal(`${mgrAddr}.${mgrName}`)
         .willSendLte(params.remainingBalance)
-        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+        .ft(
+          params.tokenContract as `${string}.${string}`,
+          params.token.assetName
+        ),
     ],
     network: getNetwork(),
   };
@@ -350,15 +413,16 @@ export function buildResumeStreamTx(streamId: number) {
     network: getNetwork(),
   };
 }
-
 export function buildCancelStreamTx(params: {
   streamId: number;
   tokenContract: string;
-  ftName: string;
+  /** Proven token metadata — see `buildCreateStreamTx`. */
+  token: ResolvedToken;
   /** Upper bound for total token movement from the contract on cancel (recipient + sender refund). */
   unclaimedBalance: bigint;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
+
   return {
     contractAddress: mgrAddr,
     contractName: mgrName,
@@ -371,7 +435,10 @@ export function buildCancelStreamTx(params: {
     postConditions: [
       Pc.principal(`${mgrAddr}.${mgrName}`)
         .willSendLte(params.unclaimedBalance)
-        .ft(params.tokenContract as `${string}.${string}`, params.ftName),
+        .ft(
+          params.tokenContract as `${string}.${string}`,
+          params.token.assetName
+        ),
     ],
     network: getNetwork(),
   };
@@ -380,13 +447,12 @@ export function buildCancelStreamTx(params: {
 export function buildTopUpStreamTx(params: {
   streamId: number;
   tokenContract: string;
-  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
-  ftName: string;
+  /** Proven token metadata — see `buildCreateStreamTx`. */
+  token: ResolvedToken;
   amount: bigint;
   senderAddress: string;
 }) {
   const [mgrAddr, mgrName] = splitContract(STREAM_MANAGER_CONTRACT);
-  const [tokenAddr, tokenName] = splitContract(params.tokenContract);
 
   return {
     contractAddress: mgrAddr,
@@ -404,7 +470,10 @@ export function buildTopUpStreamTx(params: {
     postConditions: [
       Pc.principal(params.senderAddress)
         .willSendLte(params.amount)
-        .ft(`${tokenAddr}.${tokenName}`, params.ftName),
+        .ft(
+          params.tokenContract as `${string}.${string}`,
+          params.token.assetName
+        ),
     ],
     network: getNetwork(),
   };
@@ -470,13 +539,25 @@ export async function getCurrentBlockHeight(): Promise<number> {
   return data.stacks_tip_height;
 }
 
+/**
+ * Read a wallet's balance of one SIP-010 asset.
+ *
+ * `token` must be resolved metadata, because the balances endpoint is keyed by
+ * `contractId::assetName` and a wrong asset name silently reads 0 rather than
+ * erroring. A zero balance would then block a legitimate top-up with
+ * "Insufficient balance. You have 0.00".
+ *
+ * When a contract defines several fungible tokens, the exact `assetName` match
+ * is used and there is no fallback to "any asset in this contract" — a
+ * balance in `sbtc-token-locked` is not a balance of `sbtc-token`, and
+ * reporting it as one would misstate what a user can spend.
+ */
 export async function getTokenBalance(
   address: string,
   tokenContract: string,
-  /** Fungible token asset name inside the contract (e.g. "sbtc-token", "mock-sbtc", "usda") */
-  ftName: string
+  token: Pick<ResolvedToken, "assetName">
 ): Promise<bigint> {
-  if (!address) return 0n;
+  if (!address || !isValidContractId(tokenContract)) return 0n;
   const res = await fetch(
     getApiUrl(`/extended/v1/address/${address}/balances`),
     { headers: { Accept: "application/json" } }
@@ -484,8 +565,13 @@ export async function getTokenBalance(
   if (!res.ok) return 0n;
   const data = await res.json();
   const ftBalances = data.fungible_tokens || {};
-  const key = `${tokenContract}::${ftName}`;
-  return BigInt(ftBalances[key]?.balance ?? "0");
+  const entry = ftBalances[`${tokenContract}::${token.assetName}`];
+  if (!entry) return 0n;
+  try {
+    return BigInt(entry.balance);
+  } catch {
+    return 0n;
+  }
 }
 
 // ============================================================================

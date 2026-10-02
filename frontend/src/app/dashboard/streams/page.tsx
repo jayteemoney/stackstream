@@ -13,11 +13,13 @@ import {
   buildResumeStreamTx,
   buildCancelStreamTx,
   buildExpireStreamTx,
+  requireTokenMetadata,
+  UnresolvableTokenError,
 } from "@/lib/stacks";
 import { formatTxError } from "@/lib/utils";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
-import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
+import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
 import Link from "next/link";
 import { PlusCircle, Zap, Filter } from "lucide-react";
@@ -145,19 +147,30 @@ export default function ManageStreamsPage() {
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
               onCancel={async () => {
-                const result = await execute(
-                  buildCancelStreamTx({
-                    streamId: stream.id,
-                    tokenContract: stream.token,
-                    ftName: getTokenConfigByContractId(stream.token).ftName,
-                    unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
-                  })
-                );
-                if (result?.confirmed) {
-                  toast.success("Stream cancelled");
-                  refetch();
-                } else if (result && !result.confirmed) {
-                  toast.error(formatTxError("Failed to cancel", result));
+                // Refuse rather than guess the asset name — see the note in
+                // lib/stacks.ts on UnresolvableTokenError.
+                try {
+                  const token = await requireTokenMetadata(stream.token);
+                  const result = await execute(
+                    buildCancelStreamTx({
+                      streamId: stream.id,
+                      tokenContract: stream.token,
+                      token,
+                      unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
+                    })
+                  );
+                  if (result?.confirmed) {
+                    toast.success("Stream cancelled");
+                    refetch();
+                  } else if (result && !result.confirmed) {
+                    toast.error(formatTxError("Failed to cancel", result));
+                  }
+                } catch (err) {
+                  toast.error(
+                    err instanceof UnresolvableTokenError
+                      ? err.message
+                      : formatTxError("Failed to cancel", null, err)
+                  );
                 }
               }}
               onExpire={async () => {

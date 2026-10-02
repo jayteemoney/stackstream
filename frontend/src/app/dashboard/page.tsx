@@ -10,10 +10,16 @@ import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
-import { buildPauseStreamTx, buildResumeStreamTx, buildCancelStreamTx } from "@/lib/stacks";
-import { getTokenConfigByContractId } from "@/lib/constants";
+import {
+  buildPauseStreamTx,
+  buildResumeStreamTx,
+  buildCancelStreamTx,
+  requireTokenMetadata,
+  UnresolvableTokenError,
+} from "@/lib/stacks";
+import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import type { StreamData } from "@/lib/stacks";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, unresolvableTokenLabel } from "@/lib/constants";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -29,7 +35,14 @@ export default function DashboardPage() {
   const { execute, isPending, isConfirming } = useStacksTx();
 
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
-  const { token: primaryToken, primaryStreams, otherCount } = pickPrimaryToken(streams);
+  const { primaryTokenId, primaryStreams, otherCount } = pickPrimaryToken(streams);
+  // Totals are only meaningful within one token, and only once that token's
+  // decimals are known. Until then these cards show "—" instead of a total
+  // scaled with the wrong power of ten.
+  const { token: primaryToken } = useTokenMetadata(primaryTokenId ?? "");
+  const primaryDecimals = primaryToken?.decimals;
+  const primarySymbol =
+    primaryToken?.symbol ?? (primaryTokenId ? unresolvableTokenLabel(primaryTokenId) : "");
   const totalDeposited = primaryStreams.reduce((acc, s) => acc + s.depositAmount, 0n);
   const totalWithdrawn = primaryStreams.reduce((acc, s) => acc + s.withdrawnAmount, 0n);
 
@@ -60,14 +73,22 @@ export default function DashboardPage() {
               icon={<Zap className="h-4 w-4" />}
             />
             <StatCard
-              label={`Total Deposited (${primaryToken.symbol})`}
-              value={`${formatTokenAmount(totalDeposited, primaryToken.decimals)} ${primaryToken.symbol}`}
+              label={`Total Deposited (${primarySymbol})`}
+              value={
+                primaryDecimals === undefined
+                  ? "—"
+                  : `${formatTokenAmount(totalDeposited, primaryDecimals)} ${primarySymbol}`
+              }
               sub={otherCount > 0 ? `+ ${otherCount} stream${otherCount === 1 ? "" : "s"} in other tokens` : undefined}
               icon={<Coins className="h-4 w-4" />}
             />
             <StatCard
-              label={`Total Claimed (${primaryToken.symbol})`}
-              value={`${formatTokenAmount(totalWithdrawn, primaryToken.decimals)} ${primaryToken.symbol}`}
+              label={`Total Claimed (${primarySymbol})`}
+              value={
+                primaryDecimals === undefined
+                  ? "—"
+                  : `${formatTokenAmount(totalWithdrawn, primaryDecimals)} ${primarySymbol}`
+              }
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <StatCard
@@ -138,19 +159,31 @@ export default function DashboardPage() {
               }}
               onTopUp={() => setTopUpTarget({ id: stream.id, stream })}
               onCancel={async () => {
-                const result = await execute(
-                  buildCancelStreamTx({
-                    streamId: stream.id,
-                    tokenContract: stream.token,
-                    ftName: getTokenConfigByContractId(stream.token).ftName,
-                    unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
-                  })
-                );
-                if (result?.confirmed) {
-                  toast.success("Stream cancelled");
-                  refetch();
-                } else if (result && !result.confirmed) {
-                  toast.error(formatTxError("Failed to cancel", result));
+                // Cancel refunds the sender and pays out the recipient, so the
+                // post-condition must name the exact asset. Refuse if unknown
+                // rather than send a tx the wallet will reject opaquely.
+                try {
+                  const token = await requireTokenMetadata(stream.token);
+                  const result = await execute(
+                    buildCancelStreamTx({
+                      streamId: stream.id,
+                      tokenContract: stream.token,
+                      token,
+                      unclaimedBalance: stream.depositAmount - stream.withdrawnAmount,
+                    })
+                  );
+                  if (result?.confirmed) {
+                    toast.success("Stream cancelled");
+                    refetch();
+                  } else if (result && !result.confirmed) {
+                    toast.error(formatTxError("Failed to cancel", result));
+                  }
+                } catch (err) {
+                  toast.error(
+                    err instanceof UnresolvableTokenError
+                      ? err.message
+                      : formatTxError("Failed to cancel", null, err)
+                  );
                 }
               }}
             />

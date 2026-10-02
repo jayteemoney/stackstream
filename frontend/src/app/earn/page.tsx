@@ -10,10 +10,10 @@ import { useRecipientStreams } from "@/hooks/use-streams";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
-import { buildClaimAllTx } from "@/lib/stacks";
-import { getTokenConfigByContractId } from "@/lib/constants";
+import { buildClaimAllTx, requireTokenMetadata, UnresolvableTokenError } from "@/lib/stacks";
+import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
-import { STREAM_STATUS } from "@/lib/constants";
+import { STREAM_STATUS, unresolvableTokenLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Coins, Download, Zap, TrendingUp, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +23,11 @@ export default function EarnPage() {
   const { streams, isLoading, refetch } = useRecipientStreams();
   const { blockHeight } = useBlockHeight();
   const { execute, isWorking } = useStacksTx();
+
+  const { primaryTokenId, primaryStreams, otherCount: otherStreamCount } = pickPrimaryToken(streams);
+  // Decimals and symbol for the dominant token, read from the chain. Until this
+  // resolves, every amount on the page is unrenderable rather than mis-scaled.
+  const { token: primaryToken, isLoading: isTokenLoading } = useTokenMetadata(primaryTokenId ?? "");
 
   if (!isConnected) {
     return (
@@ -35,7 +40,6 @@ export default function EarnPage() {
   }
 
   const activeStreams = streams.filter((s) => s.status === STREAM_STATUS.ACTIVE);
-  const { token: primaryToken, primaryStreams, otherCount: otherStreamCount } = pickPrimaryToken(streams);
 
   // Only streams still accruing (status==ACTIVE AND window open) should
   // contribute to the live rate and the cap on the hero counter. Without
@@ -74,6 +78,19 @@ export default function EarnPage() {
           title="No income streams"
           description="No one is streaming to you yet. When someone opens a stream to your address, it shows up here and starts earning in real time."
         />
+      ) : !primaryToken ? (
+        // No fallback here. Rendering the totals with a guessed decimals value
+        // shows a wrong number, and a wrong number in an earnings balance is
+        // worse than no number.
+        <EmptyState
+          icon={<Coins className="h-12 w-12" />}
+          title={isTokenLoading ? "Reading token metadata…" : "Unrecognized token"}
+          description={
+            isTokenLoading
+              ? "Looking up this stream's token details on the Stacks blockchain."
+              : `The token ${primaryTokenId ? unresolvableTokenLabel(primaryTokenId) : "for these streams"} could not be read from the chain, so balances cannot be displayed accurately. Open the individual streams to claim from them.`
+          }
+        />
       ) : (
         <>
           {/* Hero balance card */}
@@ -107,11 +124,26 @@ export default function EarnPage() {
                     let anySuccess = false;
                     for (const stream of streams) {
                       if ((stream.claimable ?? 0n) > 0n) {
+                        // Per-stream resolution: the loop can span tokens, and a
+                        // stream whose token can't be verified must be skipped
+                        // with an explanation instead of claimed against a
+                        // guessed asset name.
+                        let token;
+                        try {
+                          token = await requireTokenMetadata(stream.token);
+                        } catch (err) {
+                          toast.error(
+                            err instanceof UnresolvableTokenError
+                              ? `Stream #${stream.id}: ${err.message}`
+                              : formatTxError(`Stream #${stream.id} failed`, null, err)
+                          );
+                          continue;
+                        }
                         const result = await execute(
                           buildClaimAllTx({
                             streamId: stream.id,
                             tokenContract: stream.token,
-                            ftName: getTokenConfigByContractId(stream.token).ftName,
+                            token,
                             remainingBalance:
                               stream.depositAmount - stream.withdrawnAmount,
                           })

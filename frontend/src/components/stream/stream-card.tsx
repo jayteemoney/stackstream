@@ -11,8 +11,9 @@ import {
   getStreamStatusLabel,
   formatStreamWindow,
 } from "@/lib/utils";
-import { STREAM_STATUS, getTokenConfigByContractId } from "@/lib/constants";
+import { STREAM_STATUS, unresolvableTokenLabel } from "@/lib/constants";
 import { useAppStore } from "@/stores/app-store";
+import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { useStreamProgress } from "@/hooks/use-stream-progress";
 import type { StreamData } from "@/lib/stacks";
 import { Pause, Play, XCircle, ArrowUpCircle, Download, TimerOff } from "lucide-react";
@@ -50,7 +51,12 @@ export function StreamCard({
   actionLoading,
 }: StreamCardProps) {
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
-  const tokenConfig = getTokenConfigByContractId(stream.token);
+  // Resolve the stream's own token. getTokenConfigByContractId previously
+  // returned DEFAULT_TOKEN for any uncurated contract, so a USDA stream was
+  // labelled "sBTC" and its amounts divided by 1e8 instead of 1e6.
+  const { token: tokenConfig, isLoading: isTokenLoading } = useTokenMetadata(stream.token);
+  const decimals = tokenConfig?.decimals;
+  const symbol = tokenConfig?.symbol ?? unresolvableTokenLabel(stream.token);
   const isActive = stream.status === STREAM_STATUS.ACTIVE;
   const isPaused = stream.status === STREAM_STATUS.PAUSED;
   const isTerminal =
@@ -115,35 +121,46 @@ export function StreamCard({
       {perspective === "recipient" && !isTerminal ? (
         <div className="mb-4 rounded-xl bg-surface-0 p-4 border border-border">
           <p className="text-xs text-zinc-500 mb-1">Claimable Balance</p>
-          <RealtimeBalance
-            baseBalance={claimable}
-            ratePerBlock={stream.ratePerBlock}
-            depositAmount={stream.depositAmount}
-            withdrawnAmount={stream.withdrawnAmount}
-            isActive={isAccruing}
-            decimals={tokenConfig.decimals}
-            symbol={tokenConfig.symbol}
-            size="sm"
-          />
+          {decimals === undefined ? (
+            // Show the token identity but not a number. Rendering the balance
+            // with a guessed scale is how a 1.2 USDA claimable showed as 0.012.
+            <p className="text-sm text-zinc-500">
+              {isTokenLoading ? "Loading token…" : `Unavailable (${symbol})`}
+            </p>
+          ) : (
+            <RealtimeBalance
+              baseBalance={claimable}
+              ratePerBlock={stream.ratePerBlock}
+              depositAmount={stream.depositAmount}
+              withdrawnAmount={stream.withdrawnAmount}
+              isActive={isAccruing}
+              decimals={decimals}
+              symbol={symbol}
+              size="sm"
+            />
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Deposited</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(stream.depositAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
+              {decimals === undefined ? "—" : formatTokenAmount(stream.depositAmount, decimals)}{" "}
+              <span className="text-zinc-500 text-xs">{symbol}</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Streamed</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(streamed || stream.withdrawnAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
+              {decimals === undefined ? "—" : formatTokenAmount(streamed || stream.withdrawnAmount, decimals)}{" "}
+              <span className="text-zinc-500 text-xs">{symbol}</span>
             </p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-zinc-600">Withdrawn</p>
             <p className="text-sm font-semibold text-zinc-200 mt-0.5">
-              {formatTokenAmount(stream.withdrawnAmount, tokenConfig.decimals)} <span className="text-zinc-500 text-xs">{tokenConfig.symbol}</span>
+              {decimals === undefined ? "—" : formatTokenAmount(stream.withdrawnAmount, decimals)}{" "}
+              <span className="text-zinc-500 text-xs">{symbol}</span>
             </p>
           </div>
         </div>

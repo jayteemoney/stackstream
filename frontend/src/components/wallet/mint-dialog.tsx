@@ -9,6 +9,7 @@ import { buildFaucetTx } from "@/lib/stacks";
 import { useWalletStore } from "@/stores/wallet-store";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { formatTokenAmount } from "@/lib/utils";
+import { DEFAULT_TOKEN, toRawAmount } from "@/lib/constants";
 import { toast } from "sonner";
 import { Droplets } from "lucide-react";
 
@@ -23,12 +24,15 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
   const { balance, refetch } = useTokenBalance();
   const [amount, setAmount] = useState("100");
 
-  const amountRaw = Math.round(parseFloat(amount || "0") * 1e8);
-  const maxRaw = 100_000_000_000; // 1000 msBTC max per call
+  // The mock token is fixed at 8 decimals, but derive the multiplier from the
+  // registered metadata rather than hardcoding 1e8 so a future testnet token
+  // with different decimals can't be minted at the wrong scale.
+  const maxRaw = 100_000_000_000n; // 1000 msBTC max per call
+  const amountRaw = toRawAmount(amount || "0", DEFAULT_TOKEN.decimals);
 
   async function handleMint(e: React.FormEvent) {
     e.preventDefault();
-    if (!address || amountRaw <= 0) return;
+    if (!address || amountRaw === null || amountRaw <= 0n) return;
 
     if (amountRaw > maxRaw) {
       toast.error("Max 1,000 msBTC per faucet call");
@@ -36,7 +40,7 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
     }
 
     const txOptions = buildFaucetTx({
-      amount: BigInt(amountRaw),
+      amount: amountRaw,
       senderAddress: address,
     });
     const result = await execute(txOptions);
@@ -72,7 +76,7 @@ export function MintDialog({ open, onClose }: MintDialogProps) {
       <div className="rounded-xl border border-border bg-surface-0 p-3 mb-4">
         <p className="text-xs text-zinc-500">Current balance</p>
         <p className="text-sm font-mono text-zinc-200">
-          {formatTokenAmount(balance)} msBTC
+          {formatTokenAmount(balance, DEFAULT_TOKEN.decimals)} msBTC
         </p>
       </div>
 

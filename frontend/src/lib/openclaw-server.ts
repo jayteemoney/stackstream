@@ -96,8 +96,72 @@ function parseStreamData(raw: Record<string, any>): StreamData {
   };
 }
 
-export async function getStream(streamId: number): Promise<StreamData | null> {
-  const result = await callReadOnly(STREAM_MANAGER_CONTRACT, "get-stream", [
+// SIP-010 decimals, read from the token contract itself so any token formats
+// correctly, not only the ones the app lists. Decimals never change for a
+// deployed token, so cache per warm instance. Returns null if the call fails;
+// callers then omit formatted amounts rather than guess a wrong scale.
+const decimalsCache = new Map<string, number>();
+
+export async function getTokenDecimals(
+  tokenContract: string
+): Promise<number | null> {
+  const hit = decimalsCache.get(tokenContract);
+  if (hit !== undefined) return hit;
+  try {
+    const result = await callReadOnly(tokenContract, "get-decimals");
+    if (!result.success) return null;
+    const decimals = Number(result.value.value);
+    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 38) return null;
+    decimalsCache.set(tokenContract, decimals);
+    return decimals;
+  } catch {
+    return null;
+  }
+}
+
+// SIP-010 symbols never change for a deployed token either, so cache alongside
+// decimals. Returns null on failure — callers fall back to the contract's own
+// name rather than a symbol belonging to some other token.
+const symbolCache = new Map<string, string>();
+
+export async function getTokenSymbol(
+  tokenContract: string
+): Promise<string | null> {
+  const hit = symbolCache.get(tokenContract);
+  if (hit !== undefined) return hit;
+  try {
+    const result = await callReadOnly(tokenContract, "get-symbol");
+    // cvToJSON wraps `(response (string-ascii ...))` the same way it wraps
+    // `(response uint ...)` — as { value: { type, value } } — so the string is
+    // at value.value, not value. Reading value directly returns the wrapper
+    // object, which is how tokenSymbol came back null.
+    const raw = result.value?.value;
+    const symbol = typeof raw === "string" ? raw.trim() : "";
+    if (!symbol || symbol.length > 32) return null;
+    symbolCache.set(tokenContract, symbol);
+    return symbol;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A display label for a token contract, preferring the on-chain symbol and
+ * falling back to the contract's name component.
+ *
+ * The fallback matters: `SP….usda-token` is self-describing in a way that
+ * "0.012 USDA" is not. Never substitute another token's symbol here.
+ */
+export function tokenDisplayLabel(
+  tokenContract: string,
+  symbol: string | null
+): string {
+  if (symbol) return symbol;
+  const contractName = tokenContract.split(".")[1];
+  return contractName && contractName.length > 0 ? contractName : tokenContract;
+}
+
+export async function getStream(streamId: number): Promise<StreamData | null> {  const result = await callReadOnly(STREAM_MANAGER_CONTRACT, "get-stream", [
     uintCV(streamId),
   ]);
   if (result.value === null) return null;
@@ -192,9 +256,16 @@ export async function getCurrentBlockHeight(): Promise<number> {
 // Formatting helpers (mirrors openclaw-service/src/utils.ts)
 // ============================================================================
 
+/**
+ * `decimals` is required, not defaulted. The previous `= 8` default meant any
+ * caller that forgot it silently formatted a 6-decimal token at 1/100th of its
+ * real value — the /api/streams/:id bug, where a 1.2 USDA deposit rendered as
+ * "0.012". Making the argument mandatory turns that class of mistake into a
+ * compile error.
+ */
 export function formatTokenAmount(
   amount: bigint | number,
-  decimals = 8,
+  decimals: number,
   displayDecimals = 6
 ): string {
   const num = typeof amount === "number" ? amount : Number(amount);

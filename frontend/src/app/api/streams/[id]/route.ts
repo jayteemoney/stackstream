@@ -5,6 +5,9 @@ import {
   getRemainingBalance,
   getRefundableAmount,
   getCurrentBlockHeight,
+  getTokenDecimals,
+  getTokenSymbol,
+  tokenDisplayLabel,
   getStreamStatusLabel,
   getStreamProgress,
   formatTokenAmount,
@@ -32,13 +35,15 @@ export async function GET(
       return jsonResponse({ error: "Stream not found" }, 404);
     }
 
-    const [claimable, streamed, remaining, refundable, currentBlock] =
+    const [claimable, streamed, remaining, refundable, currentBlock, decimals, symbol] =
       await Promise.all([
         getClaimableBalance(id),
         getStreamedAmount(id),
         getRemainingBalance(id),
         getRefundableAmount(id),
         getCurrentBlockHeight(),
+        getTokenDecimals(stream.token),
+        getTokenSymbol(stream.token),
       ]);
 
     const progress = getStreamProgress(
@@ -58,9 +63,20 @@ export async function GET(
       refundable,
       currentBlock,
       progress: Math.round(progress * 100) / 100,
-      depositFormatted: formatTokenAmount(stream.depositAmount),
+      tokenDecimals: decimals,
+      // Always a string, and always this token's own label. A client that
+      // receives a null label cannot tell "unavailable" from "forgot", so the
+      // contract name is the honest fallback.
+      tokenLabel: tokenDisplayLabel(stream.token, symbol),
+      tokenSymbol: symbol,
+      depositFormatted:
+        decimals !== null
+          ? formatTokenAmount(stream.depositAmount, decimals)
+          : null,
       claimableFormatted:
-        claimable !== null ? formatTokenAmount(claimable) : null,
+        decimals !== null && claimable !== null
+          ? formatTokenAmount(claimable, decimals)
+          : null,
     });
   } catch (err) {
     return errorResponse(err);

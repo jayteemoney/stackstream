@@ -11,7 +11,6 @@ import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { useTokenBalance } from "@/hooks/use-token-balance";
 import { buildCreateStreamTx } from "@/lib/stacks";
 import {
-  SUPPORTED_TOKENS,
   DEFAULT_TOKEN,
   DURATION_UNITS,
   EXPLORER_BASE,
@@ -19,9 +18,12 @@ import {
   toRawAmount,
   fromRawAmount,
   type DurationUnit,
-  type TokenConfig,
 } from "@/lib/constants";
 import { formatTokenAmount, blocksToTimeString, blockToClockTime } from "@/lib/utils";
+import {
+  TokenSelector,
+  type TokenSelection,
+} from "@/components/stream/token-selector";
 import { toast } from "sonner";
 import { Zap, ArrowRight, Info, Loader2, CheckCircle2 } from "lucide-react";
 
@@ -35,10 +37,28 @@ export default function CreateStreamPage() {
   const [durationValue, setDurationValue] = useState("30");
   const [durationUnit, setDurationUnit] = useState<DurationUnit>("days");
   const [memo, setMemo] = useState("");
-  const [selectedToken, setSelectedToken] = useState<TokenConfig>(DEFAULT_TOKEN);
+  // The selection carries chain-verified metadata (assetName + decimals read
+  // from the contract), which is what the transaction builder needs. Starting
+  // on the curated default means the form is usable immediately; a `?token=`
+  // deep link or a search result replaces it once verified on-chain.
+  const [selectedToken, setSelectedToken] = useState<TokenSelection>(() => ({
+    resolved: {
+      contractId: DEFAULT_TOKEN.contractId,
+      assetName: DEFAULT_TOKEN.assetName,
+      decimals: DEFAULT_TOKEN.decimals,
+      symbol: DEFAULT_TOKEN.symbol,
+      curated: true,
+    },
+    decimals: DEFAULT_TOKEN.decimals,
+    symbol: DEFAULT_TOKEN.symbol,
+    name: DEFAULT_TOKEN.name,
+    icon: DEFAULT_TOKEN.icon,
+    description: DEFAULT_TOKEN.description,
+    trust: "curated",
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { balance, isLoading: isBalanceLoading } = useTokenBalance(selectedToken);
+  const { balance, isLoading: isBalanceLoading } = useTokenBalance(selectedToken.resolved);
 
   if (!isConnected) {
     return (
@@ -103,8 +123,8 @@ export default function CreateStreamPage() {
 
     const txOptions = buildCreateStreamTx({
       recipient,
-      tokenContract: selectedToken.contractId,
-      token: selectedToken,
+      tokenContract: selectedToken.resolved.contractId,
+      token: selectedToken.resolved,
       depositAmount: amountRaw,
       startBlock: latestBlock + 120,
       durationBlocks,
@@ -147,31 +167,25 @@ export default function CreateStreamPage() {
             disabled={isSubmitting}
           />
 
-          {/* Token selector */}
-          {SUPPORTED_TOKENS.length > 1 && (
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-zinc-300">Token</label>
-              <select
-                value={selectedToken.contractId}
-                onChange={(e) => {
-                  const token = SUPPORTED_TOKENS.find((t) => t.contractId === e.target.value);
-                  if (token) {
-                    setSelectedToken(token);
-                    setAmount(""); // reset amount when token changes (different decimals)
-                  }
-                }}
-                disabled={isSubmitting}
-                className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-zinc-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50 disabled:opacity-50"
-              >
-                {SUPPORTED_TOKENS.map((t) => (
-                  <option key={t.contractId} value={t.contractId}>
-                    {t.symbol} · {t.name}
-                  </option>
-                ))}
-              </select>
+          {/* Token selector: verified tokens, registry search, and a contract
+              id for tokens the registry hasn't indexed yet. Every path ends in
+              an on-chain verification, so nothing unverified can be streamed. */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-zinc-300">Token</label>
+            <TokenSelector
+              value={selectedToken}
+              onChange={(selection) => {
+                setSelectedToken(selection);
+                // Reset the amount: raw units differ per token's decimals, and
+                // keeping the old number would silently reinterpret it.
+                setAmount("");
+              }}
+              disabled={isSubmitting}
+            />
+            {selectedToken.description && (
               <p className="text-xs text-zinc-600">{selectedToken.description}</p>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <Input

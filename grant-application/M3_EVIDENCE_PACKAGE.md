@@ -2,7 +2,7 @@
 
 **Milestone 3 target:** 3 organisations registered and $10,000 equivalent streamed on Stacks mainnet.
 **Grant:** Stacks Endowment, Q1 2026, Payments, Getting Started track.
-**Started:** Sep 14, 2026. **Updated:** Sep 23, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
+**Started:** Sep 14, 2026. **Updated:** Sep 24, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
 
 This package follows the shape of `M1_EVIDENCE_PACKAGE.md` and `M2_EVIDENCE_PACKAGE.md`. It records what was actually shipped, not what was planned. The plan lives in `CONTENT_SCHEDULE.md`; if a day in the plan was not shipped, it is marked here as skipped, never quietly dropped.
 
@@ -52,7 +52,7 @@ Reported in aggregate here. Individual names, message texts and reply status are
 | Week | Messages sent | Replies | Calls held | Outcome |
 |---|---|---|---|---|
 | Sep 14 to Sep 20 | 3 | 1 | 0 | One senior ecosystem contact has committed to trying the product after a scheduled committee meeting |
-| Sep 21 to Sep 27 | 3 so far (Sep 23) | 0 so far | 1 (Privara onboarding call, see Section 4) | |
+| Sep 21 to Sep 27 | 4 so far (Sep 24) | 1 so far | 1 (Privara onboarding call, see Section 4) | An ecosystem operating partner replied asking how to integrate and which use cases apply; call being booked |
 | Sep 28 to Oct 4 | | | | |
 | Oct 5 to Oct 11 | | | | |
 

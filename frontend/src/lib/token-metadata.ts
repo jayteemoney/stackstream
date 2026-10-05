@@ -167,9 +167,13 @@ export function getCuratedToken(contractId: string): TokenConfig | null {
 /**
  * Curated tokens, in selector display order. This is a UI seed list, NOT a
  * protocol allowlist — see the module docstring.
+ *
+ * Pass `network` to get only the tokens deployed there, so a testnet build
+ * never offers a mainnet contract its wallet cannot transact with.
  */
-export function getCuratedTokens(): readonly TokenConfig[] {
-  return [...CURATED, ...EXTRA];
+export function getCuratedTokens(network?: StacksNetworkName): readonly TokenConfig[] {
+  const all = [...CURATED, ...EXTRA];
+  return network ? all.filter((t) => contractIdNetwork(t.contractId) === network) : all;
 }
 
 // ============================================================================
@@ -196,11 +200,36 @@ export function isValidAssetName(name: unknown): name is string {
   return typeof name === "string" && ASSET_NAME_RE.test(name);
 }
 
-/** Reject contract ids that aren't `SP….name` / `SM….name` before using them in a URL. */
-const CONTRACT_ID_RE = /^S[PM][A-Z0-9]{38,40}\.[a-zA-Z0-9\-_!?+<>=/*]{1,128}$/;
+export type StacksNetworkName = "mainnet" | "testnet";
+
+/**
+ * Shape check for `deployer.contract-name`, run before an id is used in a URL
+ * or rendered. Accepts both networks' version bytes: `SP`/`SM` are mainnet,
+ * `ST`/`SN` are testnet. Which network an id belongs to is a separate question,
+ * answered by `contractIdNetwork`, so this stays a pure shape filter.
+ */
+const CONTRACT_ID_RE = /^S[PMTN][A-Z0-9]{38,40}\.[a-zA-Z0-9\-_!?+<>=/*]{1,128}$/;
 
 export function isValidContractId(contractId: unknown): contractId is string {
   return typeof contractId === "string" && CONTRACT_ID_RE.test(contractId);
+}
+
+/** The network a well-formed contract id belongs to, from its version byte. */
+export function contractIdNetwork(contractId: string): StacksNetworkName | null {
+  if (!isValidContractId(contractId)) return null;
+  return contractId[1] === "P" || contractId[1] === "M" ? "mainnet" : "testnet";
+}
+
+/**
+ * True when the id is well formed AND deployed on `network`. A mainnet app
+ * reading a testnet contract gets a confusing "not found" from the node, so
+ * callers check this first and say which network the id is actually on.
+ */
+export function isContractIdOnNetwork(
+  contractId: unknown,
+  network: StacksNetworkName
+): contractId is string {
+  return isValidContractId(contractId) && contractIdNetwork(contractId) === network;
 }
 
 /**
@@ -267,6 +296,18 @@ export function toRawAmount(amount: string, decimals: number): bigint | null {
   const combined = `${wholePart || "0"}${padded}`;
   const raw = BigInt(combined);
   return raw > 0n ? raw : null;
+}
+
+/**
+ * True when `amount` has more fractional digits than the token can represent.
+ *
+ * `toRawAmount` truncates those digits rather than round up, so it never sends
+ * more than the user typed. Truncating silently would still send less than they
+ * typed, so forms check this first and ask the user to fix the amount.
+ */
+export function hasExcessPrecision(amount: string, decimals: number): boolean {
+  const fraction = amount.trim().split(".")[1] ?? "";
+  return fraction.replace(/0+$/, "").length > decimals;
 }
 
 /** Convert raw token units into a decimal string, without floating point. */

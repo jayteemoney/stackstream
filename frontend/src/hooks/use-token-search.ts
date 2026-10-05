@@ -21,6 +21,7 @@ import {
   type DiscoveredToken,
 } from "@/lib/token-registry";
 import { getCuratedTokens } from "@/lib/token-metadata";
+import { NETWORK } from "@/lib/constants";
 
 /**
  * Ids and symbols of the hand-verified tokens, used to catch impersonators.
@@ -145,5 +146,5 @@ export function useTokenSearch(query: string): TokenSearchState {
  * useless, the selector still offers the tokens we have verified ourselves.
  */
 export function useCuratedTokens() {
-  return getCuratedTokens();
+  return getCuratedTokens(NETWORK);
 }

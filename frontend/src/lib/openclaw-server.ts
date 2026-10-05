@@ -96,54 +96,11 @@ function parseStreamData(raw: Record<string, any>): StreamData {
   };
 }
 
-// SIP-010 decimals, read from the token contract itself so any token formats
-// correctly, not only the ones the app lists. Decimals never change for a
-// deployed token, so cache per warm instance. Returns null if the call fails;
-// callers then omit formatted amounts rather than guess a wrong scale.
-const decimalsCache = new Map<string, number>();
-
-export async function getTokenDecimals(
-  tokenContract: string
-): Promise<number | null> {
-  const hit = decimalsCache.get(tokenContract);
-  if (hit !== undefined) return hit;
-  try {
-    const result = await callReadOnly(tokenContract, "get-decimals");
-    if (!result.success) return null;
-    const decimals = Number(result.value.value);
-    if (!Number.isInteger(decimals) || decimals < 0 || decimals > 38) return null;
-    decimalsCache.set(tokenContract, decimals);
-    return decimals;
-  } catch {
-    return null;
-  }
-}
-
-// SIP-010 symbols never change for a deployed token either, so cache alongside
-// decimals. Returns null on failure — callers fall back to the contract's own
-// name rather than a symbol belonging to some other token.
-const symbolCache = new Map<string, string>();
-
-export async function getTokenSymbol(
-  tokenContract: string
-): Promise<string | null> {
-  const hit = symbolCache.get(tokenContract);
-  if (hit !== undefined) return hit;
-  try {
-    const result = await callReadOnly(tokenContract, "get-symbol");
-    // cvToJSON wraps `(response (string-ascii ...))` the same way it wraps
-    // `(response uint ...)` — as { value: { type, value } } — so the string is
-    // at value.value, not value. Reading value directly returns the wrapper
-    // object, which is how tokenSymbol came back null.
-    const raw = result.value?.value;
-    const symbol = typeof raw === "string" ? raw.trim() : "";
-    if (!symbol || symbol.length > 32) return null;
-    symbolCache.set(tokenContract, symbol);
-    return symbol;
-  } catch {
-    return null;
-  }
-}
+// SIP-010 decimals and symbol come from the same memoized resolver the UI
+// uses, so the API and the app can never disagree about a token's scale, and a
+// transient node failure is retried after a short TTL instead of being cached
+// for the life of the instance.
+export { getTokenDecimals, getTokenSymbol } from "./token-metadata-client";
 
 /**
  * A display label for a token contract, preferring the on-chain symbol and

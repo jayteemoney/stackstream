@@ -390,8 +390,6 @@ describe("verifySelection", () => {
     // a proxy, or something hostile.
     const out = await verifySelection(
       discovered({ contractId: USDA, decimals: 6, assetName: "usda" }),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       async () => ({
         contractId: USDA,
         assetName: "usda-real",
@@ -408,8 +406,6 @@ describe("verifySelection", () => {
   it("verifies an uncurated token with no friction once the chain agrees", async () => {
     const out = await verifySelection(
       discovered(),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       stubResolved({
         contractId: NEW_TOKEN,
         assetName: "nt",
@@ -423,9 +419,9 @@ describe("verifySelection", () => {
   });
 
   it("treats a resolver failure as unverifiable, never as a default token", async () => {
-    // Regression guard for the exact bug the merged PR fixed: substituting a
+    // Regression guard for the old sBTC fallback: substituting a
     // fallback here would silently stream sBTC.
-    const out = await verifySelection(discovered(), CURATED_IDS, CURATED_SYMBOLS, stubResolved(null));
+    const out = await verifySelection(discovered(), stubResolved(null));
     expect(out.status).toBe("unverifiable");
     expect(out.resolved).toBeNull();
   });
@@ -437,8 +433,6 @@ describe("verifySelection", () => {
         trust: "unusable",
         unusableReason: "No asset name — this listing cannot identify the token it describes",
       }),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       async () => {
         called = true;
         return null;
@@ -458,8 +452,6 @@ describe("verifySelection", () => {
         trust: "unverified",
         warnings: ["This listing publishes no ticker."],
       }),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       stubResolved({
         contractId: NEW_TOKEN,
         assetName: "nt",
@@ -483,8 +475,6 @@ describe("verifySelection", () => {
         trust: "impersonator",
         impersonates: SBTC,
       }),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       stubResolved({
         contractId: FAKE_SBTC,
         assetName: "sBTC",
@@ -500,8 +490,6 @@ describe("verifySelection", () => {
   it("downgrades on a decimals-only mismatch and says so", async () => {
     const out = await verifySelection(
       discovered({ decimals: 6 }),
-      CURATED_IDS,
-      CURATED_SYMBOLS,
       stubResolved({
         contractId: NEW_TOKEN,
         assetName: "nt",

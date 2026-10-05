@@ -35,7 +35,8 @@
  * suggest a token, or refuse to suggest one.
  */
 
-import type { ResolvedToken } from "./token-metadata";
+import { isValidContractId as isWellFormedContractId, type ResolvedToken } from "./token-metadata";
+import { HIRO_API_BASE } from "./constants";
 
 /** Fully-qualified `deployer.contract-name`, e.g. "SP2C2…ZM.usda-token". */
 export type ContractId = string;
@@ -144,8 +145,10 @@ interface RegistryListResponse {
 // Configuration
 // ============================================================================
 
+// Defaults to the Hiro API for the network the app runs on, so a testnet build
+// searches testnet tokens rather than offering mainnet contracts it cannot use.
 const API_BASE =
-  process.env.NEXT_PUBLIC_HIRO_API_BASE?.replace(/\/$/, "") ?? "https://api.hiro.so";
+  process.env.NEXT_PUBLIC_HIRO_API_BASE?.replace(/\/$/, "") ?? HIRO_API_BASE;
 
 /** Registry page size. The API caps this at 60. */
 export const REGISTRY_PAGE_SIZE = 60;
@@ -164,8 +167,6 @@ export const MAX_RESULTS = 25;
 // ============================================================================
 // Pure helpers — no network, fully unit-tested
 // ============================================================================
-
-const CONTRACT_ID_RE = /^S[PM][A-Z0-9]{38,40}\.[a-zA-Z0-9\-_!?+<>=/*]{1,128}$/;
 
 /**
  * A row from `/metadata/v1/search`.
@@ -196,7 +197,7 @@ export interface RegistrySearchRow {
  * capability. Its job is to reject typos and hostile strings early.
  */
 export function isValidContractId(value: unknown): value is ContractId {
-  return typeof value === "string" && CONTRACT_ID_RE.test(value);
+  return isWellFormedContractId(value);
 }
 
 /**
@@ -452,14 +453,14 @@ export function candidateFromResolved(
 export type VerifyStatus =
   /** Curated, or uncurated but fully verified on-chain. */
   | "verified"
-  /** Chain verification disagrees with the registry; treated as unverified. */
+  /** The listing disagrees with the chain. Not selectable until the user re-picks. */
   | "unverified"
   /** Cannot be verified, so it must not be streamed. */
   | "unverifiable";
 
 export interface VerifiedSelection {
   status: VerifyStatus;
-  /** Chain-proven metadata. Null unless `status` is "verified". */
+  /** Chain-proven metadata. Null unless `status` is "verified", so nothing else can be streamed. */
   resolved: ResolvedToken | null;
   /** Human-readable reason, shown when status is not "verified". */
   reason?: string;
@@ -475,21 +476,20 @@ export interface VerifiedSelection {
  *
  *   - `assetName` and `decimals` MUST come from the chain resolver. The
  *     registry is never allowed to supply either, no matter how confident it
- *     looks. I verified the registry's decimals match the chain 25/25, but
- *     "has always agreed" is not a property a payment can depend on, and an
- *     indexer is one deploy behind the chain forever.
+ *     looks. It has agreed with the chain in every spot check, but "has always
+ *     agreed" is not a property a payment can depend on, and an indexer is one
+ *     deploy behind the chain forever.
  *   - If the registry and the chain disagree on either field, the result is
  *     downgraded to "unverified" rather than trusting either side.
  *   - A null from the resolver is "unverifiable", never a fallback to a default
- *     token. That mistake is what the merged PR fixed.
+ *     token. Falling back to sBTC is what used to put the wrong asset name in
+ *     post-conditions.
  *
  * Verified-but-new tokens resolve to `status: "verified"` with no friction,
  * which is what keeps the selector from blocking legitimate team onboarding.
  */
 export async function verifySelection(
   discovered: DiscoveredToken,
-  curatedIds: readonly ContractId[],
-  curatedSymbols: ReadonlyMap<string, ContractId>,
   resolve: (contractId: ContractId) => Promise<ResolvedToken | null>,
 ): Promise<VerifiedSelection> {
   const impersonates = discovered.impersonates;
@@ -522,10 +522,10 @@ export async function verifySelection(
   const assetAgrees = resolved.assetName === discovered.assetName;
 
   if (!decimalsAgree || !assetAgrees) {
-    // The chain is authoritative, so we still hand back the chain values —
-    // but the user is told the listing disagreed, because that discrepancy is
-    // itself a signal worth surfacing (a mismatched asset name can mean a
-    // renamed token, a proxy, or something hostile).
+    // Refuse rather than silently swap in the chain values: the user picked a
+    // listing that described a different asset, and a mismatched asset name
+    // can mean a renamed token, a proxy, or something hostile. They can still
+    // stream it by entering the contract id, which verifies from the chain.
     return {
       status: "unverified",
       resolved: null,
@@ -536,10 +536,9 @@ export async function verifySelection(
     };
   }
 
-  // An impersonator still resolves on-chain — the contract genuinely is that
-  // token — so verification alone cannot catch it. It is reported as verified
+  // An impersonator still resolves on-chain (the contract genuinely is that
+  // token), so verification alone cannot catch it. It is reported as verified
   // but carries its impersonation forward so the UI can flag it explicitly.
-  void curatedIds;
   return { status: "verified", resolved, impersonates };
 }
 

@@ -16,6 +16,7 @@ import {
   EXPLORER_BASE,
   BLOCKS_PER_HOUR,
   toRawAmount,
+  hasExcessPrecision,
   fromRawAmount,
   type DurationUnit,
 } from "@/lib/constants";
@@ -90,6 +91,9 @@ export default function CreateStreamPage() {
     if (!amount || parseFloat(amount) <= 0) errs.amount = "Enter a positive amount";
     else if (amountRaw === null) {
       errs.amount = "Enter a valid amount (digits and up to one decimal point)";
+    }
+    else if (hasExcessPrecision(amount, selectedToken.decimals)) {
+      errs.amount = `${selectedToken.symbol} has ${selectedToken.decimals} decimal places. Remove the extra digits.`;
     }
     // Pre-flight balance check. The on-chain ft-transfer? inside create-stream
     // returns (err u1) if the wallet is short — catch it here so users don't

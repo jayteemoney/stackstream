@@ -10,7 +10,7 @@ import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { buildTopUpStreamTx, type StreamData } from "@/lib/stacks";
 import { useWalletStore } from "@/stores/wallet-store";
 import { formatTokenAmount, formatTxError } from "@/lib/utils";
-import { toRawAmount, fromRawAmount, unresolvableTokenLabel } from "@/lib/constants";
+import { toRawAmount, fromRawAmount, hasExcessPrecision, unresolvableTokenLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { ArrowUpCircle, AlertTriangle } from "lucide-react";
 
@@ -59,6 +59,10 @@ export function TopUpDialog({
     }
     if (amountRaw === null) {
       setError("Enter a valid amount (digits and up to one decimal point)");
+      return false;
+    }
+    if (hasExcessPrecision(amount, token.decimals)) {
+      setError(`${token.symbol} has ${token.decimals} decimal places. Remove the extra digits.`);
       return false;
     }
     if (amountRaw > balance) {

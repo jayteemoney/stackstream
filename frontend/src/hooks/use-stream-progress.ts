@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { BLOCK_TIME_SECONDS } from "@/lib/constants";
 
 /**
@@ -30,40 +30,28 @@ export function useStreamProgress(
     Math.max(0, (snapshotElapsed / duration) * 100)
   );
 
-  const [value, setValue] = useState(snapshotProgress);
-  const baseRef = useRef(snapshotProgress);
-  const startTimeRef = useRef(Date.now());
+  // The latest animation frame, tagged with the snapshot it extrapolates from
+  // so a frame computed from an old snapshot is never shown over a new one.
+  const [frame, setFrame] = useState<{ base: number; value: number } | null>(null);
 
   useEffect(() => {
-    baseRef.current = snapshotProgress;
-    startTimeRef.current = Date.now();
-    setValue(snapshotProgress);
-  }, [snapshotProgress]);
-
-  useEffect(() => {
-    if (!isAccruing) {
-      setValue(snapshotProgress);
-      return;
-    }
+    if (!isAccruing) return;
 
     const progressPerSecond = 100 / (duration * BLOCK_TIME_SECONDS);
-    let raf: number | null = null;
+    const base = snapshotProgress;
+    const startedAt = Date.now();
+    let raf = 0;
 
     function tick() {
-      const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      const interpolated = Math.min(
-        100,
-        baseRef.current + progressPerSecond * elapsed
-      );
-      setValue(interpolated);
+      const elapsed = (Date.now() - startedAt) / 1000;
+      setFrame({ base, value: Math.min(100, base + progressPerSecond * elapsed) });
       raf = requestAnimationFrame(tick);
     }
 
     raf = requestAnimationFrame(tick);
-    return () => {
-      if (raf !== null) cancelAnimationFrame(raf);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [isAccruing, duration, snapshotProgress]);
 
-  return value;
+  // Not accruing, or no frame yet for this snapshot: the snapshot is the truth.
+  return isAccruing && frame?.base === snapshotProgress ? frame.value : snapshotProgress;
 }

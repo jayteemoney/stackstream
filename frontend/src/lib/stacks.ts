@@ -33,7 +33,7 @@ import { isValidContractId, type ResolvedToken } from "./token-metadata";
 // Network helpers
 // ============================================================================
 
-export function getNetwork() {
+export function getNetwork(): "mainnet" | "testnet" {
   return IS_MAINNET ? "mainnet" : "testnet";
 }
 
@@ -128,11 +128,24 @@ export async function requireTokenMetadata(
  *
  * This helper returns the inner value object or null.
  */
-function unwrapOptional(cv: { value: any }): any {
+/** A Clarity value as cvToJSON returns it: `{ type, value }`, nested for tuples. */
+interface CvJson {
+  type?: string;
+  value?: unknown;
+}
+
+/** A tuple's fields, each itself a `CvJson`. */
+type CvTuple = Record<string, CvJson | undefined>;
+
+function unwrapOptional(cv: CvJson): CvJson | null {
   if (cv.value === null || cv.value === undefined) return null;
-  // If the value itself has a .value property, it's the optional wrapper
-  // around a typed value (tuple, uint, principal, etc.)
-  return cv.value;
+  // The optional wraps a typed value (tuple, uint, principal, etc.)
+  return cv.value as CvJson;
+}
+
+/** A uint or principal leaf, which cvToJSON renders as a string. */
+function cvString(cv: CvJson | undefined): string {
+  return String(cv?.value);
 }
 
 export async function getStream(streamId: number) {
@@ -144,7 +157,7 @@ export async function getStream(streamId: number) {
   const inner = unwrapOptional(result);
   if (inner === null) return null;
   // inner is { type: "(tuple ...)", value: { sender: ..., ... } }
-  return parseStreamData(inner.value);
+  return parseStreamData(inner.value as CvTuple);
 }
 
 export async function getStreamStatus(streamId: number): Promise<number | null> {
@@ -166,7 +179,7 @@ export async function getClaimableBalance(streamId: number): Promise<bigint | nu
   );
   const inner = unwrapOptional(result);
   if (inner === null) return null;
-  return BigInt(inner.value);
+  return BigInt(cvString(inner));
 }
 
 export async function getStreamedAmount(streamId: number): Promise<bigint | null> {
@@ -177,7 +190,7 @@ export async function getStreamedAmount(streamId: number): Promise<bigint | null
   );
   const inner = unwrapOptional(result);
   if (inner === null) return null;
-  return BigInt(inner.value);
+  return BigInt(cvString(inner));
 }
 
 export async function getRemainingBalance(streamId: number): Promise<bigint | null> {
@@ -188,7 +201,7 @@ export async function getRemainingBalance(streamId: number): Promise<bigint | nu
   );
   const inner = unwrapOptional(result);
   if (inner === null) return null;
-  return BigInt(inner.value);
+  return BigInt(cvString(inner));
 }
 
 export async function getRefundableAmount(streamId: number): Promise<bigint | null> {
@@ -199,7 +212,7 @@ export async function getRefundableAmount(streamId: number): Promise<bigint | nu
   );
   const inner = unwrapOptional(result);
   if (inner === null) return null;
-  return BigInt(inner.value);
+  return BigInt(cvString(inner));
 }
 
 export async function getSenderStreams(sender: string): Promise<number[]> {
@@ -242,7 +255,7 @@ export async function getDao(admin: string) {
   );
   const inner = unwrapOptional(result);
   if (inner === null) return null;
-  return parseDaoData(inner.value);
+  return parseDaoData(inner.value as CvTuple);
 }
 
 export async function getDaoCount(): Promise<number> {
@@ -700,21 +713,22 @@ export interface StreamData {
   memo: string | null;
 }
 
-function parseStreamData(raw: Record<string, any>): StreamData {
+function parseStreamData(raw: CvTuple): StreamData {
+  const memo = raw.memo?.value as CvJson | null | undefined;
   return {
-    sender: raw.sender.value,
-    recipient: raw.recipient.value,
-    token: raw.token.value,
-    depositAmount: BigInt(raw["deposit-amount"].value),
-    withdrawnAmount: BigInt(raw["withdrawn-amount"].value),
-    startBlock: Number(raw["start-block"].value),
-    endBlock: Number(raw["end-block"].value),
-    ratePerBlock: BigInt(raw["rate-per-block"].value),
-    status: Number(raw.status.value),
-    pausedAtBlock: Number(raw["paused-at-block"].value),
-    totalPausedDuration: Number(raw["total-paused-duration"].value),
-    createdAtBlock: Number(raw["created-at-block"].value),
-    memo: raw.memo?.value?.value ?? null,
+    sender: cvString(raw.sender),
+    recipient: cvString(raw.recipient),
+    token: cvString(raw.token),
+    depositAmount: BigInt(cvString(raw["deposit-amount"])),
+    withdrawnAmount: BigInt(cvString(raw["withdrawn-amount"])),
+    startBlock: Number(cvString(raw["start-block"])),
+    endBlock: Number(cvString(raw["end-block"])),
+    ratePerBlock: BigInt(cvString(raw["rate-per-block"])),
+    status: Number(cvString(raw.status)),
+    pausedAtBlock: Number(cvString(raw["paused-at-block"])),
+    totalPausedDuration: Number(cvString(raw["total-paused-duration"])),
+    createdAtBlock: Number(cvString(raw["created-at-block"])),
+    memo: typeof memo?.value === "string" ? memo.value : null,
   };
 }
 
@@ -727,13 +741,13 @@ export interface DaoData {
   isActive: boolean;
 }
 
-function parseDaoData(raw: Record<string, any>): DaoData {
+function parseDaoData(raw: CvTuple): DaoData {
   return {
-    name: raw.name.value,
-    admin: raw.admin.value,
-    totalStreamsCreated: Number(raw["total-streams-created"].value),
-    totalDeposited: BigInt(raw["total-deposited"].value),
-    createdAtBlock: Number(raw["created-at-block"].value),
-    isActive: raw["is-active"].value,
+    name: cvString(raw.name),
+    admin: cvString(raw.admin),
+    totalStreamsCreated: Number(cvString(raw["total-streams-created"])),
+    totalDeposited: BigInt(cvString(raw["total-deposited"])),
+    createdAtBlock: Number(cvString(raw["created-at-block"])),
+    isActive: raw["is-active"]?.value === true,
   };
 }

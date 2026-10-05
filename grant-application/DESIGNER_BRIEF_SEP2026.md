@@ -16,7 +16,7 @@ That is what you are being brought in to build, and this document is meant to gi
 
 **What StackStream is, in one sentence.** It is payment streaming on the Stacks blockchain: instead of paying someone once a month, an organisation opens a stream and the recipient's balance grows continuously, every few seconds, and they take what they have earned whenever they want.
 
-**Why anyone cares.** Everyone has been paid late, or waited a month for money they earned in week one. Streaming closes that gap. And this is the first time it has been built where the money settles on Bitcoin, which is the part nobody else can copy.
+**Why anyone cares.** Everyone has been paid late, or waited a month for money they earned in week one. Streaming closes that gap. And this is the first time it has been built secured by Bitcoin, which is the part nobody else can copy.
 
 **The single most important visual idea in this whole document.** A number going up, continuously, in real time. That is the product. If a person watches a balance tick upward for three seconds, they understand StackStream completely and no copy is needed. Every asset you make either shows that or supports it.
 
@@ -115,7 +115,7 @@ Some of these will look pedantic. Each one exists because breaking it has cost u
 
 **5.2 Never invent a number.** Not in a chart, not in a mockup, not as placeholder text that might survive to export. Every figure in every asset comes from `https://stackstream.xyz/api/stats` or from me directly. If you need a number and do not have it, leave the field as `[N]` in the layout and I will fill it before posting. A fabricated chart in this ecosystem is unrecoverable.
 
-**5.3 Every public asset has exactly one call to action, on its own final line, as a full link.** Default `stackstream.xyz`. Use `t.me/dev_jaytee` when the post's ask is "talk to us". Never two.
+**5.3 Every public asset has exactly one call to action, on its own final line, as a full link.** Always `stackstream.xyz`, including "talk to us" posts, so a viewer can check for themselves that what we say is live. The developer asset on Day 24 may use `github.com/jayteemoney/stackstream` instead. Never two. Telegram (`t.me/dev_jaytee`) never appears on an asset or as a post's link: it is for DMs and replies only.
 
 **5.4 Our handles, exactly as written, never improvised.**
 
@@ -124,7 +124,7 @@ Some of these will look pedantic. Each one exists because breaking it has cost u
 | Website | `stackstream.xyz` |
 | Official X | `@Stackstream0X` |
 | Personal X | `@dev_jayteee` (three e's, this is the one people get wrong) |
-| Telegram | `t.me/dev_jaytee` (two e's, and yes it differs from the X handle by one letter) |
+| Telegram | `t.me/dev_jaytee` (two e's). For DMs and replies only, never on an asset |
 
 **5.5 No em dashes anywhere in copy on an asset.** Commas or full stops.
 
@@ -133,6 +133,8 @@ Some of these will look pedantic. Each one exists because breaking it has cost u
 **5.7 Everything is captioned and everything is readable muted.** Most people watch video with the sound off. Every motion asset carries burned-in captions.
 
 **5.8 No jargon on any asset.** Banned: escrow, protocol, primitive, SIP-010, vault, on-chain settlement layer. Say "the money sits in a contract", "a stream", "any token on Stacks". The only exception is the two technical explainers on Day 10 and Day 24, which are aimed at developers and may use precise terms.
+
+**5.9 Tokens and cost, exactly.** Never show STX in a token strip or list: native STX is the network's coin and cannot be streamed. Show sBTC, USDA, ALEX and xBTC, plus a blank "your token" badge, because any team can now stream its own token. On cost, write "No fee from us" and "a fraction of one STX in network fees". Never "a few STX", which overstates the real cost about a thousand times.
 
 ---
 
@@ -193,8 +195,8 @@ We ship Monday Sep 14, which is five days from today. That is genuinely tight, s
 | **Batch 1** | Days 1 to 7 | **Sat Sep 12, end of day** | Two clear days of buffer before we post |
 | **Batch 2** | Days 8 to 14 | Fri Sep 18 | |
 | **Batch 3** | Days 15 to 21 | Fri Sep 25 | |
-| **Batch 4** | Days 22 to 28 | Fri Oct 2 | |
-| **Batch 5** | Days 29 to 30, plus any reshoots | Fri Oct 9 | |
+| **Batch 4** | Days 22 to 26 | Fri Oct 2 | Day 23 is a new asset (see the Week 4 table). If the old Day 23 cancel split is done, it moves to Day 25 |
+| **Batch 5** | Days 29 and 30, plus any reshoots | Fri Oct 9 | |
 
 **If Batch 0 and Batch 1 cannot both land, prioritise in this order:** Template H, then the Day 1 metric card, then the Day 3 explainer diagram. Those three cover the first week on their own and the rest can follow midweek.
 
@@ -204,11 +206,11 @@ We ship Monday Sep 14, which is five days from today. That is genuinely tight, s
 
 ## 9. The 30 days
 
-The weekly rhythm is fixed and repeats, so you always know roughly what is coming: **Monday** is the real number, **Tuesday** teaches an idea, **Wednesday** shows proof, **Thursday** kills an objection, **Friday** pictures a specific kind of team, **Saturday** is a human note, **Sunday** is a bigger idea.
+The weekly rhythm is fixed and repeats, so you always know roughly what is coming: **Monday** is the real number, **Tuesday** teaches an idea, **Wednesday** shows proof, **Thursday** kills an objection, **Friday** pictures a specific kind of team. **Weekdays only:** from Oct 4 nothing is posted on Saturday or Sunday, so Days 6, 7, 13, 14, 20, 21, 27 and 28 are removed and need no asset.
 
 Bracketed values like `[N]` are numbers I fill in on the morning of posting. Leave them as visible placeholder fields in the layout.
 
-### Week 1: Sep 14 to Sep 20, what streaming actually is
+### Week 1: Sep 14 to Sep 18, what streaming actually is
 
 | Day | Date | Post | Asset | Template |
 |---|---|---|---|---|
@@ -217,10 +219,8 @@ Bracketed values like `[N]` are numbers I fill in on the morning of posting. Lea
 | 3 | Wed Sep 16 | Watch it move | **The ticking balance loop.** Six to eight seconds, seamless, no logo until the last frame. Cold open on the number | H |
 | 4 | Thu Sep 17 | Where the money actually sits | Diagram answering "who is holding my funds". Sender, contract, recipient, with the contract highlighted and a lock. Copy: "It never touches us" | B, D |
 | 5 | Fri Sep 18 | Payday that runs itself | Segment scene: a small team of five. Left panel, month-end chaos, spreadsheet, chasing signatures, someone missed. Right panel, five quiet streams already running | E |
-| 6 | Sat Sep 19 | Why I built this | Founder photo, quiet. One line: "I have been paid late. So has everyone I know" | F |
-| 7 | Sun Sep 20 | Money that moves like water | Wide conceptual piece. Streaming as continuous flow versus discrete lumps. The most artistic asset of the month, use the range | E |
 
-### Week 2: Sep 21 to Sep 27, proof and control
+### Week 2: Sep 21 to Sep 25, proof and control
 
 | Day | Date | Post | Asset | Template |
 |---|---|---|---|---|
@@ -229,32 +229,26 @@ Bracketed values like `[N]` are numbers I fill in on the morning of posting. Lea
 | 10 | Wed Sep 23 | A real transaction | Proof card from an actual mainnet transaction. Hash, block, amount, confirmed. Plain and unglamorous on purpose | C |
 | 11 | Thu Sep 24 | What if nobody claims it? | Objection card. Doubt on top. Answer below: "It keeps accruing. Nothing is lost. Claim all of it on the last day if you like" | D |
 | 12 | Fri Sep 25 | Grants that release as work ships | Segment scene: a grant programme. A funding bar releasing in stages as milestones complete, unreleased portion clearly still inside the funder's control | E, B |
-| 13 | Sat Sep 26 | The number nobody wants to post | Founder note about publishing eleven streams instead of hiding it. Quiet, honest, no chart | F |
-| 14 | Sun Sep 27 | Nobody else can do this bit | Comparison chart. StackStream, Sablier, Streamflow. Rows: real-time, any token, non-custodial, cancellable, **settlement**. One orange cell carries the whole asset | G |
 
-### Week 3: Sep 28 to Oct 4, who it is for
+### Week 3: Sep 28 to Oct 2, who it is for
 
 | Day | Date | Post | Asset | Template |
 |---|---|---|---|---|
 | 15 | Mon Sep 28 | The number, week 3 | Metric card | A |
-| 16 | Tue Sep 29 | Any token you actually hold | Token strip: sBTC, STX, USDA, ALEX, all flowing through one stream. Kill the assumption that this is STX-only | B |
+| 16 | Tue Sep 29 | Any token you actually hold (posted) | Token strip: sBTC, USDA, ALEX, xBTC and a blank "your token" badge, all flowing through one stream. **Correction for any reuse:** the original strip showed STX, which cannot be streamed. Remove it | B |
 | 17 | Wed Sep 30 | Two minutes, start to finish | Screen-recorded flow: connect, create stream, watch it start. Captioned, muted-readable, under 40 seconds | H, C |
-| 18 | Thu Oct 1 | What does it cost? | Objection card. Answer: "No protocol fee. Stacks gas only, a few STX." Make the number visually tiny, that is the message | D |
+| 18 | Thu Oct 1 | What does it cost? (posted) | Objection card. Answer: "No fee from us. A fraction of one STX in network fees." Make the number visually tiny, that is the message. **Correction for any reuse:** the original said "No protocol fee" (jargon) and "a few STX" (about a thousand times too high) | D |
 | 19 | Fri Oct 2 | Paid as you work | Segment scene: a contributor watching their balance grow while working. The recipient-side view, which we have under-served | E |
-| 20 | Sat Oct 3 | Building this alone | Founder note, behind the scenes, warm and unpolished | F |
-| 21 | Sun Oct 4 | Bitcoin is the difference | The settlement explainer, and **the single most language-sensitive asset of the month**. Two clearly separate timelines: stream updates in seconds, settlement inherits Bitcoin finality. Two tracks, visually distinct, never merged into one arrow. Re-read rule 5.1 before starting this one | B |
 
-### Week 4: Oct 5 to Oct 11, trust and depth
+### Week 4: Oct 5 to Oct 9, trust and depth
 
 | Day | Date | Post | Asset | Template |
 |---|---|---|---|---|
 | 22 | Mon Oct 5 | The number, week 4 | Metric card | A |
-| 23 | Tue Oct 6 | Cancel it and see | Diagram of a cancelled stream splitting into two: earned to the recipient, unearned back to the sender, in the same transaction. Use the chart green and red here | B |
-| 24 | Wed Oct 7 | Open code, tested | Developer-facing card. Contract line count, 125 passing tests including fuzz tests, independently audited, report in the repo. Terminal aesthetic, Geist Mono. Jargon is allowed on this one | C |
-| 25 | Thu Oct 8 | Is it safe? | Objection card on custody and audit. Answer: "The funds sit in the contract. Never with us. Not at any point" | D |
+| 23 | Tue Oct 6 | Pay your team in your own token | **New asset.** The Template B master diagram, with the token on the stream shown as a blank "your token" badge and a small link chip reading `stackstream.xyz/…?token=` above the sender. One idea only: your token, one link, paid as they work. No STX anywhere | B, E |
+| 24 | Wed Oct 7 | Open code, open data | Developer-facing card. Contract line count, 125 passing tests including fuzz tests, independently audited, report in the repo, plus two terminal lines: `GET /api/streams/{id}` and `/dashboard/create?token=<contract-id>`. Terminal aesthetic, Geist Mono. Jargon is allowed on this one | C |
+| 25 | Thu Oct 8 | Is it safe? | Objection card on custody and audit. Answer: "The funds sit in the contract. Never with us. Not at any point". If the old Day 23 cancel split (earned to the recipient, unearned back to the sender, green and red) is already made, use it here instead | D |
 | 26 | Fri Oct 9 | How teams pay people today | Segment scene: the manual month-end process drawn honestly, every step, every place it breaks. Then the same thing as one stream. This is the highest-converting asset in the set, give it the most time | E, B |
-| 27 | Sat Oct 10 | What I got wrong | Founder note on lessons from the last three months. Vulnerable and specific | F |
-| 28 | Sun Oct 11 | Where this goes | Roadmap piece: cross-chain payout and private streams. **Every element on this asset carries a visible "roadmap, not shipped" marker.** We do not promise dates and we do not let a viewer mistake a plan for a feature | B |
 
 ### Week 5: Oct 12 to Oct 13, closing
 
@@ -275,7 +269,8 @@ An asset is finished when all of these are true. Check them yourself before deli
 - [ ] Every numeral is Geist Mono
 - [ ] Exactly one accent colour is doing work
 - [ ] Exactly one call to action, as a full link, on its own final line
-- [ ] Handles spelled correctly: `@Stackstream0X`, `@dev_jayteee`, `t.me/dev_jaytee`
+- [ ] Handles spelled correctly: `@Stackstream0X`, `@dev_jayteee`
+- [ ] No Telegram link on the asset, and no STX in any token list
 - [ ] Zero invented numbers. Unknown figures left as visible `[N]` fields
 - [ ] Rule 5.1 checked by reading the copy out loud
 - [ ] No em dashes
@@ -293,4 +288,4 @@ Telegram `t.me/dev_jaytee` is fastest and I will answer within the hour during w
 
 ---
 
-*Jethro Irmiya, Sep 9, 2026. Live figures quoted here were true on Sep 8, 2026 and are refreshed from https://stackstream.xyz/api/stats on the morning of each post.*
+*Jethro Irmiya, Sep 9, 2026. Updated Oct 5, 2026: weekdays only, Telegram removed from assets, token and cost corrections, new Day 23 and Day 24 assets. Live figures quoted here were true on Sep 8, 2026 and are refreshed from https://stackstream.xyz/api/stats on the morning of each post.*

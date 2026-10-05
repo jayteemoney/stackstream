@@ -2,7 +2,7 @@
 
 **Milestone 3 target:** 3 organisations registered and $10,000 equivalent streamed on Stacks mainnet.
 **Grant:** Stacks Endowment, Q1 2026, Payments, Getting Started track.
-**Started:** Sep 14, 2026. **Updated:** Sep 24, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
+**Started:** Sep 14, 2026. **Updated:** Oct 5, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
 
 This package follows the shape of `M1_EVIDENCE_PACKAGE.md` and `M2_EVIDENCE_PACKAGE.md`. It records what was actually shipped, not what was planned. The plan lives in `CONTENT_SCHEDULE.md`; if a day in the plan was not shipped, it is marked here as skipped, never quietly dropped.
 
@@ -16,8 +16,8 @@ Read directly from the contract through `https://stackstream.xyz/api/stats` on t
 |---|---|---|---|---|
 | Sep 14, 2026 | not recorded | 11 | 0 | Campaign baseline, read at 14:56 UTC |
 | Sep 21, 2026 | 9,037,877 | 11 | 0 | Week 2 |
-| Sep 28, 2026 | | | | Week 3 |
-| Oct 5, 2026 | | | | Week 4 |
+| Sep 28, 2026 | not recorded | 11 | 0 | Week 3. Not read that morning; both counts only increase and were 11 and 0 on Sep 21 and Oct 5, so they were 11 and 0 here too |
+| Oct 5, 2026 | 9,125,390 | 11 | 0 | Week 4, read at 06:36 UTC |
 | Oct 12, 2026 | | | | Week 5 |
 
 Rule carried from M2: any stream between our own wallets is labelled as ours wherever it appears, and is never counted as adoption.
@@ -35,11 +35,24 @@ One row per calendar day. A row is only filled in on the day it was posted. Post
 | 3 | Sep 16 | Watch it move | Official X (pinned), Personal X, Stacks Discord, WhatsApp | H | |
 | 4 | Sep 17 | Where the money actually sits | Official X, Personal X, WhatsApp | B, D | |
 | 5 | Sep 18 | Payday that runs itself | Official X, Personal X, LinkedIn, Grantees TG (link share), WhatsApp | E | |
-| 6 | Sep 19 | Why I built this | **Skipped** | | |
-| 7 | Sep 20 | Money that moves like water | **Skipped** | | |
+| 6 | Sep 19 (Sat) | Why I built this | **Not posted (weekend)** | | |
+| 7 | Sep 20 (Sun) | Money that moves like water | **Not posted (weekend)** | | |
 | 8 | Sep 21 | The number, week 2 | Official X, Personal X, WhatsApp | A | |
 | 9 | Sep 22 | You are never locked in | Official X, Personal X, WhatsApp | B | |
 | 10 | Sep 23 | A real transaction (stream 11 receipt) | Official X, Personal X, Stacks Discord, Grantees TG, WhatsApp | C | |
+| 11 | Sep 24 | What if nobody claims it? | Official X, Personal X, WhatsApp | D | |
+| 12 | Sep 25 | Grants that release as work ships | Official X, Personal X, LinkedIn, Grantees TG, WhatsApp | E, B | |
+| 13 | Sep 26 (Sat) | The number nobody wants to post | **Not posted (weekend)** | | |
+| 14 | Sep 27 (Sun) | Nobody else can do this bit | **Not posted (weekend)** | | |
+| 15 | Sep 28 | The number, week 3 | Official X, Personal X, WhatsApp | A | |
+| 16 | Sep 29 | Any token you actually hold | Official X, Personal X, WhatsApp | B | |
+| 17 | Sep 30 | Two minutes, start to finish | Official X, Personal X, Stacks Discord, WhatsApp | H, C | |
+| 18 | Oct 1 | What does it cost? | Official X, Personal X, WhatsApp | D | |
+| 19 | Oct 2 | Paid as you work | Official X, Personal X, LinkedIn, WhatsApp | E | |
+| 20 | Oct 3 (Sat) | Building this alone | **Not posted (weekend)** | | |
+| 21 | Oct 4 (Sun) | Bitcoin is the difference | **Not posted (weekend)** | | |
+
+From Oct 4 the plan is weekdays only: Days 27 and 28 (Oct 10 and 11) are removed rather than skipped.
 
 **Standing rules every post obeyed:** one link per post, the follow line for @Stackstream0X from Day 3 onward, live numbers only, no deadlines, and the settlement language rule from `MARKETING_PLAN_V2.md`.
 
@@ -52,8 +65,8 @@ Reported in aggregate here. Individual names, message texts and reply status are
 | Week | Messages sent | Replies | Calls held | Outcome |
 |---|---|---|---|---|
 | Sep 14 to Sep 20 | 3 | 1 | 0 | One senior ecosystem contact has committed to trying the product after a scheduled committee meeting |
-| Sep 21 to Sep 27 | 4 so far (Sep 24) | 1 so far | 1 (Privara onboarding call, see Section 4) | An ecosystem operating partner replied asking how to integrate and which use cases apply; call being booked |
-| Sep 28 to Oct 4 | | | | |
+| Sep 21 to Sep 27 | 4 | 1 | 2 (Privara onboarding call; Zero Authority DAO X Space on Sep 25 and call on Sep 26) | The ecosystem operating partner that runs Stacks DeGrants replied, invited us to their X Space, held a call and proposed working together |
+| Sep 28 to Oct 4 | [confirm] | | 0 | Product week: shipped streams in any token including a team's own, from one link |
 | Oct 5 to Oct 11 | | | | |
 
 ---
@@ -66,6 +79,7 @@ An organisation counts toward M3 only once its registration transaction confirms
 
 | Date | Organisation | What they build | Stage | Next step |
 |---|---|---|---|---|
+| Sep 26, 2026 | **Zero Authority DAO** (@zeroauthdao) | Runs Stacks DeGrants microgrants and an on-chain bounty and freelance platform. Endowment operating partner | Call held after their X Space. Ended with an offer to work together | Pilot: one bounty or DeGrants milestone paid as a stream from their wallet, then registration |
 | Sep 2026 | **Privara** (useprivara.xyz) | Privacy-preserving payments on Stacks: one-time recipient addresses for sBTC, USDCx and STX. Contracts, web app, relayer and SDK live on mainnet. Fellow Stacks Endowment grantee | Onboarding call held | Registration and first stream, on a call, from their wallet |
 
 ### Registrations confirmed on mainnet
@@ -100,3 +114,11 @@ Designed to `DESIGNER_BRIEF_SEP2026.md`. Filenames follow `SS_D##_slug_ratio`.
 - Stream 11 receipt (our own wallets): https://explorer.hiro.so/txid/0xe8367172fde244bb23b776fe6acda8afcb6cf9559ae67b7a2cd6f8dc5ca89148?chain=mainnet
 - Contracts and audit report: https://github.com/jayteemoney/stackstream
 - Grant listing: https://grants.stacksendowment.co/
+
+## Section 7, Shipped during the campaign
+
+| Date | What | Evidence |
+|---|---|---|
+| Sep 24 | Open read-only API and integration guide, so any app can show live stream data | PR #27, `docs/INTEGRATION_GUIDE.md` |
+| Oct 2 | Token amounts read from each token's own decimals everywhere, fixing 6-decimal tokens shown at 1/100 of their value | PR #30 |
+| Oct 2 | Stream any token on Stacks, including a team's own, from search or a one-click link, with look-alike tokens flagged | PRs #31 and #32 |

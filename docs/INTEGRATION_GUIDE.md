@@ -25,7 +25,7 @@ Source, tests and the audit report: [github.com/jayteemoney/stackstream](https:/
 
 ### Tokens
 
-Any SIP-010 token works. These are the ones the app lists today:
+Any SIP-010 token works, including your organisation's own. The app pins these four at the top of the token picker, and any other token can be found by search or opened from a link (see Level 1):
 
 | Token | Contract | Asset name | Decimals |
 |---|---|---|---|
@@ -56,6 +56,14 @@ Block times vary, so treat these as estimates.
 2. Open **Register** and give your organisation a name. This is one transaction, done once.
 3. Open **Create stream**. Enter the recipient's address, the token, the amount and the duration, then sign.
 4. Manage streams from the dashboard: pause, resume, top up, or cancel.
+
+**Streaming your own token.** Put this link in your docs or team chat, with your token's contract id:
+
+```
+https://stackstream.xyz/dashboard/create?token=SP….your-token
+```
+
+The create form opens with that token selected. Its asset name and decimals are read from the chain before anything can be signed, so the link only chooses the token. It cannot change the amount, the recipient, or the post-conditions. A token that uses the name of a well-known token, such as a second "sBTC", is flagged and must be confirmed by its full contract id.
 
 Recipients see their streams on the **Earn** page and claim from there.
 

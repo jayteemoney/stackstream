@@ -1,6 +1,8 @@
-# StackStream Content Schedule: Sep 14 to Oct 13, 2026 (30 days)
+# StackStream Content Schedule: Sep 14 to Oct 13, 2026 (weekdays only)
 
-> Same 30 days and day numbers as `DESIGNER_BRIEF_SEP2026.md`. Who gets a message, and the messages themselves: `ECOSYSTEM_OUTREACH_SEP2026.md` and `M3_DAO_ACQUISITION_PLAN.md`. Voice and settlement rules: `MARKETING_PLAN_V2.md`.
+> Same day numbers as `DESIGNER_BRIEF_SEP2026.md`, so asset filenames still match. Who gets a message, and the messages themselves: `ECOSYSTEM_OUTREACH_SEP2026.md` and `M3_DAO_ACQUISITION_PLAN.md`. Voice and settlement rules: `MARKETING_PLAN_V2.md`. How to run a call once a team says yes: `TEAM_ONBOARDING_PLAYBOOK.md`.
+>
+> **Weekdays only, from Oct 4.** Saturday and Sunday posts are removed from the plan: Days 6, 7, 13, 14, 20, 21, 27 and 28 are not posted and are not moved to another day. Every weekday from Day 1 to Day 19 was posted.
 
 ---
 
@@ -8,11 +10,24 @@
 
 | Fact | Value | Source |
 |---|---|---|
-| Streams created on mainnet | **11** | `stackstream.xyz/api/stats`, Sep 24, 13:50 UTC |
+| Streams created on mainnet | **11** | `stackstream.xyz/api/stats`, Oct 5, 06:36 UTC |
 | Organisations registered | **0** | same |
-| Tests | **125, all passing**, across 2 test files, including property-based fuzz tests | `npx vitest run`, verified Sep 15 |
+| Tests | **125 contract tests, all passing**, including property-based fuzz tests. 206 tests across the whole repo | `npx vitest run`, verified Oct 4 |
 | Security | Independent paid bounty audit before mainnet. Zero critical findings, every real bug fixed in v1.0.0-rc2 | `audits/AUDIT_REPORT_v1.0.0.md` |
 | Live | Stacks mainnet since May 2026 | `deployments/default.mainnet-plan.yaml` |
+| Real network cost | 0.003 to 0.018 STX per transaction | Mainnet stream-manager transactions, May to July 2026 |
+
+### Shipped during the campaign, and usable in copy
+
+| Shipped | What it means for a reader | Where it is used |
+|---|---|---|
+| **Any token, including a team's own** (Oct 2) | A team can pay contributors in its own token, not only a list we chose. The token is checked against the chain before anyone can sign | D22, D23, D24, outreach |
+| **One-link setup** (Oct 2) | A team puts `stackstream.xyz/dashboard/create?token=<contract id>` in its docs and the form opens with its token already selected | D23, D24, Zero Authority, Velar |
+| **Look-alike warning** (Oct 2) | A token borrowing a famous name, such as a fake "sBTC", is flagged before it can be chosen | D23 LinkedIn, D25 |
+| **Correct amounts for every token** (Oct 2) | Balances in 6-decimal tokens such as USDA are shown at their real value everywhere, including the assistant | Answer if asked; not a post on its own |
+| **Open read API and integration guide** (Sep 24) | Any app or wallet can show live stream data without asking us, documented in `docs/INTEGRATION_GUIDE.md` | D24, Zero Authority, Xverse |
+
+Not shipped, never in copy as a feature: private streams with Privara (research done, see `PRIVARA_INTEGRATION.md`), cross-chain payout.
 
 ---
 
@@ -25,8 +40,8 @@
 Four points every post can stand on:
 
 1. **It has a real audience.** DAOs, grant programmes, and contributors across Stacks pay and get paid by hand today.
-2. **It is safe.** Independently audited, 125 passing tests, and funds sit in the contract, never with us.
-3. **It is live.** On Stacks mainnet, works with any token on Stacks, no fee from us.
+2. **It is safe.** Independently audited, 125 passing contract tests, and funds sit in the contract, never with us.
+3. **It is live.** On Stacks mainnet, works with any token on Stacks including a team's own, no fee from us.
 4. **Both sides benefit.** Recipients claim as they earn. Payers keep full control: pause, top up, or cancel, with unearned funds returned instantly.
 
 **The public call:** real teams using StackStream is how it proves it serves the ecosystem, and shows the Stacks Endowment a product that grows natively, over time and space.
@@ -61,26 +76,29 @@ Four points every post can stand on:
 
 | Door | Who | What they get | Days |
 |---|---|---|---|
-| **1. DAOs and teams** | Bitflow, Zest, Stacking DAO, Velar, Taptive | Payroll set once, contributors claim anytime, full control kept | D5, D9, D23, D26 |
-| **2. Grant and bounty programmes** | Stacks Endowment, DeGrants, PaySats, DeepStack | Funds release as work ships, unreleased funds stay with the funder, the payment is the report | D10, D12, D24 |
-| **3. People being paid** | Contributors, freelancers, creators | Pay grows while they work, claimed anytime on the Earn page | D6, D11, D19 |
-| **4. Subscriptions** | Listen only this run | Charges only while the service is used | D7 |
+| **1. DAOs and teams** | Bitflow, Zest, Stacking DAO, Velar, Taptive | Payroll set once, in any token including their own, contributors claim anytime, full control kept | D5, D9, D23, D26 |
+| **2. Grant and bounty programmes** | Zero Authority and DeGrants, Stacks Endowment, PaySats, DeepStack | Funds release as work ships, unreleased funds stay with the funder, the payment is the report | D10, D12, D24 |
+| **3. People being paid** | Contributors, freelancers, creators | Pay grows while they work, claimed anytime on the Earn page | D11, D19 |
+| **4. Subscriptions** | Listen only this run | Charges only while the service is used | None |
 
-**Distribution layer:** Xverse (Ken Liao), Stacks Labs (Alex Miller, Andre Serrano), and Muneeb Ali, held until a team registers. Their days: D14, D16, D17, D21, D24.
+**Distribution layer:** Xverse (Ken Liao), Stacks Labs (Alex Miller, Andre Serrano), and Muneeb Ali, held until a team registers. Their days: D16, D17, D24.
 
-**Private scoreboard, every Sunday:** per door, record conversations opened, replies, calls, organisations registered, streams funded by others, value streamed, and unprompted inbound. A registration or funded stream beats a call, and a call beats a reply. Day 30 names the door with the most pull. Value streamed stays on the scoreboard only.
+**Private scoreboard, every Friday after the post:** per door, record conversations opened, replies, calls, organisations registered, streams funded by others, value streamed, and unprompted inbound. A registration or funded stream beats a call, and a call beats a reply. Day 30 names the door with the most pull. Value streamed stays on the scoreboard only.
 
 ---
 
 ## Rules
 
+- **Weekdays only.** Monday to Friday. Nothing is scheduled on Saturday or Sunday, and a weekend is never used to catch up a missed weekday.
 - **Numbers:** [N] streams and [D] organisations from `stackstream.xyz/api/stats` on the morning of posting. Never estimate. Any stream we open ourselves is labelled as ours.
-- **Security claims:** say "independently audited" and "125 passing tests". Re-run the suite before Day 24 in case the count changed.
+- **Security claims:** say "independently audited" and "125 passing tests" (these are the contract tests). Re-run the suite before Day 24 in case the count changed.
+- **Tokens:** say "any token on Stacks", and when naming examples use sBTC, USDA, ALEX and xBTC. Never list STX: native STX is not a token the contract can stream.
+- **Cost:** say "no fee from us" and "a fraction of one STX in network fees". Never "a few STX", which overstates the real cost about a thousand times.
 - **No deadlines anywhere. No target figures or amounts in public.**
 - **Settlement:** never put the update rhythm and Bitcoin settlement in the same clause. Social: "your balance updates every few seconds, secured by Bitcoin". Technical: "streams update in seconds; settlement inherits Bitcoin finality".
 - **No jargon** in social copy or on assets: escrow, protocol, primitive, SIP-010, vault. Forum posts and Days 10 and 24 may be precise.
-- **Link:** every post ends with https://stackstream.xyz. Developer days may use the GitHub repo. Explorer links go in the first reply. Telegram only in DMs and replies.
-- **Follow line:** every post carries a follow ask for the official page, placed just before the final link: "Follow @Stackstream0X for the weekly numbers." on X and LinkedIn, "Weekly numbers on X: @Stackstream0X." on Forum, Discord and Grantees Telegram, and "X: @Stackstream0X" appended to the WhatsApp line. The link still stays last. Effective from Day 3, Sep 16.
+- **Link:** every post ends with https://stackstream.xyz. Developer days may use the GitHub repo. Explorer links go in the first reply. Telegram only in DMs and replies, never as a post's link.
+- **Follow line:** every post carries a follow ask for the official page, placed just before the final link: "Follow @Stackstream0X for the weekly numbers." on X and LinkedIn, "Weekly numbers on X: @Stackstream0X." on Forum, Discord and Grantees Telegram, and "X: @Stackstream0X" appended to the WhatsApp line. The link still stays last.
 - **Handles:** @Stackstream0X, @dev_jayteee (three e's), t.me/dev_jaytee (two e's).
 - **DMs** go from @dev_jayteee only. @Stackstream0X engages each target two to three days first.
 - **No team named** without written permission, and nothing posted before the transaction confirms.
@@ -91,34 +109,38 @@ Four points every post can stand on:
 
 ## Weekly rhythm
 
-**Mon** the number (A) · **Tue** one idea (B) · **Wed** proof (H or C) · **Thu** one objection (D) · **Fri** one door (E) · **Sat** human note (F) · **Sun** a bigger idea.
+**Mon** the number (A) · **Tue** one idea (B) · **Wed** proof (H or C) · **Thu** one objection (D) · **Fri** one door (E). No weekend posts.
 
-**A missed day is skipped, not reposted.** The calendar does not shift and no day carries two posts. Weekends count. LinkedIn about twice a week, Forum four times, Discord on Days 3, 10, 17 and 24, Grantees Telegram five touches, WhatsApp daily.
+**A missed day is skipped, not reposted.** The calendar does not shift and no day carries two posts. LinkedIn about twice a week, Forum on Day 30, Discord on Days 3, 10, 17 and 24, Grantees Telegram five touches, WhatsApp every weekday.
 
 ---
 
 ## Outreach calendar
 
-Follow-ups at three and ten days, then stop.
+Weekdays only. Follow-ups at three and ten days, then stop. Message texts are in `ECOSYSTEM_OUTREACH_SEP2026.md`, Part 6.
 
-| Send | Person | Door | Follow-ups |
-|---|---|---|---|
-| Tue Sep 15 | **Bitflow**, via your existing thread with the Bitflow account, asking for Dylan Floyd | 1 | Sep 18, Sep 25 |
-| Tue Sep 15 | **Rena Shah**, Stacks Endowment. Replied Sep 18: will try it after the Q3 TC meeting in Cayman | 2 | None. Check in after the meeting |
-| Wed Sep 16 | **Grant Nissly**, Taptive and Stacks Labs. LinkedIn only, already connected, message directly | 1 | Sep 21 (slipped from Sep 19), email Sep 28 if silent |
-| Wed Sep 23 | **Tycho Onnasch**, Zest and Stacking DAO. Followed Sep 21, message two days later | 1 | Sep 26, Oct 3 |
-| Tue Sep 22 | **DeGrants stewards** via @zeroauthdao | 2 | Sep 25, Oct 2 |
-| Wed Sep 23 | **Mithil Thakore**, Velar | 1 | Sep 26, Oct 3 |
-| Fri Sep 25 | **PaySats and DeepStack**, fellow grantees | 2 | Oct 2 |
-| Mon Sep 28 | **Alex Miller**, Stacks Labs | Distribution | Oct 1, Oct 8 |
-| Tue Sep 29 | **Andre Serrano**, sBTC go-to-market | Distribution | Oct 2, Oct 9 |
-| Wed Sep 30 | **Ken Liao**, Xverse | Distribution | Oct 3, Oct 10 |
-| Fri Oct 2 | **Three content creators**, M3 Template E, only if Tycho is silent | 3 | Oct 5 |
-| Hold | **Muneeb Ali**, until a team registers. One message, no follow-up | Distribution | None |
+| Send | Person | Door | Where it stands, Oct 5 | Message |
+|---|---|---|---|---|
+| **Mon Oct 5** | **Zero Authority DAO** (zero), runs DeGrants | 2 | Replied Sep 24. X Space Sep 25, call Sep 26 ended positively, with an offer to work together. No message from us since Sep 26 | Z1, the pilot proposal |
+| Mon Oct 5 | **Grant Nissly**, Taptive and Stacks Labs | 1 | LinkedIn Sep 16 and Sep 21, silent | G2, one email, then stop |
+| **Tue Oct 6** | **Privara** (Samuel Dahunsi), fellow grantee | 1 | Onboarding call held and went well | P1, registration plus the integration questions |
+| Tue Oct 6 | **Mithil Thakore**, Velar | 1 | Not yet sent | V1, on the own-token day |
+| Tue Oct 6 | **Tycho Onnasch**, Zest and Stacking DAO | 1 | DM Sep 23, no reply | T3, last nudge, then stop |
+| **Wed Oct 7** | **PaySats** and **DeepStack**, fellow grantees | 2 | Not yet sent | GR1, one each, builder to builder |
+| Wed Oct 7 | **Alex Miller**, Stacks Labs | Distribution | Not yet sent | A1 |
+| **Thu Oct 8** | **Andre Serrano**, sBTC go-to-market | Distribution | Not yet sent | S1 |
+| Thu Oct 8 | **Ken Liao**, Xverse | Distribution | Not yet sent | K1 |
+| Fri Oct 9 | **Rena Shah**, Stacks Endowment | 2 | Replied Sep 18: will try it after the Q3 Treasury Committee meeting | R1, one gentle check-in, only if the meeting has passed |
+| Fri Oct 9 | **Bitflow**, via Diego Mey Sanchez | 1 | Bitflow account silent after Sep 25 | B2, once, then stop |
+| Hold | **Muneeb Ali**, until a team registers. One message, no follow-up | Distribution | Held | Break-glass |
+
+Follow-ups for the new sends fall on the third and tenth weekday after sending. If a date lands on a weekend, send on the Monday.
 
 ---
 
 ## Which channels fire each day
+
+Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 | Day | Date | Narrative | Asset | Off. X | Pers. X | LinkedIn | Forum | Discord | TG | WhatsApp |
 |---|---|---|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
@@ -127,35 +149,27 @@ Follow-ups at three and ten days, then stop.
 | 3 | Wed Sep 16 | Watch it move (posted) | H | ✓ | ✓ |  |  | ✓ |  | ✓ |
 | 4 | Thu Sep 17 | Where the money actually sits (posted) | B, D | ✓ | ✓ |  |  |  |  | ✓ |
 | 5 | Fri Sep 18 | Payday that runs itself (posted) | E | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 6 | Sat Sep 19 | Why I built this (skipped) | F | ✓ | ✓ |  |  |  |  | ✓ |
-| 7 | Sun Sep 20 | Money that moves like water (skipped) | E | ✓ | ✓ |  |  |  |  | ✓ |
 | 8 | Mon Sep 21 | The number, week 2 (posted) | A | ✓ | ✓ |  |  |  |  | ✓ |
 | 9 | Tue Sep 22 | You are never locked in (posted) | B | ✓ | ✓ |  |  |  |  | ✓ |
 | 10 | Wed Sep 23 | A real transaction (posted) | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
-| 11 | Thu Sep 24 | What if nobody claims it? | D | ✓ | ✓ |  |  |  |  | ✓ |
-| 12 | Fri Sep 25 | Grants that release as work ships | E, B | ✓ | ✓ | ✓ |  |  | ✓ | ✓ |
-| 13 | Sat Sep 26 | The number nobody wants to post | F | ✓ | ✓ |  |  |  |  | ✓ |
-| 14 | Sun Sep 27 | Nobody else can do this bit | G | ✓ | ✓ | ✓ | ✓ |  |  | ✓ |
-| 15 | Mon Sep 28 | The number, week 3 | A | ✓ | ✓ |  |  |  |  | ✓ |
-| 16 | Tue Sep 29 | Any token you actually hold | B | ✓ | ✓ |  |  |  |  | ✓ |
-| 17 | Wed Sep 30 | Two minutes, start to finish | H, C | ✓ | ✓ |  |  | ✓ |  | ✓ |
-| 18 | Thu Oct 1 | What does it cost? | D | ✓ | ✓ |  |  |  |  | ✓ |
-| 19 | Fri Oct 2 | Paid as you work | E | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 20 | Sat Oct 3 | Building this alone | F | ✓ | ✓ |  |  |  |  | ✓ |
-| 21 | Sun Oct 4 | Bitcoin is the difference | B | ✓ | ✓ | ✓ | ✓ |  |  | ✓ |
+| 11 | Thu Sep 24 | What if nobody claims it? (posted) | D | ✓ | ✓ |  |  |  |  | ✓ |
+| 12 | Fri Sep 25 | Grants that release as work ships (posted) | E, B | ✓ | ✓ | ✓ |  |  | ✓ | ✓ |
+| 15 | Mon Sep 28 | The number, week 3 (posted) | A | ✓ | ✓ |  |  |  |  | ✓ |
+| 16 | Tue Sep 29 | Any token you actually hold (posted) | B | ✓ | ✓ |  |  |  |  | ✓ |
+| 17 | Wed Sep 30 | Two minutes, start to finish (posted) | H, C | ✓ | ✓ |  |  | ✓ |  | ✓ |
+| 18 | Thu Oct 1 | What does it cost? (posted) | D | ✓ | ✓ |  |  |  |  | ✓ |
+| 19 | Fri Oct 2 | Paid as you work (posted) | E | ✓ | ✓ | ✓ |  |  |  | ✓ |
 | 22 | Mon Oct 5 | The number, week 4 | A | ✓ | ✓ |  |  |  |  | ✓ |
-| 23 | Tue Oct 6 | Cancel it and see | B | ✓ | ✓ |  |  |  |  | ✓ |
-| 24 | Wed Oct 7 | Open code, tested | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
+| 23 | Tue Oct 6 | Pay your team in your own token | B, E | ✓ | ✓ | ✓ |  |  |  | ✓ |
+| 24 | Wed Oct 7 | Open code, open data | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
 | 25 | Thu Oct 8 | Is it safe? | D | ✓ | ✓ |  |  |  |  | ✓ |
 | 26 | Fri Oct 9 | How teams pay people today | E, B | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 27 | Sat Oct 10 | What I got wrong | F | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 28 | Sun Oct 11 | Where this goes | B | ✓ | ✓ |  | ✓ |  |  | ✓ |
 | 29 | Mon Oct 12 | The number, week 5 | A | ✓ | ✓ |  |  |  |  | ✓ |
 | 30 | Tue Oct 13 | Thirty days in the open | A, G | ✓ | ✓ | ✓ | ✓ |  | ✓ | ✓ |
 
 ---
 
-## Week 1: What streaming is (Sep 14 to Sep 20)
+## Week 1: What streaming is (Sep 14 to Sep 18)
 
 ### Day 1, Mon Sep 14: The call to real teams (posted)
 
@@ -294,52 +308,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 6, Sat Sep 19: Why I built this (skipped, not reposted)
-
-> `SS_D06_why-i-built-this` (F) · Follow-up: Grant
-
-**Official X**
-> Our founder on why StackStream exists:
-> "I have been paid late. So has everyone I know."
-> So we built pay that arrives as the work happens, secured by Bitcoin.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> I have been paid late. So has everyone I know.
-> Not dishonestly late, structurally late: the work is done, then weeks of waiting for money already earned.
-> StackStream is my answer to that.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> I have been paid late. So has everyone I know. That is why I built this. stackstream.xyz · X: @Stackstream0X
-
----
-
-### Day 7, Sun Sep 20: Money that moves like water (skipped, not reposted)
-
-> `SS_D07_like-water` (E) · Tonight: first private scoreboard review
-
-**Official X**
-> Work flows. Value flows. Pay still arrives in lumps.
-> Streams change that for contributors, grantees, freelancers, and subscribers alike.
-> Money that moves like water, live on Stacks.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Music, video, and news all became continuous. Pay is still a lump on a date.
-> I think that changes, because waiting for money you have already earned was never a feature.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Money that moves like water, not in buckets. stackstream.xyz · X: @Stackstream0X
-
----
-
-## Week 2: Proof and control (Sep 21 to Sep 27)
+## Week 2: Proof and control (Sep 21 to Sep 25)
 
 ### Day 8, Mon Sep 21: The number, week 2 (posted)
 
@@ -418,7 +387,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 11, Thu Sep 24: What if nobody claims it?
+### Day 11, Thu Sep 24: What if nobody claims it? (posted)
 
 > `SS_D11_nobody-claims` (D) · Outreach: reply to Zero Authority to book the call. No follow-ups due (Tycho Sep 26, Bitflow Sep 25, Rena not chased)
 
@@ -439,7 +408,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 12, Fri Sep 25: Grants that release as work ships
+### Day 12, Fri Sep 25: Grants that release as work ships (posted)
 
 > `SS_D12_grants-in-stages` (E, B) · Follow-ups: DeGrants, Rena · Outreach: PaySats and DeepStack
 
@@ -472,70 +441,9 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 13, Sat Sep 26: The number nobody wants to post
+## Week 3: Who it is for (Sep 28 to Oct 2)
 
-> `SS_D13_founder-note` (F) · Follow-ups: Grant, Mithil
-
-**Official X**
-> Why we publish small numbers every Monday:
-> The one thing about us you can check in ten seconds should be the thing you trust most.
-> Live counts, straight from the chain.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Every Monday I post numbers that make StackStream look small: [N] streams, [D] registered organisations.
-> I keep posting them because anyone can verify them in seconds. Small and true beats big and dressed up.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Posting our real numbers on purpose. True beats impressive. stackstream.xyz · X: @Stackstream0X
-
----
-
-### Day 14, Sun Sep 27: Nobody else can do this bit
-
-> `SS_D14_comparison` (G) · Match on four rows, differ on one, and never claim a row we do not win
-
-**Official X**
-> Real-time streams, any token, non-custodial, cancel anytime: Sablier has it, Streamflow has it, and so do we.
-> The difference is the foundation. Theirs are Ethereum and Solana. Ours is secured by Bitcoin.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Streaming money is not our invention. Sablier proved it on Ethereum, with over $2B streamed.
-> What did not exist was the same thing secured by Bitcoin. That gap is why I built StackStream.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**LinkedIn**
-> Positioning honestly in a category that already exists.
-> Payment streaming is proven. Sablier has streamed over $2 billion on Ethereum, and Streamflow serves Solana. Real-time accrual, multi-token support, non-custodial contracts, and cancellation are table stakes, and StackStream matches them.
-> The difference is the foundation. StackStream runs on Stacks, where streams update in seconds and settlement inherits Bitcoin finality. For organisations that already hold Bitcoin, or want payroll on the most established settlement layer, that is the property the alternatives cannot offer.
-> It is live on mainnet, independently audited, and backed by 125 passing tests.
-> Competing on the one row that matters is more credible than claiming every row.
-> Follow @Stackstream0X on X for the weekly numbers.
-> https://stackstream.xyz
-
-**Stacks Forum**, thread: "StackStream, Sablier, Streamflow: an honest comparison"
-> Posting this because people ask, and accuracy matters more than flattery.
-> Shared by all three: continuous accrual, token-agnostic streams (SIP-010 for us), non-custodial contracts, and sender cancellation with unearned funds returned.
-> Where Sablier and Streamflow lead: scale, integrations, years in production, and features we deliberately deferred, such as cliffs, vesting schedules, and multi-recipient splits.
-> Where StackStream differs: Clarity on Stacks, so streams update in seconds and settlement inherits Bitcoin finality, and sBTC means the streamed asset can be actual Bitcoin. Live on mainnet since May, audited through an independent bounty review, with 125 passing tests including property-based fuzzing.
-> If anything here is wrong about either project, correct me and I will update the chart.
-> Weekly numbers on X: @Stackstream0X.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Others stream on Ethereum and Solana. We are secured by Bitcoin. stackstream.xyz · X: @Stackstream0X
-
----
-
-## Week 3: Who it is for (Sep 28 to Oct 4)
-
-### Day 15, Mon Sep 28: The number, week 3
+### Day 15, Mon Sep 28: The number, week 3 (posted)
 
 > `SS_D15_metric-card` (A) · Outreach: Alex Miller
 
@@ -556,7 +464,9 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 16, Tue Sep 29: Any token you actually hold
+### Day 16, Tue Sep 29: Any token you actually hold (posted)
+
+> **Correction for any reuse.** Native STX cannot be streamed: the contract takes tokens, and STX is the network's own coin. Say "any token on Stacks, including sBTC, USDA, ALEX and xBTC", and since Oct 2, "including your own".
 
 > `SS_D16_any-token` (B) · Outreach: Andre Serrano
 
@@ -578,7 +488,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 17, Wed Sep 30: Two minutes, start to finish
+### Day 17, Wed Sep 30: Two minutes, start to finish (posted)
 
 > `SS_D17_two-minute-flow` (H, C), captioned, under 40 seconds · Outreach: Ken Liao
 
@@ -605,7 +515,9 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 18, Thu Oct 1: What does it cost?
+### Day 18, Thu Oct 1: What does it cost? (posted)
+
+> **Correction for any reuse.** Real network fees on our contract are 0.003 to 0.018 STX per transaction. Say "a fraction of one STX", never "a few STX".
 
 > `SS_D18_cost` (D), asset copy "No fee from us" · Follow-ups: Alex, Tycho
 
@@ -627,7 +539,7 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 19, Fri Oct 2: Paid as you work
+### Day 19, Fri Oct 2: Paid as you work (posted)
 
 > `SS_D19_paid-as-you-work` (E) · Follow-ups: DeGrants, Andre · Outreach: creators, only if Tycho is silent
 
@@ -657,158 +569,103 @@ Follow-ups at three and ten days, then stop.
 
 ---
 
-### Day 20, Sat Oct 3: Building this alone
-
-> `SS_D20_behind-the-scenes` (F) · Follow-ups: Mithil, Ken
-
-**Official X**
-> Behind StackStream is one builder, many late nights, and a public counter that never gets dressed up.
-> Small team, audited code, and every message answered.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Building StackStream mostly alone is less romantic than it sounds.
-> The upside: when you message about your stream, you reach the person who wrote the code. My DMs are open.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Building this mostly alone, and still answering every message. stackstream.xyz · X: @Stackstream0X
-
----
-
-### Day 21, Sun Oct 4: Bitcoin is the difference
-
-> `SS_D21_two-clocks` (B), two separate timelines · Read the settlement rule aloud before posting
-
-**Official X**
-> Two clocks, never mixed up.
-> Clock one: your balance updates every few seconds.
-> Clock two: settlement inherits Bitcoin finality, on Bitcoin's own schedule.
-> Fast where you feel it. Final where it counts.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> The easiest mistake when describing StackStream is merging two speeds into one.
-> The stream updates in seconds. Separately, settlement inherits Bitcoin finality. Precise beats impressive, especially with money.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**LinkedIn**
-> Why we built on Bitcoin, and why we describe it carefully.
-> StackStream runs on Stacks. Since the Nakamoto upgrade, blocks arrive roughly every five seconds, so a stream's balance updates in near real time. That is the clock people feel.
-> Separately, Stacks state anchors to Bitcoin, and settlement inherits Bitcoin finality on Bitcoin's own schedule. That is the clock that makes a payment final.
-> We keep the two apart in everything we publish, because payment infrastructure should be described precisely. Together they give responsiveness where people experience it, and the most established finality where it counts.
-> The contracts are live on mainnet and independently audited.
-> Follow @Stackstream0X on X for the weekly numbers.
-> https://stackstream.xyz
-
-**Stacks Forum**, thread: "Two clocks: accrual cadence and Bitcoin finality in StackStream"
-> A short technical note to keep descriptions of StackStream accurate.
-> Accrual: the claimable balance is computed from elapsed Stacks blocks. Post-Nakamoto that gives roughly five-second granularity, so the UI and the on-chain claimable amount move in near real time.
-> Finality: claims, top-ups, and cancellations are Stacks transactions. They confirm on Stacks quickly and inherit Bitcoin finality once the relevant state is anchored to Bitcoin, on Bitcoin's cadence rather than per Stacks block.
-> "Updates in seconds" and "Bitcoin finality" are both true, and they describe different layers. If you ever see us merging them, flag it and we will fix it.
-> Weekly numbers on X: @Stackstream0X.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Updates in seconds. Secured by Bitcoin. stackstream.xyz · X: @Stackstream0X
-
----
-
-## Week 4: Trust and depth (Oct 5 to Oct 11)
+## Week 4: Trust and depth (Oct 5 to Oct 9)
 
 ### Day 22, Mon Oct 5: The number, week 4
 
-> `SS_D22_metric-card` (A) · If a team registers this week, run the break-glass posts
+> `SS_D22_metric-card` (A) · Outreach: Zero Authority (Z1), Grant Nissly (G2) · If a team registers this week, run the break-glass posts · Personal X: keep the bracketed line under 60 characters so the post stays within 280
 
 **Official X**
 > Week 4. [N] streams on mainnet. [D] organisations registered.
-> Every team that streams here strengthens the case for payments on Stacks: real-time, verifiable, built to grow natively, over time and space.
+> New: any team can now stream its own token, not only the ones we list. Share one link and your people are paid in it as they work.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **Personal X**
 > Week 4: [N] streams, [D] organisations registered.
-> [One honest line on the gap between conversations and registrations, and what you are changing.]
-> Still setting up every team's first stream myself.
+> [One honest line on the gap between conversations and registrations.] New: teams can stream their own token from one link. I still set up every first stream myself.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **WhatsApp**
-> Week 4: [N] streams, [D] teams. Still building, still open. stackstream.xyz · X: @Stackstream0X
+> Week 4: [N] streams, [D] teams. Now in any token, even your own. stackstream.xyz · X: @Stackstream0X
 
 ---
 
-### Day 23, Tue Oct 6: Cancel it and see
+### Day 23, Tue Oct 6: Pay your team in your own token
 
-> `SS_D23_cancel-split` (B), chart green and red
+> `SS_D23_own-token` (B, E), the master diagram with a blank token badge on the stream · Outreach: Privara (P1), Mithil Thakore (V1), Tycho (T3) · Replaces "Cancel it and see"; the cancel split now lives on Day 25
 
 **Official X**
-> What happens when a stream is cancelled halfway?
-> Earned funds go to the person who earned them. Unearned funds go back to the sender. Same transaction, no dispute.
+> Your DAO has its own token. Now you can pay contributors in it, continuously.
+> Share one link, we check the token against the chain, and the stream opens. They claim as they earn. You stay in control.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **Personal X**
-> The moment I trust most in StackStream is cancel.
-> Earned goes one way, unearned the other, in one transaction. No clawback emails, and no refund in five to seven business days.
+> The question I kept hearing: can we stream our own token?
+> Now yes. Put one link in your docs and the form opens with your token picked and verified. No list to get onto, no waiting on me.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
+**LinkedIn**
+> Many organisations on Stacks pay contributors in their own token. Most still do it by hand, in lump sums.
+> StackStream now streams any token on Stacks, including a team's own. The team shares one link, the token's details are read straight from the chain, and a stream opens in a few minutes. Contributors watch their balance grow and claim whenever they want. The team can pause, top up or cancel at any point, and anything unearned returns in the same transaction.
+> Tokens that borrow a well-known name are flagged before anyone can pick them, so a link cannot be used to slip in a fake.
+> It is live on Stacks mainnet, independently audited, and takes no fee. If your organisation pays in its own token, I will set up the first stream with you.
+> Follow @Stackstream0X on X for the weekly numbers.
+> https://stackstream.xyz
+
 **WhatsApp**
-> Cancel a stream and it splits fairly, instantly. stackstream.xyz · X: @Stackstream0X
+> Pay your team in your own token, as they work. stackstream.xyz · X: @Stackstream0X
 
 ---
 
-### Day 24, Wed Oct 7: Open code, tested
+### Day 24, Wed Oct 7: Open code, open data
 
-> `SS_D24_open-code` (C), precise terms allowed · Re-run `npx vitest run` first and update the count if it changed
+> `SS_D24_open-code` (C), precise terms allowed · Outreach: PaySats and DeepStack (GR1), Alex Miller (A1) · Re-run `npx vitest run` first and update the count if it changed
 
 **Official X**
 > For developers.
-> Open-source Clarity contracts, 125 passing tests including property-based fuzzing, and an independent audit before mainnet. Report in the repo.
-> Read it, run it, then decide.
+> Open-source Clarity contracts, 125 passing tests with fuzzing, and an independent audit before mainnet. Plus an open read API any app can call, and a link that opens a stream in any token.
 > Follow @Stackstream0X for the weekly numbers.
 > https://github.com/jayteemoney/stackstream
 
 **Personal X**
 > I would not move my salary through a contract I could not read, so you can read ours.
-> 125 passing tests, including fuzz tests on the property that matters most: funds are always conserved.
+> 125 tests, fuzzing on the one property that matters (funds always add up), and an open API for your app.
 > Follow @Stackstream0X for the weekly numbers.
 > https://github.com/jayteemoney/stackstream
 
 **Stacks Discord**
-> A developer-focused one. StackStream's contracts are open source: stream-manager and stream-factory in Clarity, with 125 passing tests on Clarinet, including property-based fuzz tests. The independent audit report and findings triage are in /audits, and every real bug found was fixed before mainnet.
-> If you want to build on streams, or you spot something, open an issue or DM me.
+> For builders. StackStream's Clarity contracts are open source, with 125 passing tests on Clarinet including property-based fuzzing. Audit report and findings triage are in /audits.
+> New: a public read-only API (/api/streams, /api/daos, /api/stats) any site can call from the browser, documented in docs/INTEGRATION_GUIDE.md, and a create link that preselects any SIP-010 token: stackstream.xyz/dashboard/create?token=<contract-id>.
+> Build on it, or open an issue if something is wrong.
 > Weekly numbers on X: @Stackstream0X.
 > https://github.com/jayteemoney/stackstream
 
 **Grantees Telegram**
-> For anyone preparing security evidence for a milestone: our audit report and findings triage are public in the repo. Feel free to copy the format, as it made our own reporting far easier.
+> For anyone wiring payments into their own product: our read API is open and documented, and you can link straight to a stream in your own token. The audit report and findings triage are public too, so copy the format if it helps your milestone evidence. stackstream.xyz
 > Weekly numbers on X: @Stackstream0X.
 
 **WhatsApp**
-> Open code, independent audit, 125 passing tests. stackstream.xyz · X: @Stackstream0X
+> Open code, independent audit, open data. stackstream.xyz · X: @Stackstream0X
 
 ---
 
 ### Day 25, Thu Oct 8: Is it safe?
 
-> `SS_D25_is-it-safe` (D) · Follow-up: Alex
+> `SS_D25_is-it-safe` (D), or reuse `SS_D23_cancel-split` if it was already produced · Outreach: Andre Serrano (S1), Ken Liao (K1)
 
 **Official X**
 > Is it safe?
-> Funds sit in the contract, never with us. The contracts were independently audited before mainnet, and every real bug found was fixed.
-> Code, tests, and report are public.
+> Funds sit in the contract, never with us. Audited before mainnet. Cancel anytime: earned goes to the recipient, unearned comes straight back to you, in one transaction.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **Personal X**
 > The question behind every question: can I trust it?
-> My answer: do not trust it, check it. Audited contracts, 125 passing tests, and everything public in the repo.
+> My answer: do not trust it, check it. Audited contracts, 125 passing tests, all public. Even a cancel splits fairly in one transaction.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
@@ -844,68 +701,6 @@ Follow-ups at three and ten days, then stop.
 
 **WhatsApp**
 > Month-end payroll takes hours. It should take zero. stackstream.xyz · X: @Stackstream0X
-
----
-
-### Day 27, Sat Oct 10: What I got wrong
-
-> `SS_D27_what-i-got-wrong` (F) · Follow-up: Ken · No target figures, no dates, no excuses
-
-**Official X**
-> Our founder on the last three months, including what did not work.
-> Short version: good contracts do not onboard teams. Conversations do.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> What I got wrong this year: I polished too long, pitched before I listened, and assumed a working product would sell itself.
-> Now every conversation starts with a question. [One true line on the result.]
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**LinkedIn**
-> Three lessons from trying to get organisations to adopt payment infrastructure.
-> StackStream is live on mainnet, audited, and works well. Getting teams to register has been slower than I expected, and the product was not the reason. My approach was.
-> First, I pitched before I listened. My early messages assumed how teams paid people, and a wrong premise makes any message read like a template.
-> Second, being first is the real objection, not the technology. Nobody wants to be the first team to trust something new with pay.
-> Third, publishing honest numbers built more credibility than anything I wrote about the product.
-> Every conversation now starts with a question. [One true line on what that has changed.]
-> Follow @Stackstream0X on X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Wrote about what I got wrong this year. The honest version. stackstream.xyz · X: @Stackstream0X
-
----
-
-### Day 28, Sun Oct 11: Where this goes
-
-> `SS_D28_roadmap` (B), every element marked "roadmap, not shipped" · Tonight: final scoreboard review, draft Day 30
-
-**Official X**
-> Where this goes. Roadmap, not shipped:
-> Cross-chain payout, so recipients receive on the chain they use.
-> Private streams, because a salary is personal.
-> No dates. Everything else is live today.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Two things I am building toward, neither live yet: paying someone who receives on another chain, and streams where the amount stays private.
-> No dates I cannot keep. Nothing shipped today closes either door.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Stacks Forum**, thread: "Roadmap note: cross-chain payout and private streams"
-> Neither is shipped and neither has a date. Here are the constraints, so the discussion stays grounded.
-> Cross-chain payout depends on sBTC cross-chain transfer being generally available. That bridge moves tokens, not arbitrary messages, so we are scoping payout as a token transfer at claim time rather than mirroring stream state across chains.
-> Private streams depend on zero-knowledge verification inside Clarity. Recent ecosystem work suggests it is possible without network changes, but it needs serious cryptographic review before anyone's pay relies on it.
-> Before either, the priority is teams using what is live. If you have views on either design, especially payout at claim versus at creation, I would like to hear them.
-> Weekly numbers on X: @Stackstream0X.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Where we are heading next. Roadmap, not promises. stackstream.xyz · X: @Stackstream0X
 
 ---
 
@@ -963,7 +758,7 @@ Follow-ups at three and ten days, then stop.
 > A retrospective for the ecosystem, posted the same day as the public numbers.
 > Numbers: 11 to [N] streams and 0 to [D] organisations, all verifiable at stackstream.xyz/api/stats. Any streams we opened ourselves are labelled: [list or "none"].
 > Conversations: [count] opened across teams, grant programmes, contributors, and ecosystem partners. The strongest response came from [door], the weakest from [door].
-> Shipped this month: [list]. Changing next: [one or two lines].
+> Shipped this month: streams in any token including a team's own, opened from one link; a warning on look-alike tokens; correct amounts for every token; and an open read API with an integration guide. Changing next: [one or two lines].
 > The contracts remain open source, independently audited, live on mainnet, and backed by 125 passing tests. If your Stacks project pays people by hand, I will still set it up with you personally.
 > Weekly numbers on X: @Stackstream0X.
 > https://stackstream.xyz
@@ -999,6 +794,24 @@ Follow-ups at three and ten days, then stop.
 
 **WhatsApp**
 > First onboarding call done. Real team, real wallet. stackstream.xyz · X: @Stackstream0X
+
+---
+
+## Extra post: working with Zero Authority DAO
+
+> Post only with Zero Authority's written OK, as an afternoon extra after the morning post. Says "working together" or "pilot", never "registered", until a registration transaction confirms. Asset: none, or a plain card with both logos if they agree.
+
+**Official X**
+> We are working with @zeroauthdao on paying bounties and grants as streams.
+> Contributors see their pay grow as work ships, and the funder keeps full control. Receipts once the first pilot is live.
+> Follow @Stackstream0X for the weekly numbers.
+> https://stackstream.xyz
+
+**Personal X**
+> Zero Authority has paid out across hundreds of on-chain bounties. I am exploring streaming those payouts with them, so the payment itself shows progress.
+> Grateful they leaned in. More when the first stream is live.
+> Follow @Stackstream0X for the weekly numbers.
+> https://stackstream.xyz
 
 ---
 

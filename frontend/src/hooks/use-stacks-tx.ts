@@ -3,7 +3,11 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { PostConditionMode } from "@stacks/transactions";
+import {
+  PostConditionMode,
+  type ClarityValue,
+  type PostCondition,
+} from "@stacks/transactions";
 import { waitForTxConfirmation, clarityErrorMessage } from "@/lib/stacks";
 import {
   isUserCancel,
@@ -32,6 +36,17 @@ export interface TxResult {
  *
  * Ref: https://docs.stacks.co/stacks.js/connect#contract-calls
  */
+/** What every `build…Tx` helper in `lib/stacks.ts` returns. */
+export interface ContractCallOptions {
+  contractAddress: string;
+  contractName: string;
+  functionName: string;
+  functionArgs: ClarityValue[];
+  network: "mainnet" | "testnet";
+  postConditions?: PostCondition[];
+  postConditionMode?: PostConditionMode;
+}
+
 export function useStacksTx() {
   const [status, setStatus] = useState<TxStatus>("idle");
   const [txId, setTxId] = useState<string | null>(null);
@@ -39,7 +54,7 @@ export function useStacksTx() {
   const queryClient = useQueryClient();
 
   const execute = useCallback(
-    async (options: Record<string, any>): Promise<TxResult | null> => {
+    async (options: ContractCallOptions): Promise<TxResult | null> => {
       setStatus("pending");
       setError(null);
       setTxId(null);
@@ -141,9 +156,9 @@ export function useStacksTx() {
             errorRepr: result.errorRepr,
           };
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.dismiss(toastId);
-        if (err?.message === "cancelled") {
+        if ((err as { message?: unknown } | null)?.message === "cancelled") {
           setStatus("idle");
           return null;
         }

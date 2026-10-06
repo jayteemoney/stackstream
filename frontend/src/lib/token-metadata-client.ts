@@ -18,10 +18,10 @@ import {
   cvToJSON,
   type ClarityValue,
 } from "@stacks/transactions";
-import { HIRO_API_BASE } from "./constants";
+import { HIRO_API_BASE, NETWORK } from "./constants";
 import {
   isValidAssetName,
-  isValidContractId,
+  isContractIdOnNetwork,
   isValidDecimals,
   pickUnambiguousAssetName,
   getCuratedToken,
@@ -45,7 +45,7 @@ async function callReadOnly(
     functionName,
     functionArgs: args,
     senderAddress: contractAddress,
-    network: process.env.NEXT_PUBLIC_NETWORK === "mainnet" ? "mainnet" : "testnet",
+    network: NETWORK,
   });
   return cvToJSON(result);
 }
@@ -55,19 +55,79 @@ async function callReadOnly(
 // ============================================================================
 
 /**
- * Decimals never change for a deployed token (SIP-010 fixes them at deploy
- * time), so a process-lifetime cache is safe and removes a round-trip from
- * every stream render.
+ * Memoize an async chain read whose successful result never changes.
  *
- * Cached per module instance, which means per serverless instance in production
- * and per page load in the browser. Deliberately not persisted: token metadata
- * must never go stale across a redeploy or a token migration.
+ * SIP-010 fixes decimals, symbol and the asset name at deploy time, so a hit
+ * is cached for the life of the module (per serverless instance, or per page
+ * load in the browser). It is deliberately not persisted, so a redeploy or a
+ * token migration always starts clean.
+ *
+ * A miss is different: it is usually a rate limit, a timeout or a node hiccup,
+ * not a fact about the token. Caching it forever would make one 429 mark a
+ * valid token "unverifiable" until the instance restarts. Misses are therefore
+ * cached for `NEGATIVE_TTL_MS` only, which still stops a broken contract from
+ * turning every render into a request.
+ *
+ * Concurrent calls for the same key share one in-flight promise, so a page
+ * rendering twenty streams in one token makes one round-trip, not twenty.
  */
-const cache = new Map<string, ResolvedToken | null>();
+const NEGATIVE_TTL_MS = 60_000;
 
-/** Test seam: drop the memoized metadata. */
+interface Memo<T> {
+  hits: Map<string, T>;
+  misses: Map<string, number>;
+  inflight: Map<string, Promise<T | null>>;
+}
+
+const memos: Memo<unknown>[] = [];
+
+function createMemo<T>(): Memo<T> {
+  const memo: Memo<T> = { hits: new Map(), misses: new Map(), inflight: new Map() };
+  memos.push(memo as Memo<unknown>);
+  return memo;
+}
+
+function memoized<T>(
+  memo: Memo<T>,
+  key: string,
+  load: () => Promise<T | null>
+): Promise<T | null> {
+  const hit = memo.hits.get(key);
+  if (hit !== undefined) return Promise.resolve(hit);
+
+  const missUntil = memo.misses.get(key);
+  if (missUntil !== undefined && missUntil > Date.now()) return Promise.resolve(null);
+
+  const pending = memo.inflight.get(key);
+  if (pending) return pending;
+
+  const request = load()
+    .catch(() => null)
+    .then((value) => {
+      memo.inflight.delete(key);
+      if (value === null) {
+        memo.misses.set(key, Date.now() + NEGATIVE_TTL_MS);
+      } else {
+        memo.hits.set(key, value);
+        memo.misses.delete(key);
+      }
+      return value;
+    });
+  memo.inflight.set(key, request);
+  return request;
+}
+
+const decimalsMemo = createMemo<number>();
+const symbolMemo = createMemo<string>();
+const resolvedMemo = createMemo<ResolvedToken>();
+
+/** Test seam: drop every memoized read, hits and misses alike. */
 export function clearTokenMetadataCache(): void {
-  cache.clear();
+  for (const memo of memos) {
+    memo.hits.clear();
+    memo.misses.clear();
+    memo.inflight.clear();
+  }
 }
 
 // ============================================================================
@@ -81,31 +141,28 @@ export function clearTokenMetadataCache(): void {
  * `{ success, value: { type: "uint", value: "6" } }`, so the number lives at
  * `value.value` as a decimal string. Reading `value` directly yields NaN.
  */
-export async function getTokenDecimals(contractId: string): Promise<number | null> {
-  if (!isValidContractId(contractId)) return null;
-  try {
+export function getTokenDecimals(contractId: string): Promise<number | null> {
+  if (!isContractIdOnNetwork(contractId, NETWORK)) return Promise.resolve(null);
+  return memoized(decimalsMemo, contractId, async () => {
     const result = await callReadOnly(contractId, "get-decimals");
     if (!result.success) return null;
     const decimals = Number(result.value?.value);
     return isValidDecimals(decimals) ? decimals : null;
-  } catch {
-    return null;
-  }
+  });
 }
 
 /**
- * Read SIP-010 `get-symbol`. Display only — never used in post-conditions.
+ * Read SIP-010 `get-symbol`. Display only, never used in post-conditions.
  */
-async function getTokenSymbol(contractId: string): Promise<string | null> {
-  try {
+export function getTokenSymbol(contractId: string): Promise<string | null> {
+  if (!isContractIdOnNetwork(contractId, NETWORK)) return Promise.resolve(null);
+  return memoized(symbolMemo, contractId, async () => {
     const result = await callReadOnly(contractId, "get-symbol");
     if (!result.success) return null;
-    const raw = result.value?.value;
-    if (typeof raw !== "string" || raw.length === 0 || raw.length > 32) return null;
+    const raw = typeof result.value?.value === "string" ? result.value.value.trim() : "";
+    if (raw.length === 0 || raw.length > 32) return null;
     return /^[\x20-\x7e]+$/.test(raw) ? raw : null;
-  } catch {
-    return null;
-  }
+  });
 }
 
 /**
@@ -120,7 +177,7 @@ async function getTokenSymbol(contractId: string): Promise<string | null> {
  * see `pickUnambiguousAssetName` for why several is a refusal, not a guess.
  */
 export async function getTokenAssetName(contractId: string): Promise<string | null> {
-  if (!isValidContractId(contractId)) return null;
+  if (!isContractIdOnNetwork(contractId, NETWORK)) return null;
   const [deployer, contractName] = splitContract(contractId);
   try {
     const res = await fetch(
@@ -159,23 +216,20 @@ export async function getTokenAssetName(contractId: string): Promise<string | nu
 export async function resolveTokenMetadata(
   contractId: string
 ): Promise<ResolvedToken | null> {
-  if (!isValidContractId(contractId)) return null;
-
-  const cached = cache.get(contractId);
-  if (cached !== undefined) return cached;
-
   const curated = getCuratedToken(contractId);
-  let resolved: ResolvedToken | null = null;
-
   if (curated) {
-    resolved = {
+    return {
       contractId: curated.contractId,
       assetName: curated.assetName,
       decimals: curated.decimals,
       symbol: curated.symbol,
       curated: true,
     };
-  } else {
+  }
+
+  if (!isContractIdOnNetwork(contractId, NETWORK)) return null;
+
+  return memoized(resolvedMemo, contractId, async () => {
     // assetName and decimals are independent reads; run them together. The
     // symbol is display-only, so its absence does not block resolution.
     const [assetName, decimals, symbol] = await Promise.all([
@@ -183,24 +237,17 @@ export async function resolveTokenMetadata(
       getTokenDecimals(contractId),
       getTokenSymbol(contractId),
     ]);
-    if (assetName !== null && decimals !== null) {
-      resolved = {
-        contractId,
-        assetName,
-        decimals,
-        // A display symbol is nice to have; the asset name is an honest
-        // substitute and is guaranteed unique to this contract.
-        symbol: symbol ?? contractId.split(".")[1] ?? contractId,
-        curated: false,
-      };
-    }
-  }
-
-  // Cache both hits and misses so a failing token does not re-hit the chain on
-  // every render. The negative entries are what stop a broken contract from
-  // becoming a request amplifier.
-  cache.set(contractId, resolved);
-  return resolved;
+    if (assetName === null || decimals === null) return null;
+    return {
+      contractId,
+      assetName,
+      decimals,
+      // A display symbol is nice to have; the asset name is an honest
+      // substitute and is guaranteed unique to this contract.
+      symbol: symbol ?? contractId.split(".")[1] ?? contractId,
+      curated: false,
+    };
+  });
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import { StatCard } from "@/components/ui/stat-card";
-import { Card, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RealtimeBalance } from "@/components/stream/realtime-balance";

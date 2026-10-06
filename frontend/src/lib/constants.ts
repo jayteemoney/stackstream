@@ -109,6 +109,7 @@ export {
   isValidContractId,
   isValidDecimals,
   toRawAmount,
+  hasExcessPrecision,
   fromRawAmount,
   unresolvableTokenLabel,
   type ResolvedToken,
@@ -143,7 +144,7 @@ if (!IS_MAINNET) {
  * don't appear in this dropdown. Display metadata (name, description, icon)
  * cannot be read off-chain, which is the only reason the list exists.
  */
-export const SUPPORTED_TOKENS = getCuratedTokens();
+export const SUPPORTED_TOKENS = getCuratedTokens(NETWORK);
 
 /**
  * Default token for the create-stream form (first in the selector).

@@ -38,6 +38,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCuratedTokens, useTokenSearch } from "@/hooks/use-token-search";
 import { resolveTokenMetadata } from "@/lib/token-metadata-client";
+import { contractIdNetwork } from "@/lib/token-metadata";
+import { NETWORK, NETWORK_LABEL } from "@/lib/constants";
 import {
   MAX_RESULTS,
   classifyAll,
@@ -274,12 +276,7 @@ export function TokenSelector({ value, onChange, disabled }: TokenSelectorProps)
   const verify = async (candidate: DiscoveredToken): Promise<boolean> => {
     setVerifying(true);
     try {
-      const result = await verifySelection(
-        candidate,
-        curatedIds,
-        curatedSymbols,
-        resolveTokenMetadata,
-      );
+      const result = await verifySelection(candidate, resolveTokenMetadata);
 
       if (result.status === "verified" && result.resolved) {
         onChange(toSelection(result.resolved, candidate));
@@ -349,6 +346,14 @@ export function TokenSelector({ value, onChange, disabled }: TokenSelectorProps)
    */
   const selectByContractId = async (contractId: ContractId) => {
     setManualError(null);
+    // Checked before any chain read: the node would answer a wrong-network id
+    // with a bare "not found", which reads as if the token does not exist.
+    if (contractIdNetwork(contractId) !== NETWORK) {
+      setManualError(
+        `That contract is not on ${NETWORK_LABEL}. Check you copied the ${NETWORK_LABEL.toLowerCase()} contract id.`,
+      );
+      return;
+    }
     setVerifying(true);
     try {
       // The chain is the authority here, and it is the only source: the
@@ -405,7 +410,7 @@ export function TokenSelector({ value, onChange, disabled }: TokenSelectorProps)
     const parsed = parseTokenDeepLink(manual);
     if (!isValidContractId(parsed)) {
       setManualError(
-        "That is not a valid contract id. It should look like SP….contract-name.",
+        `That is not a valid contract id. It should look like ${NETWORK === "mainnet" ? "SP" : "ST"}….contract-name.`,
       );
       return;
     }
@@ -589,7 +594,7 @@ export function TokenSelector({ value, onChange, disabled }: TokenSelectorProps)
                 setManual(e.target.value);
                 setManualError(null);
               }}
-              placeholder="SP….contract-name"
+              placeholder={`${NETWORK === "mainnet" ? "SP" : "ST"}….contract-name`}
               disabled={disabled || verifying}
               autoComplete="off"
               spellCheck={false}

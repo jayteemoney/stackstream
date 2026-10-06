@@ -1,28 +1,82 @@
-name: Tests
+name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
-    branches: ["**"]
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    name: Run test suite
+    name: Contract and unit tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+            openclaw-service/package-lock.json
 
+      # The root suite imports frontend and service sources, which resolve their
+      # dependencies from their own node_modules.
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm ci --prefix frontend
+          npm ci --prefix openclaw-service
 
       - name: Run tests
         run: npm test
+
+  frontend:
+    name: Frontend typecheck, lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_NETWORK: mainnet
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      # Webpack, not Turbopack: Turbopack breaks @stacks/connect in production.
+      - run: npm run build
+
+  openclaw-service:
+    name: OpenClaw service typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: openclaw-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: openclaw-service/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc --noEmit

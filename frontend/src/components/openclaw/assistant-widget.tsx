@@ -5,15 +5,53 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { OPENCLAW_API_URL, unresolvableTokenLabel } from "@/lib/constants";
 import { formatTokenAmount, getStreamStatusLabel, getStreamStatusColor } from "@/lib/utils";
-import { MessageCircle, X, Search, Loader2, Zap, Hash, User, Building2 } from "lucide-react";
+import { MessageCircle, X, Search, Zap, Hash, User, Building2 } from "lucide-react";
 
 type QueryType = "stream" | "sender" | "recipient" | "dao" | "block";
 
 interface ResultEntry {
   type: QueryType;
   query: string;
-  data: any;
+  /** Raw JSON from the API, narrowed to a response type where it is rendered. */
+  data: unknown;
   error?: string;
+}
+
+// Response shapes from the public read API. Every field is optional because
+// the widget renders whatever came back and must not crash on a missing one.
+
+interface StreamResponse {
+  streamId?: number;
+  id?: number;
+  status?: number | { code?: number; label?: string };
+  sender?: string;
+  recipient?: string;
+  token?: string;
+  depositFormatted?: string | null;
+  depositAmount?: string;
+  "deposit-amount"?: string;
+  claimableFormatted?: string | null;
+  claimable?: string;
+  tokenDecimals?: number | null;
+  tokenLabel?: string | null;
+  progress?: number;
+}
+
+type StreamListResponse = { streamIds?: number[] } | number[];
+
+interface DaoResponse {
+  name?: string;
+  admin?: string;
+  isActive?: boolean;
+  "is-active"?: boolean;
+  totalStreamsCreated?: number;
+  "total-streams-created"?: number;
+  totalDepositedFormatted?: string | null;
+}
+
+interface BlockResponse {
+  blockHeight?: number;
+  block_height?: number;
 }
 
 async function fetchApi(path: string) {
@@ -50,13 +88,15 @@ function formatApiAmount(
   return "—";
 }
 
-function StreamResult({ data }: { data: any }) {
+function StreamResult({ data }: { data: StreamResponse }) {
+  const statusCode = typeof data.status === "object" ? data.status.code : data.status;
+  const statusLabel = typeof data.status === "object" ? data.status.label : undefined;
   return (
     <div className="space-y-2 text-xs">
       <div className="flex items-center justify-between">
         <span className="font-medium text-zinc-200">Stream #{data.streamId ?? data.id}</span>
-        <span className={cn("font-medium", getStreamStatusColor(data.status?.code ?? data.status))}>
-          {data.status?.label ?? getStreamStatusLabel(data.status)}
+        <span className={cn("font-medium", getStreamStatusColor(statusCode ?? -1))}>
+          {statusLabel ?? getStreamStatusLabel(statusCode ?? -1)}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-400">
@@ -85,8 +125,8 @@ function StreamResult({ data }: { data: any }) {
   );
 }
 
-function StreamListResult({ data, label }: { data: any; label: string }) {
-  const ids = data.streamIds ?? data;
+function StreamListResult({ data, label }: { data: StreamListResponse; label: string }) {
+  const ids = Array.isArray(data) ? data : data.streamIds;
   return (
     <div className="space-y-1 text-xs">
       <p className="text-zinc-400">{label}</p>
@@ -105,7 +145,7 @@ function StreamListResult({ data, label }: { data: any; label: string }) {
   );
 }
 
-function DaoResult({ data }: { data: any }) {
+function DaoResult({ data }: { data: DaoResponse }) {
   return (
     <div className="space-y-2 text-xs">
       <div className="flex items-center justify-between">
@@ -133,7 +173,7 @@ function DaoResult({ data }: { data: any }) {
   );
 }
 
-function BlockResult({ data }: { data: any }) {
+function BlockResult({ data }: { data: BlockResponse }) {
   return (
     <div className="text-xs space-y-1">
       <p className="text-zinc-400">Current block height</p>
@@ -192,7 +232,7 @@ export function AssistantWidget() {
 
     setLoading(true);
     try {
-      let data: any;
+      let data: unknown;
       switch (queryType) {
         case "stream":
           data = await fetchApi(`/api/streams/${safe}`);
@@ -211,10 +251,10 @@ export function AssistantWidget() {
           break;
       }
       setResults((prev) => [...prev, { type: queryType, query: q, data }]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setResults((prev) => [
         ...prev,
-        { type: queryType, query: q, data: null, error: err.message },
+        { type: queryType, query: q, data: null, error: err instanceof Error ? err.message : String(err) },
       ]);
     } finally {
       setLoading(false);
@@ -308,16 +348,16 @@ export function AssistantWidget() {
                 {result.error ? (
                   <p className="text-xs text-red-400">{result.error}</p>
                 ) : result.type === "stream" ? (
-                  <StreamResult data={result.data} />
+                  <StreamResult data={result.data as StreamResponse} />
                 ) : result.type === "sender" || result.type === "recipient" ? (
                   <StreamListResult
-                    data={result.data}
+                    data={result.data as StreamListResponse}
                     label={`${result.type === "sender" ? "Sent" : "Received"} streams`}
                   />
                 ) : result.type === "dao" ? (
-                  <DaoResult data={result.data} />
+                  <DaoResult data={result.data as DaoResponse} />
                 ) : (
-                  <BlockResult data={result.data} />
+                  <BlockResult data={result.data as BlockResponse} />
                 )}
               </div>
             ))}

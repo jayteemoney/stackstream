@@ -8,7 +8,7 @@ import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { buildClaimTx, type StreamData } from "@/lib/stacks";
 import { formatTokenAmount, formatTxError } from "@/lib/utils";
-import { toRawAmount, fromRawAmount, unresolvableTokenLabel } from "@/lib/constants";
+import { toRawAmount, fromRawAmount, hasExcessPrecision, unresolvableTokenLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Download, AlertTriangle } from "lucide-react";
 
@@ -54,6 +54,10 @@ export function ClaimDialog({
     }
     if (amountRaw === null) {
       setError("Enter a valid amount (digits and up to one decimal point)");
+      return false;
+    }
+    if (hasExcessPrecision(amount, token.decimals)) {
+      setError(`${token.symbol} has ${token.decimals} decimal places. Remove the extra digits.`);
       return false;
     }
     if (amountRaw > claimable) {

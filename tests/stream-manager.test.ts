@@ -1323,14 +1323,23 @@ describe("StackStream - Stream Manager Contract", () => {
     // --- Invariant 4: Multi-cycle Pause Accounting ---
 
     it("invariant: multi-cycle pause — claimable frozen during each individual pause", () => {
-      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n, rng);
       const startBlock = getCurrentBlock() + 2;
       const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
       const streamId = (createResult.result as any).value.value as bigint;
 
       for (let cycle = 0; cycle < 3; cycle++) {
         simnet.mineEmptyBlocks(Math.max(3, Math.floor(Number(duration) * 0.1)));
-        simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+
+        // Same guard as the "returns to ACTIVE" invariant below: pause is refused
+        // once end-block passes (ERR-STREAM-ENDED), while accrual is still
+        // finishing because earlier pauses pushed the effective end later. The
+        // freeze invariant only applies to a pause that actually took effect.
+        const pause = simnet.callPublicFn(streamManagerContract, "pause-stream", [Cl.uint(streamId)], wallet1);
+        if ((pause.result as any).type !== "ok") {
+          expect(pause.result).toBeErr(Cl.uint(207));
+          break;
+        }
 
         const claimableAtPause = (simnet.callReadOnlyFn(streamManagerContract, "get-claimable-balance", [Cl.uint(streamId)], deployer).result as any).value.value as bigint;
 
@@ -1401,7 +1410,7 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: multi-cycle pause — status returns to ACTIVE after each resume", () => {
-      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n);
+      const { deposit, duration } = generateRandomStream(500_000_000n, 1_000_000_000n, rng);
       const startBlock = getCurrentBlock() + 2;
       const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
       const streamId = (createResult.result as any).value.value as bigint;
@@ -1507,7 +1516,7 @@ describe("StackStream - Stream Manager Contract", () => {
     });
 
     it("invariant: multiple sequential top-ups preserve rate-per-block", () => {
-      const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n);
+      const { deposit, duration } = generateRandomStream(200_000_000n, 500_000_000n, rng);
       const startBlock = getCurrentBlock() + 2;
       const createResult = createStream(wallet1, wallet2, Number(deposit), startBlock, Number(duration));
       const streamId = (createResult.result as any).value.value as bigint;

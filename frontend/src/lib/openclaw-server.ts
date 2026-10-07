@@ -3,6 +3,7 @@
  * as Next.js route handlers on the same Vercel deployment (no separate host).
  * Response shapes are kept identical to the standalone Express service.
  */
+import { NETWORK, CONTRACT_DEPLOYER } from "./constants";
 import {
   fetchCallReadOnlyFunction,
   cvToJSON,
@@ -15,14 +16,9 @@ import {
 // Config
 // ============================================================================
 
-const NETWORK = (process.env.NEXT_PUBLIC_NETWORK ?? "mainnet") as
-  | "testnet"
-  | "mainnet";
+// Network and deployer come from the one validated source the UI uses, so the
+// API can never read a different chain from the app serving it.
 const IS_MAINNET = NETWORK === "mainnet";
-
-const CONTRACT_DEPLOYER =
-  process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER ??
-  "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
 
 const STREAM_MANAGER_CONTRACT = `${CONTRACT_DEPLOYER}.stream-manager`;
 const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;

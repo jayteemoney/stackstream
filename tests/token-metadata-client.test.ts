@@ -1,8 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vitest";
 
 // The chain is mocked: these tests are about the cache policy around the reads,
-// not the reads themselves. `NEXT_PUBLIC_NETWORK` is unset here, so the module
-// runs as a testnet build and every contract id below is a testnet one.
+// not the reads themselves. The module runs as a testnet build, so every
+// contract id below is a testnet one. Set before any import evaluates, and
+// restored after, so other test files still see the default (mainnet).
+const savedEnv = vi.hoisted(() => {
+  const saved = {
+    network: process.env.NEXT_PUBLIC_NETWORK,
+    deployer: process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER,
+  };
+  process.env.NEXT_PUBLIC_NETWORK = "testnet";
+  process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
+  return saved;
+});
+
+afterAll(() => {
+  if (savedEnv.network === undefined) delete process.env.NEXT_PUBLIC_NETWORK;
+  else process.env.NEXT_PUBLIC_NETWORK = savedEnv.network;
+  if (savedEnv.deployer === undefined) delete process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER;
+  else process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER = savedEnv.deployer;
+});
+
 const readOnly = vi.fn();
 // Mocked by path: the frontend resolves its own copy of the package, which is a
 // different module from the one at the repo root.

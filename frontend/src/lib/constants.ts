@@ -2,16 +2,39 @@
 // Network & Contract Configuration
 // ============================================================================
 
-export const NETWORK = (process.env.NEXT_PUBLIC_NETWORK ?? "testnet") as
-  | "testnet"
-  | "mainnet";
+/**
+ * The network and the contract deployer travel together: the contracts are
+ * deployed once per network, so a testnet build needs a testnet (ST/SN)
+ * deployer and a mainnet build a mainnet (SP/SM) one.
+ *
+ * Both default to the live deployment on mainnet, so `npm run dev` with no env
+ * file reads the same contracts as stackstream.xyz. A testnet build sets both
+ * variables (see .env.example). A mismatched pair used to start "fine" and then
+ * fail deep in the UI with an empty token list, so it now stops at startup
+ * with a message saying which variable to fix.
+ */
+const LIVE_DEPLOYER = "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
+
+function readNetwork(value: string | undefined): "testnet" | "mainnet" {
+  if (!value) return "mainnet";
+  if (value === "mainnet" || value === "testnet") return value;
+  throw new Error(`NEXT_PUBLIC_NETWORK must be "mainnet" or "testnet", not "${value}".`);
+}
+
+export const NETWORK = readNetwork(process.env.NEXT_PUBLIC_NETWORK);
 
 export const IS_MAINNET = NETWORK === "mainnet";
 
 // Contract deployer address
-export const CONTRACT_DEPLOYER =
-  process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER ??
-  "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
+export const CONTRACT_DEPLOYER = process.env.NEXT_PUBLIC_CONTRACT_DEPLOYER || LIVE_DEPLOYER;
+
+const deployerNetwork = /^S[PM]/.test(CONTRACT_DEPLOYER) ? "mainnet" : "testnet";
+if (deployerNetwork !== NETWORK) {
+  throw new Error(
+    `NEXT_PUBLIC_CONTRACT_DEPLOYER (${CONTRACT_DEPLOYER}) is a ${deployerNetwork} address, ` +
+      `but NEXT_PUBLIC_NETWORK is ${NETWORK}. Set them as a pair; see frontend/.env.example.`
+  );
+}
 
 // Contract identifiers
 export const STREAM_MANAGER_CONTRACT = `${CONTRACT_DEPLOYER}.stream-manager`;
@@ -153,7 +176,13 @@ export const SUPPORTED_TOKENS = getCuratedTokens(NETWORK);
  * stream — a stream in an unlisted token is not this token, and using it as a
  * fallback is what produced wrong asset names in post-conditions.
  */
-export const DEFAULT_TOKEN = SUPPORTED_TOKENS[0];
+export const DEFAULT_TOKEN: TokenConfig = (() => {
+  const first = SUPPORTED_TOKENS[0];
+  if (!first) {
+    throw new Error(`No curated token is configured for ${NETWORK}.`);
+  }
+  return first;
+})();
 
 /**
  * Curated lookup by exact contract id, e.g. "SM3VDX...sbtc-token".

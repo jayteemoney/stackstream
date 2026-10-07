@@ -275,6 +275,20 @@ export async function isRegisteredDao(admin: string): Promise<boolean> {
   return result.value === true;
 }
 
+/**
+ * Whether `streamId` is linked to the organisation registered by `admin`.
+ * Linking is what makes a stream count on the organisation's public record
+ * (its stream total on /organisations), so the UI offers it for unlinked ones.
+ */
+export async function isStreamTracked(admin: string, streamId: number): Promise<boolean> {
+  const result = await callReadOnly(
+    STREAM_FACTORY_CONTRACT,
+    "is-stream-tracked",
+    [principalCV(admin), uintCV(streamId)]
+  );
+  return result.value === true;
+}
+
 // ============================================================================
 // Transaction builders (return openContractCall options)
 // ============================================================================
@@ -522,6 +536,25 @@ export function buildExpireStreamTx(params: {
       principalCV(params.tokenContract),
     ],
     postConditionMode: PostConditionMode.Allow,
+    network: getNetwork(),
+  };
+}
+
+/**
+ * Link a stream to the sender's organisation (stream-factory `track-stream`).
+ * Moves no tokens, so deny mode with no post-conditions is exact. The contract
+ * refuses if the caller is not the stream's sender, has no active workspace,
+ * or already linked it.
+ */
+export function buildTrackStreamTx(streamId: number) {
+  const [factoryAddr, factoryName] = splitContract(STREAM_FACTORY_CONTRACT);
+  return {
+    contractAddress: factoryAddr,
+    contractName: factoryName,
+    functionName: "track-stream",
+    functionArgs: [uintCV(streamId)],
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [],
     network: getNetwork(),
   };
 }

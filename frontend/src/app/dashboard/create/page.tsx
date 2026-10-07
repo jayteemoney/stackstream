@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,20 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { useTokenBalance } from "@/hooks/use-token-balance";
-import { buildCreateStreamTx } from "@/lib/stacks";
+import { buildCreateStreamTx, getSenderStreams } from "@/lib/stacks";
+import {
+  PREFILL_KEYS,
+  buildStreamSetupLink,
+  hasPrefill,
+  parseStreamPrefill,
+  type StreamPrefill,
+} from "@/lib/stream-setup-link";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { LinkStreamButton } from "@/components/stream/link-stream-button";
 import {
   DEFAULT_TOKEN,
   DURATION_UNITS,
+  NETWORK,
   EXPLORER_BASE,
   BLOCKS_PER_HOUR,
   toRawAmount,
@@ -26,18 +36,43 @@ import {
   type TokenSelection,
 } from "@/components/stream/token-selector";
 import { toast } from "sonner";
-import { Zap, ArrowRight, Info, Loader2, CheckCircle2 } from "lucide-react";
+import { Zap, ArrowRight, Info, Loader2, CheckCircle2, Copy } from "lucide-react";
 
 export default function CreateStreamPage() {
   const { address, isConnected } = useWalletStore();
   const { blockHeight } = useBlockHeight();
   const { execute, isPending, isConfirming, txId, status, error, reset } = useStacksTx();
 
-  const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState("");
-  const [durationValue, setDurationValue] = useState("30");
-  const [durationUnit, setDurationUnit] = useState<DurationUnit>("days");
-  const [memo, setMemo] = useState("");
+  // A prepared setup link fills the form once, on first render. The wallet
+  // owner still reviews every field and signs; see lib/stream-setup-link.ts.
+  const [prefill] = useState<StreamPrefill>(() =>
+    typeof window === "undefined" ? {} : parseStreamPrefill(window.location.search, NETWORK)
+  );
+  const fromLink = hasPrefill(prefill);
+  const [recipient, setRecipient] = useState(prefill.recipient ?? "");
+  const [amount, setAmount] = useState(prefill.amount ?? "");
+  const [durationValue, setDurationValue] = useState(prefill.durationValue ?? "30");
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>(prefill.durationUnit ?? "days");
+  const [memo, setMemo] = useState(prefill.memo ?? "");
+  const [createdStreamId, setCreatedStreamId] = useState<number | null>(null);
+  const { workspace } = useWorkspace();
+
+  // Strip the setup values from the address bar once the form is showing, so
+  // a refresh does not refill it over edits. Waiting for a wallet means a
+  // refresh before connecting still keeps the link. `token` is left for the
+  // token selector, which applies and strips it itself.
+  useEffect(() => {
+    if (!isConnected) return;
+    const params = new URLSearchParams(window.location.search);
+    if (!PREFILL_KEYS.some((key) => params.has(key))) return;
+    PREFILL_KEYS.forEach((key) => params.delete(key));
+    const rest = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      rest ? `${window.location.pathname}?${rest}` : window.location.pathname
+    );
+  }, [isConnected]);
   // The selection carries chain-verified metadata (assetName + decimals read
   // from the contract), which is what the transaction builder needs. Starting
   // on the curated default means the form is usable immediately; a `?token=`
@@ -140,6 +175,14 @@ export default function CreateStreamPage() {
 
     if (result?.confirmed) {
       toast.success("Stream created and confirmed on-chain!");
+      // The wallet result carries no stream id. Stream ids only increase, so
+      // the sender's highest id is the stream this transaction just created.
+      try {
+        const ids = await getSenderStreams(address);
+        setCreatedStreamId(ids.length > 0 ? Math.max(...ids) : null);
+      } catch {
+        setCreatedStreamId(null);
+      }
       setRecipient("");
       setAmount("");
       setDurationValue("30");
@@ -152,6 +195,23 @@ export default function CreateStreamPage() {
 
   const isSubmitting = isPending || isConfirming;
 
+  async function copySetupLink() {
+    const link = buildStreamSetupLink(window.location.origin, {
+      token: selectedToken.resolved.contractId,
+      recipient,
+      amount,
+      durationValue,
+      durationUnit,
+      memo,
+    });
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Setup link copied. Send it to the person who will sign.");
+    } catch {
+      toast.error("Could not copy. Your browser blocked clipboard access.");
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -162,6 +222,13 @@ export default function CreateStreamPage() {
         </CardDescription>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          {fromLink && status !== "success" && (
+            <div className="rounded-xl border border-brand-500/30 bg-brand-500/5 p-4 text-sm text-zinc-300">
+              This form was filled in from a setup link. Check the recipient, the token and the
+              amount before you sign.
+            </div>
+          )}
+
           <Input
             label="Recipient Address"
             placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
@@ -347,6 +414,19 @@ export default function CreateStreamPage() {
                 Your stream is now active. View it on the{" "}
                 <a href="/dashboard/streams" className="text-brand-400 underline">Manage Streams</a> page.
               </p>
+              {workspace?.isActive && createdStreamId !== null && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-3">
+                  <p className="text-xs text-zinc-400">
+                    Link stream #{createdStreamId} to {workspace.name} so it counts on your
+                    organisation&apos;s public record.
+                  </p>
+                  <LinkStreamButton
+                    streamId={createdStreamId}
+                    workspaceName={workspace.name}
+                    onLinked={() => setCreatedStreamId(null)}
+                  />
+                </div>
+              )}
               <a
                 href={`${EXPLORER_BASE}/txid/${txId}`}
                 target="_blank"
@@ -385,6 +465,17 @@ export default function CreateStreamPage() {
               </>
             )}
           </Button>
+          {status !== "success" && (
+            <button
+              type="button"
+              onClick={copySetupLink}
+              disabled={isSubmitting}
+              className="mx-auto flex items-center gap-1.5 text-xs text-zinc-500 transition-colors hover:text-brand-400 disabled:opacity-50"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy setup link for someone else to sign
+            </button>
+          )}
         </form>
       </Card>
     </div>

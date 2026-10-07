@@ -137,3 +137,22 @@ body {
   background: #f97316;
   animation: float-up 2s ease-out infinite;
 }
+
+/* ============================================================================
+   Entrance (organisations directory). Off for users who ask for less motion.
+   ============================================================================ */
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}

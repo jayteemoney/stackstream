@@ -229,6 +229,7 @@ Public, read-only, no keys. Any website can call these from the browser.
 | `GET /api/streams/sender/{address}` | IDs of streams an address pays |
 | `GET /api/streams/recipient/{address}` | IDs of streams an address receives |
 | `GET /api/daos/{admin}` | An organisation by its admin address |
+| `GET /api/organisations` | Every registered organisation, newest first, with the total from the contract |
 | `GET /api/stats` | Total streams and organisations |
 | `GET /api/blocks/current` | Current Stacks block height |
 

@@ -41,6 +41,7 @@ const footerLinks = [
   {
     heading: "Protocol",
     links: [
+      { label: "Organisations", href: "/organisations" },
       { label: "Dashboard", href: "/dashboard" },
       { label: "Earn", href: "/earn" },
       { label: "Create Stream", href: "/dashboard/create" },

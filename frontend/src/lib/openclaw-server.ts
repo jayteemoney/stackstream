@@ -25,9 +25,9 @@ const CONTRACT_DEPLOYER =
   "SP2V6TCRFTYQHP8F4D9HSFZHRQNGVBQEZR0TMSM79";
 
 const STREAM_MANAGER_CONTRACT = `${CONTRACT_DEPLOYER}.stream-manager`;
-const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;
+export const STREAM_FACTORY_CONTRACT = `${CONTRACT_DEPLOYER}.stream-factory`;
 
-const HIRO_API_BASE = IS_MAINNET
+export const HIRO_API_BASE = IS_MAINNET
   ? "https://api.mainnet.hiro.so"
   : "https://api.testnet.hiro.so";
 

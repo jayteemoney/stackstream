@@ -19,6 +19,8 @@ import {
 import { formatTxError } from "@/lib/utils";
 import type { StreamData } from "@/lib/stacks";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
+import { LinkStreamButton } from "@/components/stream/link-stream-button";
+import { useWorkspace, useTrackedStreams } from "@/hooks/use-workspace";
 import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -43,6 +45,12 @@ export default function ManageStreamsPage() {
   const { execute, isPending, isConfirming } = useStacksTx();
   const [filter, setFilter] = useState<FilterValue>("all");
   const [topUpTarget, setTopUpTarget] = useState<{ id: number; stream: StreamData } | null>(null);
+  const { workspace } = useWorkspace();
+  const canLink = workspace?.isActive === true;
+  const { tracked, refresh: refreshTracked } = useTrackedStreams(
+    streams.map((s) => s.id),
+    canLink
+  );
 
   const filteredStreams =
     filter === "all"
@@ -127,6 +135,20 @@ export default function ManageStreamsPage() {
               stream={stream}
               perspective="sender"
               actionLoading={isPending || isConfirming}
+              footer={
+                canLink && tracked && !tracked.has(stream.id) ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-zinc-500">
+                      Not yet counted on {workspace!.name}&apos;s public record.
+                    </p>
+                    <LinkStreamButton
+                      streamId={stream.id}
+                      workspaceName={workspace!.name}
+                      onLinked={refreshTracked}
+                    />
+                  </div>
+                ) : undefined
+              }
               onPause={async () => {
                 const result = await execute(buildPauseStreamTx(stream.id));
                 if (result?.confirmed) {

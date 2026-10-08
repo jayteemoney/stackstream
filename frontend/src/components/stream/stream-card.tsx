@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge, streamStatusToBadge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -33,6 +34,8 @@ interface StreamCardProps {
   onClaimPartial?: () => void;
   onExpire?: () => void;
   actionLoading?: boolean;
+  /** Extra row under the actions, e.g. linking the stream to an organisation. */
+  footer?: ReactNode;
 }
 
 export function StreamCard({
@@ -49,6 +52,7 @@ export function StreamCard({
   onClaimPartial,
   onExpire,
   actionLoading,
+  footer,
 }: StreamCardProps) {
   const blockHeight = useAppStore((s) => s.currentBlockHeight);
   // Resolve the stream's own token. getTokenConfigByContractId previously
@@ -245,6 +249,7 @@ export function StreamCard({
           </div>
         )}
       </div>
+      {footer && <div className="mt-4 border-t border-border/60 pt-4">{footer}</div>}
     </Card>
   );
 }

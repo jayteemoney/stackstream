@@ -2,28 +2,31 @@
 
 ## 1. Introduction
 
-StackStream is a Bitcoin-native payroll streaming protocol built on [Stacks](https://www.stacks.co/). It lets DAOs pay contributors continuously — tokens stream block-by-block instead of in lump sums. Recipients can claim accrued tokens at any time, and senders can pause, resume, cancel, or top up streams as needed.
+StackStream is payment streaming on [Stacks](https://www.stacks.co/), live on mainnet at [stackstream.xyz](https://stackstream.xyz). Instead of paying someone in one lump sum, an organisation opens a stream: the recipient's balance grows every few seconds and they claim it whenever they want. The sender can pause, resume, top up or cancel at any time, and anything not yet earned goes back to the sender.
 
 **Who is it for?**
 
-- **DAO admins** who want to pay contributors with transparent, on-chain payroll
-- **Contributors** who want real-time access to earned tokens without waiting for payment cycles
+- **Organisations** (DAOs, teams, grant programmes) that pay people and want it on-chain and transparent
+- **Recipients** (contributors, builders, creators) who want their pay as they earn it, not at the end
 
 ## 2. Prerequisites
 
-Before using StackStream, you need:
+1. **A Stacks wallet**: [Leather](https://leather.io/) or [Xverse](https://www.xverse.app/)
+2. **A little STX for network fees**, for both sides. Each transaction costs a fraction of one STX (0.003 to 0.018 STX on mainnet so far). **Recipients need STX too**: claiming is a transaction, so a recipient with no STX cannot claim.
+3. **The token you want to stream**, in the sender's wallet
 
-1. **A Stacks wallet** — [Leather](https://leather.io/) or [Xverse](https://www.xverse.app/)
-2. **STX for transaction fees** — A small amount of STX to pay gas fees
-3. **SIP-010 tokens** — The tokens you want to stream
+**Tokens:** any SIP-010 token on Stacks works, including an organisation's own token. sBTC, USDA, ALEX and xBTC are pinned at the top of the token picker. Native STX cannot be streamed, because it is the network's coin rather than a SIP-010 token.
 
-**Mainnet tokens supported:** sBTC, USDA, ALEX, xBTC. Any SIP-010 compliant token is accepted by the protocol; the frontend token selector surfaces the most common options.
+### Running on testnet
 
-### Getting Testnet Tokens
+The app runs on mainnet by default. A testnet build needs both settings in `frontend/.env.local`, as a pair (see `frontend/.env.example`):
 
-If you're testing on testnet:
-- Get testnet STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet)
-- Mint testnet msBTC from the mock token faucet in the StackStream contracts
+```
+NEXT_PUBLIC_NETWORK=testnet
+NEXT_PUBLIC_CONTRACT_DEPLOYER=ST…your-testnet-deployer
+```
+
+A mismatched pair stops the app at startup with a message naming the setting to fix. On testnet, get STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet) and mint msBTC with the **Faucet** button in the app header.
 
 ## 3. Getting Started
 
@@ -39,12 +42,13 @@ Once connected, your address appears in the navigation bar and the app loads you
 
 ### Navigation
 
-The app has two main sections:
+The app has three main areas:
 
-- **Dashboard** — For DAO admins/senders who create and manage streams
-- **Earn** — For contributors/recipients who claim tokens from streams
+- **Dashboard**: for organisations and senders who create and manage streams
+- **Earn**: for recipients who claim what they have earned
+- **Organisations** (`/organisations`, also in the top menu of the home page): the public list of every registered organisation
 
-## 4. For DAO Admins (Dashboard)
+## 4. For Organisations and Senders (Dashboard)
 
 ### Overview
 
@@ -56,13 +60,23 @@ The dashboard home (`/dashboard`) shows:
 - **Recipients** — Number of unique addresses receiving streams
 - **Recent Streams** — Your most recent stream cards with quick actions
 
+### Registering Your Organisation
+
+Registering is optional for streaming, but it is what puts your organisation on the public directory at `/organisations` and lets your streams count on its record.
+
+1. Go to **Dashboard > Register Workspace** (the app calls an organisation a "workspace")
+2. Enter your organisation's name. Names are unique and up to 64 characters
+3. Click **Register Workspace** and approve the transaction
+
+Register from the wallet your organisation pays from: that wallet becomes the organisation's admin, and a wallet can only register once. Within about a minute the organisation appears on `/organisations` with a link to its registration receipt.
+
 ### Creating a Stream
 
 1. Navigate to **Dashboard > Create Stream** (or click **New Stream**)
 2. Fill in the form:
    - **Recipient Address** — The Stacks address that will receive tokens
-   - **Token** — Select the SIP-010 token to stream (sBTC, USDA, ALEX, xBTC on mainnet; msBTC on testnet)
-   - **Total Amount** — Amount to stream in the token's display unit (e.g., `0.5` for 0.5 sBTC)
+   - **Token**: pick one of the verified tokens, search any SIP-010 token by name, or choose **Enter a contract id instead** and paste its contract id. See "Choosing a token" below
+   - **Total Amount**: in the token's normal units (e.g. `0.5` for 0.5 sBTC, `25` for 25 USDA). You cannot enter more decimal places than the token has (8 for sBTC, 6 for USDA); the form tells you if you do
    - **Duration** — How long the stream should last (minutes, hours, days, or months)
    - **Memo** (optional) — A note attached to the stream (e.g., "January salary")
 3. Review the **Stream Preview** showing:
@@ -73,7 +87,48 @@ The dashboard home (`/dashboard`) shows:
 5. Approve the transaction in your wallet
 6. Wait for confirmation — you'll see a link to the block explorer
 
-The stream begins at the next Stacks block after the start block you set.
+The stream starts about 120 blocks (roughly 10 minutes) after you submit, which leaves time for the wallet and the network to confirm it.
+
+When it confirms, the green success box gives you the stream number. If your wallet has a registered organisation, it also offers **Link to <your organisation>**: see "Linking streams to your organisation" below.
+
+### Choosing a Token
+
+Every token's asset name and decimals are read from the chain before you can sign, so the amount and the transfer are always correct.
+
+- **Verified**: sBTC, USDA, ALEX and xBTC, pinned at the top. Select and go.
+- **Community**: any other token found by search or contract id. You confirm it by checking its full contract id, then click **I've checked it — continue**.
+- **Impersonates a verified token** (red): a different contract using the name of a verified token, such as a second "sBTC". Check the contract id carefully; usually it is not the token you want.
+
+**Streaming your own token from a link.** Put this link in your docs or team chat with your token's contract id, and the form opens with that token selected:
+
+```
+https://stackstream.xyz/dashboard/create?token=SP….your-token
+```
+
+### Setup Links: Prepare a Stream for Someone Else to Sign
+
+A setup link opens the create form already filled in, so you can prepare a stream with an organisation and they only check it and sign.
+
+1. Fill in the form (token, recipient, amount, duration, memo) but do not submit
+2. Click **Copy setup link for someone else to sign** under the button
+3. Send the link to the person who will pay. When they open it and connect their wallet, every field is filled in, with a banner asking them to check it before signing
+
+The link only fills the form. Nothing moves until the payer signs in their own wallet. A link can carry `token`, `recipient`, `amount`, `duration`, `unit` (minutes, hours, days or months) and `memo`. For example, a 28-day, 500 USDA milestone:
+
+```
+https://stackstream.xyz/dashboard/create?token=SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token&recipient=SP…builder&amount=500&duration=28&unit=days&memo=Milestone%201%20of%203
+```
+
+Any value that is not valid (a malformed address, an address from the other network, a negative amount) is left out, so the field stays empty rather than holding a wrong value.
+
+### Linking Streams to Your Organisation
+
+A stream counts on your organisation's public record (its stream total on `/organisations`) only once it is linked. Linking is one extra transaction from the same wallet, and moves no tokens.
+
+- **Right after creating a stream:** click **Link to <your organisation>** in the green success box
+- **For older streams:** go to **Dashboard > Manage Streams**. Every stream that is not linked yet shows "Not yet counted on <name>'s public record" with a **Link to <name>** button
+
+Only the organisation that sent a stream can link it, and only once.
 
 ### Managing Streams
 
@@ -116,7 +171,10 @@ Cancellation is permanent. Unstreamed tokens are refunded to the sender. The rec
 
 #### Top Up a Stream
 
-Top-up adds tokens to an existing stream, extending its duration at the same rate per block. This is done through the protocol's `top-up-stream` function.
+1. Click **Top Up** on the stream card
+2. Enter the amount and approve the transaction
+
+Top-up adds tokens to the stream and extends its duration at the same rate per block.
 
 > **Note:** Top-up is only possible while the stream's end block is still in the future. A stream that has already expired (whether active or paused) cannot be topped up — create a new stream instead.
 
@@ -194,7 +252,7 @@ You can claim accrued tokens at any time:
 1. From the **Earn** home page, click **Claim All**
 2. This claims all available tokens from all your active streams
 
-Claimed tokens are transferred directly to your wallet.
+Claimed tokens are transferred directly to your wallet. Each claim is a transaction, so keep a little STX in your wallet for the fee.
 
 ### Claim History
 
@@ -205,6 +263,12 @@ Navigate to **Earn > History** to see your claim records:
 - Amount you've claimed
 - Stream status
 - Block range (start to end)
+
+## 5a. The Organisations Directory
+
+`stackstream.xyz/organisations` lists every organisation registered on StackStream, newest first, read live from the contract and refreshed every minute. Each card shows the organisation's name, its admin address, when it joined, how many streams it has linked, whether it is active, and a link to its registration receipt on the explorer.
+
+The same data is available to other sites at `GET /api/organisations`, documented in `docs/INTEGRATION_GUIDE.md`.
 
 ## 6. Key Concepts
 
@@ -358,10 +422,46 @@ A: If the stream is paused, progress halts. The app also polls for on-chain bloc
 A: Get testnet STX from the [Stacks faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet). For msBTC test tokens, use the mock token faucet function in the deployed contracts.
 
 **Q: Can I stream any SIP-010 token?**
-A: Yes — the protocol is permissionless and accepts any SIP-010 compliant token. On mainnet, the frontend surfaces sBTC, USDA, ALEX, and xBTC as the default options. On testnet, msBTC (mock sBTC with a public faucet) is used for development. Additional tokens can be streamed by calling the contracts directly, or by adding them to the frontend token list.
+A: Yes, including your own. Search for it in the token picker, paste its contract id, or open `stackstream.xyz/dashboard/create?token=<contract-id>`. Its details are checked on-chain first. A contract that defines more than one token (sBTC and ALEX each also define a "-locked" token) is only accepted when it is one of the verified ones, because the app cannot otherwise tell which token is meant.
+
+**Q: The recipient can't claim. What's wrong?**
+A: The most common cause is that the recipient's wallet has no STX for the network fee. Send them a small amount of STX (0.05 STX covers many claims). Also check the stream has started and is not paused.
+
+**Q: Why doesn't my stream show on my organisation's card?**
+A: It has not been linked yet. Link it from the success box after creating it, or from **Dashboard > Manage Streams**. The directory refreshes within about a minute.
 
 **Q: What's the minimum stream duration?**
 A: 1 block (roughly 5 seconds since Nakamoto). Practically, streams are most useful over longer periods such as days, weeks, or months.
 
 **Q: Is there a maximum deposit amount?**
 A: There's no protocol-enforced maximum, but the amount must fit in a Clarity uint (up to 2^128 - 1).
+
+## 10. Testing Everything End to End (USDA on mainnet)
+
+A checklist for the recent features, run with real USDA in small amounts. It takes about 30 minutes and roughly 0.1 STX in fees.
+
+**Before you start**
+
+- **Two wallets.** Wallet A pays and Wallet B receives (a stream cannot pay its own sender). Wallet A needs about 2 USDA and 0.2 STX. Wallet B needs about 0.05 STX to claim.
+- **Every stream you open here is real and counts on the public stream total.** Label it as your own anywhere you mention it.
+- **Do not register a test organisation on mainnet.** Registration is permanent and adds to the public organisation count, even if deactivated later. Test linking (step 9) only with a wallet that is already a real registered organisation, or on testnet.
+
+| # | What to do | What you should see |
+|---|---|---|
+| 1 | Wallet A: open **Create Stream** and pick **USDA** from the verified tokens | USDA selected, with a "Verified" badge and your USDA balance |
+| 2 | Type `1.1234567` as the amount and submit | The form refuses: "USDA has 6 decimal places. Remove the extra digits." |
+| 3 | In the token search, type `sBTC` | Several results. Any contract other than the real sBTC carries the red "Impersonates a verified token" badge |
+| 4 | Fill in recipient Wallet B, amount `1`, duration `1` hour, memo `Test stream`. Click **Copy setup link for someone else to sign**, and open the link in a new tab | The new tab's form is filled in with the same values, under the banner asking you to check it |
+| 5 | In that tab, click **Create Stream** and sign | A green success box with the stream number, after about one block |
+| 6 | Wallet B: open **Earn** after about 10 minutes, when the stream starts | The claimable balance grows every few seconds, shown in USDA at its real value (about 0.0167 USDA per minute, not 100 times smaller) |
+| 7 | Wallet B: **Partial** claim of `0.01`, then **Claim All** | Each claim confirms and the USDA arrives in Wallet B. **Earn > History** shows the claims |
+| 8 | Wallet A: **Pause**, wait a minute, **Resume**, then **Top Up** `0.5` USDA | While paused, Wallet B's balance stops growing. After the top-up, the stream runs longer at the same rate |
+| 9 | Only if Wallet A is already a registered organisation: click **Link to <name>** on the stream in **Manage Streams** | The button disappears. Within about a minute the organisation's stream count on `/organisations` goes up by one |
+| 10 | Wallet A: **Cancel** the stream | Wallet B keeps what it earned. The unearned USDA comes back to Wallet A in the same transaction |
+| 11 | Open `/dashboard/create?token=SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token` | The form opens with USDA already selected |
+| 12 | Open `/dashboard/create?recipient=ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM` (a testnet address) | The recipient field stays empty: a recipient from the wrong network is ignored |
+| 13 | Open the assistant (chat bubble) and look up the stream number | Deposited and claimable amounts show in USDA at their real value |
+| 14 | Open `/organisations` | The page loads with the live count and every organisation's card |
+
+If any step does not match, note the step number, the stream number and a screenshot, and report it before onboarding a team.
+

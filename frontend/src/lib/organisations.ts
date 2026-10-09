@@ -15,6 +15,7 @@ import {
   getDao,
   getDaoCount,
   getNetwork,
+  getStreamNonce,
   HIRO_API_BASE,
   STREAM_FACTORY_CONTRACT,
 } from "./openclaw-server";
@@ -36,6 +37,12 @@ export interface OrganisationDirectory {
   network: "mainnet" | "testnet";
   /** `get-dao-count`, the authoritative total. */
   total: number;
+  /**
+   * Every stream ever opened on mainnet (`get-stream-nonce`), by anyone, whether
+   * or not an organisation sent it. Distinct from the streams organisations
+   * have linked, which is the sum of `streamsTracked`.
+   */
+  streamsCreated: number;
   /** Newest first. */
   organisations: Organisation[];
   /**
@@ -148,7 +155,11 @@ let cached: { directory: OrganisationDirectory; expires: number } | null = null;
 export async function getOrganisationDirectory(): Promise<OrganisationDirectory> {
   if (cached && Date.now() < cached.expires) return cached.directory;
 
-  const [rows, total] = await Promise.all([fetchFactoryTransactions(), getDaoCount()]);
+  const [rows, total, streamsCreated] = await Promise.all([
+    fetchFactoryTransactions(),
+    getDaoCount(),
+    getStreamNonce(),
+  ]);
   const registrations = parseRegistrations(rows, STREAM_FACTORY_CONTRACT);
 
   // The contract is the source of truth for each record. A registration whose
@@ -172,6 +183,7 @@ export async function getOrganisationDirectory(): Promise<OrganisationDirectory>
   const directory: OrganisationDirectory = {
     network: getNetwork(),
     total,
+    streamsCreated,
     organisations,
     unlisted: Math.max(0, total - organisations.length),
     asOf: new Date().toISOString(),

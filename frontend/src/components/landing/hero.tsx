@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LiveStreamCard } from "@/components/landing/live-stream-card";
+import { LiveStats } from "@/components/landing/live-stats";
 import { ArrowRight, Zap } from "lucide-react";
 
 export function Hero() {
@@ -79,6 +80,16 @@ export function Hero() {
               Watch Earnings Flow
             </Button>
           </Link>
+        </motion.div>
+
+        {/* Live usage, read from the contract */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mt-8 flex justify-center"
+        >
+          <LiveStats />
         </motion.div>
 
         {/* Animated streaming preview */}

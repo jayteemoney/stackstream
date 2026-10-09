@@ -2,7 +2,7 @@
 
 **Milestone 3 target:** 3 organisations registered and $10,000 equivalent streamed on Stacks mainnet.
 **Grant:** Stacks Endowment, Q1 2026, Payments, Getting Started track.
-**Started:** Sep 14, 2026. **Updated:** Oct 5, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
+**Started:** Sep 14, 2026. **Updated:** Oct 9, 2026. Updated daily while the campaign runs; every row below is verifiable from a public link or from the contract.
 
 This package follows the shape of `M1_EVIDENCE_PACKAGE.md` and `M2_EVIDENCE_PACKAGE.md`. It records what was actually shipped, not what was planned. The plan lives in `CONTENT_SCHEDULE.md`; if a day in the plan was not shipped, it is marked here as skipped, never quietly dropped.
 
@@ -52,7 +52,12 @@ One row per calendar day. A row is only filled in on the day it was posted. Post
 | 20 | Oct 3 (Sat) | Building this alone | **Not posted (weekend)** | | |
 | 21 | Oct 4 (Sun) | Bitcoin is the difference | **Not posted (weekend)** | | |
 
-From Oct 4 the plan is weekdays only: Days 27 and 28 (Oct 10 and 11) are removed rather than skipped.
+| 22 | Oct 5 | The number, week 4 | Official X, Personal X, WhatsApp | A | |
+| 23 | Oct 6 | Pay your team in your own token | Official X, Personal X, LinkedIn, WhatsApp | B, E | |
+| 24 | Oct 7 | Open code, open data | Official X, Personal X, Stacks Forum, Grantees TG, WhatsApp | C | |
+| 25 | Oct 8 | Is it safe? | Official X, Personal X, WhatsApp | D | |
+
+From Oct 4 the plan is weekdays only: Days 27 and 28 (Oct 10 and 11) are removed rather than skipped. The schedule's "Stacks Discord" posts have been published on the Stacks Forum.
 
 **Standing rules every post obeyed:** one link per post, the follow line for @Stackstream0X from Day 3 onward, live numbers only, no deadlines, and the settlement language rule from `MARKETING_PLAN_V2.md`.
 
@@ -67,7 +72,7 @@ Reported in aggregate here. Individual names, message texts and reply status are
 | Sep 14 to Sep 20 | 3 | 1 | 0 | One senior ecosystem contact has committed to trying the product after a scheduled committee meeting |
 | Sep 21 to Sep 27 | 4 | 1 | 2 (Privara onboarding call; Zero Authority DAO X Space on Sep 25 and call on Sep 26) | The ecosystem operating partner that runs Stacks DeGrants replied, invited us to their X Space, held a call and proposed working together |
 | Sep 28 to Oct 4 | [confirm] | | 0 | Product week: shipped streams in any token including a team's own, from one link |
-| Oct 5 to Oct 11 | | | | |
+| Oct 5 to Oct 11 | 8 so far (Oct 9) | 1 so far, with four follow-up exchanges | 0 | The Zero Authority contact registered the first workspace (Oct 6), then agreed a creator test: 5 creators, 20 USDA each over 7 days, funded by ZADAO from its own wallet, starting Oct 12. The official ZADAO DeGrants pilot follows it |
 
 ---
 
@@ -86,7 +91,7 @@ An organisation counts toward M3 only once its registration transaction confirms
 
 | Date | Organisation | Registration tx | First stream tx | Token | Amount |
 |---|---|---|---|---|---|
-| | | | | | |
+| Oct 6, 2026 | Grimaldo (contact at Zero Authority DAO, registered from his own wallet) | [0x0e1ddc99…3dceeb](https://explorer.hiro.so/txid/0x0e1ddc9926223f93a408c6390b8d3f5ceb5e09dd46756fe44f1347a93b3dceeb?chain=mainnet), block 9,134,238 | None yet | | |
 
 ---
 
@@ -122,3 +127,5 @@ Designed to `DESIGNER_BRIEF_SEP2026.md`. Filenames follow `SS_D##_slug_ratio`.
 | Sep 24 | Open read-only API and integration guide, so any app can show live stream data | PR #27, `docs/INTEGRATION_GUIDE.md` |
 | Oct 2 | Token amounts read from each token's own decimals everywhere, fixing 6-decimal tokens shown at 1/100 of their value | PR #30 |
 | Oct 2 | Stream any token on Stacks, including a team's own, from search or a one-click link, with look-alike tokens flagged | PRs #31 and #32 |
+| Oct 7 | Public organisations directory at stackstream.xyz/organisations, read live from the contract | PR #35 |
+| Oct 8 | Streams link to the organisation that created them, and prepared setup links let a team check and sign a stream in one step | PR #37 |

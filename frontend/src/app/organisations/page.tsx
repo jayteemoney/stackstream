@@ -158,31 +158,38 @@ function Hero({ directory }: { directory: OrganisationDirectory | null }) {
             style={delay(2)}
           >
             <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-brand-500/10 blur-3xl" />
-            <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-              Organisations registered
-            </p>
-            <p className="mt-3 font-mono text-7xl font-semibold tabular-nums leading-none text-brand-400 sm:text-8xl">
-              {total ?? "–"}
-            </p>
-            <div className="mt-8 grid grid-cols-2 gap-6 border-t border-border/60 pt-6">
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="text-xs uppercase tracking-wider text-zinc-600">Streams on mainnet</p>
-                <p className="mt-1.5 font-mono text-2xl tabular-nums text-zinc-200">
+                <p className="whitespace-nowrap text-xs font-medium uppercase tracking-widest text-zinc-500">
+                  Organisations
+                </p>
+                <p className="mt-3 font-mono text-6xl font-semibold tabular-nums leading-none text-brand-400 sm:text-7xl">
+                  {total ?? "–"}
+                </p>
+              </div>
+              <div>
+                <p className="whitespace-nowrap text-xs font-medium uppercase tracking-widest text-zinc-500">
+                  Streams
+                </p>
+                <p className="mt-3 font-mono text-6xl font-semibold tabular-nums leading-none text-brand-400 sm:text-7xl">
                   {directory?.streamsCreated ?? "–"}
                 </p>
-                <p className="mt-0.5 text-xs text-zinc-500">opened by anyone</p>
               </div>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-6 border-t border-border/60 pt-6">
               <div>
                 <p className="text-xs uppercase tracking-wider text-zinc-600">From organisations</p>
                 <p className="mt-1.5 font-mono text-2xl tabular-nums text-zinc-200">
                   {streams ?? "–"}
                 </p>
-                <p className="mt-0.5 text-xs text-zinc-500">linked to a listed team</p>
               </div>
-              <div className="col-span-2">
+              <div>
                 <p className="text-xs uppercase tracking-wider text-zinc-600">Newest</p>
                 <p className="mt-1.5 truncate text-sm font-medium text-zinc-200" title={newest?.name}>
-                  {newest ? `${newest.name} · ${formatDate(newest.registeredAt)}` : "–"}
+                  {newest ? newest.name : "–"}
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  {newest ? formatDate(newest.registeredAt) : ""}
                 </p>
               </div>
             </div>

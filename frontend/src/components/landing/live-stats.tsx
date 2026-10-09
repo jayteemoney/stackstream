@@ -1,19 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { OPENCLAW_API_URL } from "@/lib/constants";
-
-interface Stats {
-  streamsCreated: number;
-  workspacesRegistered: number;
-}
-
-async function fetchStats(): Promise<Stats> {
-  const res = await fetch(`${OPENCLAW_API_URL}/api/stats`);
-  if (!res.ok) throw new Error(`stats ${res.status}`);
-  return (await res.json()) as Stats;
-}
+import { useNetworkStats } from "@/hooks/use-network-stats";
 
 /**
  * The live usage line under the hero. Read from the contract through
@@ -21,12 +9,7 @@ async function fetchStats(): Promise<Stats> {
  * sees a placeholder or a guessed figure.
  */
 export function LiveStats() {
-  const { data } = useQuery({
-    queryKey: ["live-stats"],
-    queryFn: fetchStats,
-    refetchInterval: 60_000,
-    staleTime: 30_000,
-  });
+  const { stats: data } = useNetworkStats();
   if (!data) return null;
 
   const orgs = data.workspacesRegistered;

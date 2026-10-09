@@ -20,6 +20,7 @@ import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import type { StreamData } from "@/lib/stacks";
 import { STREAM_STATUS, unresolvableTokenLabel } from "@/lib/constants";
 import { TopUpDialog } from "@/components/stream/top-up-dialog";
+import { NetworkStats } from "@/components/layout/network-stats";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { PlusCircle, Zap, Users, Coins, TrendingUp } from "lucide-react";
@@ -47,17 +48,23 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <EmptyState
-        icon={<Zap className="h-12 w-12" />}
-        title="Connect your wallet"
-        description="Connect a Stacks wallet to open streams and manage real-time payments, settled on Bitcoin."
-      />
+      <div className="space-y-6">
+        <NetworkStats />
+        <EmptyState
+          icon={<Zap className="h-12 w-12" />}
+          title="Connect your wallet"
+          description="Connect a Stacks wallet to open streams and manage real-time payments, settled on Bitcoin."
+        />
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Stats row */}
+      <NetworkStats />
+
+      {/* Your streams */}
+      <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Your streams</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (

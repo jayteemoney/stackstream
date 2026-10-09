@@ -159,10 +159,10 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 | 17 | Wed Sep 30 | Two minutes, start to finish (posted) | H, C | ✓ | ✓ |  |  | ✓ |  | ✓ |
 | 18 | Thu Oct 1 | What does it cost? (posted) | D | ✓ | ✓ |  |  |  |  | ✓ |
 | 19 | Fri Oct 2 | Paid as you work (posted) | E | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 22 | Mon Oct 5 | The number, week 4 | A | ✓ | ✓ |  |  |  |  | ✓ |
-| 23 | Tue Oct 6 | Pay your team in your own token | B, E | ✓ | ✓ | ✓ |  |  |  | ✓ |
-| 24 | Wed Oct 7 | Open code, open data | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
-| 25 | Thu Oct 8 | Is it safe? | D | ✓ | ✓ |  |  |  |  | ✓ |
+| 22 | Mon Oct 5 | The number, week 4 (posted) | A | ✓ | ✓ |  |  |  |  | ✓ |
+| 23 | Tue Oct 6 | Pay your team in your own token (posted) | B, E | ✓ | ✓ | ✓ |  |  |  | ✓ |
+| 24 | Wed Oct 7 | Open code, open data (posted) | C | ✓ | ✓ |  |  | ✓ | ✓ | ✓ |
+| 25 | Thu Oct 8 | Is it safe? (posted) | D | ✓ | ✓ |  |  |  |  | ✓ |
 | 26 | Fri Oct 9 | How teams pay people today | E, B | ✓ | ✓ | ✓ |  |  |  | ✓ |
 | 29 | Mon Oct 12 | The number, week 5 | A | ✓ | ✓ |  |  |  |  | ✓ |
 | 30 | Tue Oct 13 | Thirty days in the open | A, G | ✓ | ✓ | ✓ | ✓ |  | ✓ | ✓ |
@@ -571,7 +571,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ## Week 4: Trust and depth (Oct 5 to Oct 9)
 
-### Day 22, Mon Oct 5: The number, week 4
+### Day 22, Mon Oct 5: The number, week 4 (posted)
 
 > `SS_D22_metric-card` (A) · Outreach: Zero Authority (Z1), Grant Nissly (G2) · If a team registers this week, run the break-glass posts · Personal X: keep the bracketed line under 60 characters so the post stays within 280
 
@@ -592,7 +592,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ---
 
-### Day 23, Tue Oct 6: Pay your team in your own token
+### Day 23, Tue Oct 6: Pay your team in your own token (posted)
 
 > `SS_D23_own-token` (B, E), the master diagram with a blank token badge on the stream · Outreach: Privara (P1), Mithil Thakore (V1), Tycho (T3) · Replaces "Cancel it and see"; the cancel split now lives on Day 25
 
@@ -621,7 +621,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ---
 
-### Day 24, Wed Oct 7: Open code, open data
+### Day 24, Wed Oct 7: Open code, open data (posted)
 
 > `SS_D24_open-code` (C), precise terms allowed · Outreach: PaySats and DeepStack (GR1), Alex Miller (A1) · Re-run `npx vitest run` first and update the count if it changed
 
@@ -653,7 +653,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ---
 
-### Day 25, Thu Oct 8: Is it safe?
+### Day 25, Thu Oct 8: Is it safe? (posted)
 
 > `SS_D25_is-it-safe` (D), or reuse `SS_D23_cancel-split` if it was already produced · Outreach: Andre Serrano (S1), Ken Liao (K1)
 

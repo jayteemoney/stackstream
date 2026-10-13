@@ -138,7 +138,7 @@ Navigate to **Dashboard > Streams** to see all your streams with filter tabs:
 - **Active** — Currently streaming
 - **Paused** — Temporarily halted
 - **Cancelled** — Permanently stopped
-- **Depleted** — Fully streamed
+- **Fully claimed** — Every token has been paid out
 
 Each stream card shows the recipient, deposited amount, progress bar, and status badge.
 
@@ -223,19 +223,20 @@ Navigate to **Dashboard > Analytics** to see:
 
 The earn home (`/earn`) shows:
 
-- **Total Claimable Balance** — Real-time updating display of tokens you can claim right now
-- **Claim All** button — Claim all available tokens across all streams in one action
+- **Ready to claim** — Real-time updating display of tokens you can claim right now
+- **Claim All** button — Claim everything available across all your streams
 - **Total Earned** — Lifetime earnings across all streams
 - **Total Claimed** — Tokens you've already withdrawn
 - **Active Streams** — Number of streams currently paying you
 
 ### Viewing Your Streams
 
-Navigate to **Earn > Streams** to see all streams where you're the recipient. Each card shows:
+Navigate to **Earnings > My Streams** to see all streams where you're the recipient. Each card shows:
 
-- Sender address
-- Token type and deposited amount
-- Claimable amount (updating in real-time)
+- Who pays you: the organisation's name if it registered a workspace, otherwise its address
+- The stream's note (memo), shown in full
+- **Ready to claim**, updating in real time
+- How much you have earned out of the total, and roughly how much you earn a day
 - Progress bar
 - Status badge
 
@@ -244,19 +245,20 @@ Navigate to **Earn > Streams** to see all streams where you're the recipient. Ea
 You can claim accrued tokens at any time:
 
 **Claim from a specific stream:**
-1. Go to **Earn > Streams**
-2. Click **Claim** on the stream card
+1. Go to **Earnings > My Streams**
+2. Click **Claim now** on the stream card, or **Claim some** to take part of it
 3. Approve the transaction in your wallet
+4. A message confirms the exact amount, for example "Claimed 0.84 USDA to your wallet"
 
 **Claim all available:**
-1. From the **Earn** home page, click **Claim All**
+1. From the **Earnings** page, click **Claim All**
 2. This claims all available tokens from all your active streams
 
 Claimed tokens are transferred directly to your wallet. Each claim is a transaction, so keep a little STX in your wallet for the fee.
 
 ### Claim History
 
-Navigate to **Earn > History** to see your claim records:
+Navigate to **Earnings > History** to see your claim records:
 
 - Stream ID and sender
 - Total deposited in the stream
@@ -288,7 +290,7 @@ Tokens accrue linearly: `rate_per_block × elapsed_blocks = accrued_amount`
 | Active | 0 | Tokens are streaming block-by-block |
 | Paused | 1 | Temporarily halted; no new tokens accrue |
 | Cancelled | 2 | Permanently stopped; unstreamed tokens refunded |
-| Depleted | 3 | Fully streamed; all tokens delivered |
+| Fully claimed | 3 | Every token has been paid out to the recipient |
 
 ### Precision Math
 
@@ -453,8 +455,8 @@ A checklist for the recent features, run with real USDA in small amounts. It tak
 | 3 | In the token search, type `sBTC` | Several results. Any contract other than the real sBTC carries the red "Impersonates a verified token" badge |
 | 4 | Fill in recipient Wallet B, amount `1`, duration `1` hour, memo `Test stream`. Click **Copy setup link for someone else to sign**, and open the link in a new tab | The new tab's form is filled in with the same values, under the banner asking you to check it |
 | 5 | In that tab, click **Create Stream** and sign | A green success box with the stream number, after about one block |
-| 6 | Wallet B: open **Earn** after about 10 minutes, when the stream starts | The claimable balance grows every few seconds, shown in USDA at its real value (about 0.0167 USDA per minute, not 100 times smaller) |
-| 7 | Wallet B: **Partial** claim of `0.01`, then **Claim All** | Each claim confirms and the USDA arrives in Wallet B. **Earn > History** shows the claims |
+| 6 | Wallet B: open **Earnings** after about 10 minutes, when the stream starts | The claimable balance grows every few seconds, shown in USDA at its real value (about 0.0167 USDA per minute, not 100 times smaller) |
+| 7 | Wallet B: **Claim some** with `0.01`, then **Claim now** | Each claim confirms with a message naming the exact USDA amount, and the USDA arrives in Wallet B. **Earnings > History** shows the claims |
 | 8 | Wallet A: **Pause**, wait a minute, **Resume**, then **Top Up** `0.5` USDA | While paused, Wallet B's balance stops growing. After the top-up, the stream runs longer at the same rate |
 | 9 | Only if Wallet A is already a registered organisation: click **Link to <name>** on the stream in **Manage Streams** | The button disappears. Within about a minute the organisation's stream count on `/organisations` goes up by one |
 | 10 | Wallet A: **Cancel** the stream | Wallet B keeps what it earned. The unearned USDA comes back to Wallet A in the same transaction |

@@ -44,3 +44,17 @@ export function useTrackedStreams(streamIds: readonly number[], enabled: boolean
 
   return { tracked: query.data ?? null, isLoading: query.isLoading, refresh };
 }
+
+/**
+ * The registered organisation name of whoever sends a stream, so a recipient
+ * sees "From Grimaldo" rather than a bare address. Null when the sender has no
+ * active workspace.
+ */
+export function useSenderName(sender: string): string | null {
+  const query = useQuery({
+    queryKey: ["workspace", sender],
+    queryFn: () => getDao(sender),
+    staleTime: 5 * 60_000,
+  });
+  return query.data?.isActive ? query.data.name : null;
+}

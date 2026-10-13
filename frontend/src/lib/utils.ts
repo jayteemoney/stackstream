@@ -51,7 +51,7 @@ export function getStreamStatusLabel(status: number): string {
     case 2:
       return "Cancelled";
     case 3:
-      return "Depleted";
+      return "Fully claimed";
     default:
       return "Unknown";
   }
@@ -211,3 +211,14 @@ export const PRECISION = 1_000_000_000_000n;
 
 /** Token decimals for sBTC */
 export const SBTC_DECIMALS = 8;
+
+/**
+ * The success toast for a claim. `paid` is what the contract actually returned,
+ * which for claim-all is more than the balance shown when the button was
+ * pressed, since the stream kept accruing until the transaction mined.
+ */
+export function claimSuccessMessage(paid: bigint | undefined, decimals: number, symbol: string): string {
+  return paid === undefined
+    ? `Claimed to your wallet`
+    : `Claimed ${formatTokenAmount(paid, decimals)} ${symbol} to your wallet`;
+}

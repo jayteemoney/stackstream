@@ -11,7 +11,7 @@ import { buildClaimAllTx, requireTokenMetadata, UnresolvableTokenError } from "@
 import { useTokensMetadata } from "@/hooks/use-token-metadata";
 import type { StreamData } from "@/lib/stacks";
 import { ClaimDialog } from "@/components/stream/claim-dialog";
-import { formatTxError } from "@/lib/utils";
+import { claimSuccessMessage, formatTxError } from "@/lib/utils";
 import { toast } from "sonner";
 import { Coins } from "lucide-react";
 import { useState } from "react";
@@ -85,7 +85,7 @@ export default function EarnStreamsPage() {
                 })
               );
               if (result?.confirmed) {
-                toast.success("Tokens claimed!");
+                toast.success(claimSuccessMessage(result.okUint, token.decimals, token.symbol));
                 refetch();
               } else if (result && !result.confirmed) {
                 toast.error(formatTxError("Failed to claim", result));

@@ -210,10 +210,10 @@ export const BALANCE_POLL_INTERVAL = 15_000;
 export const BLOCK_POLL_INTERVAL = 30_000;
 
 /**
- * User-feedback form. Defaults to a placeholder Google Form URL — set
- * `NEXT_PUBLIC_FEEDBACK_URL` in the Vercel env to point at a real
- * form. The URL is opened in a new tab; we do not POST to it.
+ * User-feedback form: six questions on whether StackStream worked for the
+ * user and whether we may quote them. `NEXT_PUBLIC_FEEDBACK_URL` overrides it.
+ * The URL is opened in a new tab; we do not POST to it.
  */
 export const FEEDBACK_URL =
   process.env.NEXT_PUBLIC_FEEDBACK_URL ??
-  "https://forms.gle/xmpNJkjtWwV2gYCS7";
+  "https://forms.gle/M8prrYmC7qNc3d1H8";

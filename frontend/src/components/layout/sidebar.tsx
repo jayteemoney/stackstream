@@ -67,13 +67,14 @@ export function Sidebar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 px-6 py-5 border-b border-border">
           <Image
-            src="/logo-oval.png"
-            alt="StackStream"
-            width={46}
-            height={36}
-            className="h-9 w-auto"
+            src="/logo-mark.png"
+            alt=""
+            width={72}
+            height={72}
+            className="h-9 w-9"
             priority
           />
+          <span className="text-base font-semibold tracking-tight text-zinc-100">StackStream</span>
         </Link>
 
         {/* Nav links */}

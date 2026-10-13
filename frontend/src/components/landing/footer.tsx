@@ -97,12 +97,13 @@ export function Footer() {
           <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 w-fit">
               <Image
-                src="/logo-oval.png"
-                alt="StackStream"
-                width={56}
-                height={44}
-                className="h-11 w-auto"
+                src="/logo-mark.png"
+                alt=""
+                width={80}
+                height={80}
+                className="h-10 w-10"
               />
+              <span className="text-lg font-semibold tracking-tight text-zinc-100">StackStream</span>
             </Link>
 
             <p className="text-sm leading-relaxed text-zinc-500 max-w-xs">

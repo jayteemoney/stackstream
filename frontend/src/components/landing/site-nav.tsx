@@ -13,13 +13,14 @@ export function SiteNav() {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-surface-0/80 backdrop-blur-md border-b border-border/50">
       <Link href="/" className="flex items-center gap-2">
         <Image
-          src="/logo-oval.png"
-          alt="StackStream"
-          width={46}
-          height={36}
-          className="h-9 w-auto"
+          src="/logo-mark.png"
+          alt=""
+          width={72}
+          height={72}
+          className="h-9 w-9"
           priority
         />
+        <span className="text-base font-semibold tracking-tight text-zinc-100">StackStream</span>
       </Link>
       <div className="flex items-center gap-4 sm:gap-6">
         {links.map((link) => (

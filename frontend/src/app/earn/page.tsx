@@ -12,7 +12,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { buildClaimAllTx, requireTokenMetadata, UnresolvableTokenError } from "@/lib/stacks";
 import { useTokenMetadata } from "@/hooks/use-token-metadata";
-import { formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
+import { claimSuccessMessage, formatTokenAmount, formatTxError, pickPrimaryToken } from "@/lib/utils";
 import { STREAM_STATUS, unresolvableTokenLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Coins, Download, Zap, TrendingUp, Wallet } from "lucide-react";
@@ -98,7 +98,7 @@ export default function EarnPage() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-brand-500/5 to-transparent rounded-bl-full" />
             <div className="relative">
               <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-3">
-                Total Claimable Balance ({primaryToken.symbol})
+                Ready to claim ({primaryToken.symbol})
               </p>
               <RealtimeBalance
                 baseBalance={totalClaimable}
@@ -149,7 +149,7 @@ export default function EarnPage() {
                           })
                         );
                         if (result?.confirmed) {
-                          toast.success(`Claimed stream #${stream.id}`);
+                          toast.success(claimSuccessMessage(result.okUint, token.decimals, token.symbol));
                           anySuccess = true;
                         } else if (result && !result.confirmed) {
                           toast.error(formatTxError(`Stream #${stream.id} failed`, result));

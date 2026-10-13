@@ -26,6 +26,8 @@ export interface TxResult {
   errorCode?: string;
   /** Raw tx_result repr string from the API */
   errorRepr?: string;
+  /** The uint a successful call returned, e.g. the amount a claim paid out */
+  okUint?: bigint;
 }
 
 /**
@@ -108,7 +110,7 @@ export function useStacksTx() {
 
         setTxId(id);
         setStatus("confirming");
-        toast.loading("Submitted — waiting for on-chain confirmation (~5–15s)", {
+        toast.loading("Submitted. Waiting for the network to confirm, usually 5 to 15 seconds", {
           id: toastId,
         });
 
@@ -130,7 +132,7 @@ export function useStacksTx() {
           queryClient.refetchQueries({ queryKey: ["stream"], type: "active" });
           queryClient.refetchQueries({ queryKey: ["stream-nonce"], type: "active" });
           queryClient.refetchQueries({ queryKey: ["token-balance"], type: "active" });
-          return { confirmed: true, txId: id, status: result.status };
+          return { confirmed: true, txId: id, status: result.status, okUint: result.okUint };
         } else {
           let msg: string;
           if (result.status === "timeout") {
@@ -165,7 +167,7 @@ export function useStacksTx() {
         if (isStaleChunk(err)) {
           // A deploy replaced the bundle files under this open tab — reload
           // onto the current build instead of surfacing module internals.
-          toast.info("StackStream was updated — refreshing…");
+          toast.info("StackStream was updated. Refreshing…");
           setTimeout(() => window.location.reload(), 800);
           return null;
         }

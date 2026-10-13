@@ -682,6 +682,14 @@ export interface TxConfirmationResult {
   errorCode?: string;
   /** Raw tx_result repr string from the API */
   errorRepr?: string;
+  /** The uint a successful call returned, e.g. the amount a claim paid out */
+  okUint?: bigint;
+}
+
+/** Read the uint out of a `(ok u123)` result repr, or undefined for anything else. */
+export function parseOkUint(repr: string | undefined): bigint | undefined {
+  const match = repr?.match(/^\(ok u(\d+)\)$/);
+  return match ? BigInt(match[1]) : undefined;
 }
 
 export async function waitForTxConfirmation(
@@ -702,7 +710,7 @@ export async function waitForTxConfirmation(
         const data = await res.json();
         const status = data.tx_status;
         if (status === "success") {
-          return { status, confirmed: true };
+          return { status, confirmed: true, okUint: parseOkUint(data.tx_result?.repr) };
         }
         if (status === "abort_by_response" || status === "abort_by_post_condition") {
           const repr: string | undefined = data.tx_result?.repr;

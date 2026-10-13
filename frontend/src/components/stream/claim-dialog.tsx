@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { useTokenMetadata } from "@/hooks/use-token-metadata";
 import { buildClaimTx, type StreamData } from "@/lib/stacks";
-import { formatTokenAmount, formatTxError } from "@/lib/utils";
+import { claimSuccessMessage, formatTokenAmount, formatTxError } from "@/lib/utils";
 import { toRawAmount, fromRawAmount, hasExcessPrecision, unresolvableTokenLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Download, AlertTriangle } from "lucide-react";
@@ -49,11 +49,11 @@ export function ClaimDialog({
       return false;
     }
     if (!amount || parseFloat(amount) <= 0) {
-      setError("Enter a positive amount");
+      setError("Enter an amount above 0");
       return false;
     }
     if (amountRaw === null) {
-      setError("Enter a valid amount (digits and up to one decimal point)");
+      setError("Enter a number, like 1.5");
       return false;
     }
     if (hasExcessPrecision(amount, token.decimals)) {
@@ -82,7 +82,7 @@ export function ClaimDialog({
     );
 
     if (result?.confirmed) {
-      toast.success(`Claimed ${formatTokenAmount(amountRaw, token.decimals)} ${token.symbol}`);
+      toast.success(claimSuccessMessage(result.okUint ?? amountRaw, token.decimals, token.symbol));
       setAmount("");
       onSuccess();
     } else if (result && !result.confirmed) {
@@ -104,7 +104,7 @@ export function ClaimDialog({
         </div>
         <div>
           <h2 className="text-base font-semibold text-zinc-100">
-            Claim from Stream #{streamId}
+            Claim part of stream #{streamId}
           </h2>
           <p className="text-xs text-zinc-500">
             {token ? (
@@ -142,11 +142,6 @@ export function ClaimDialog({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           error={error}
-          hint={
-            amountRaw !== null && amountRaw > 0n
-              ? `${amountRaw.toLocaleString()} raw units`
-              : undefined
-          }
           disabled={!token}
         />
 

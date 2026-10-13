@@ -98,12 +98,12 @@ export function RealtimeBalance({
   }, [isActive, ratePerSecond, baseBalance, depositAmount, withdrawnAmount]);
 
   const humanValue = displayValue / Math.pow(10, decimals);
-  // Pad fractional precision past the token's native decimals so the rapid-
-  // animation tail still has digits to flicker for tokens with fewer decimals.
-  const displayDigits = Math.max(decimals + 4, 12);
+  // Show the token's own precision and no more: digits past it are not real
+  // money and make the number hard to read. The last two digits tick.
+  const displayDigits = Math.max(decimals, 6);
   const formatted = humanValue.toFixed(displayDigits);
   const [intPart, decPart] = formatted.split(".");
-  const stableDigits = Math.max(decimals - 2, 4);
+  const stableDigits = displayDigits - 2;
 
   return (
     <div className={cn("relative", className)}>

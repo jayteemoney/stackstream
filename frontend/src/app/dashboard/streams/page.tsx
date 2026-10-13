@@ -33,7 +33,7 @@ const filterOptions = [
   { label: "Active", value: "active" },
   { label: "Paused", value: "paused" },
   { label: "Cancelled", value: "cancelled" },
-  { label: "Depleted", value: "depleted" },
+  { label: "Fully claimed", value: "depleted" },
 ] as const;
 
 type FilterValue = (typeof filterOptions)[number]["value"];

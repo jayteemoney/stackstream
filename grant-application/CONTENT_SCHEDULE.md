@@ -706,65 +706,62 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ## Week 5: Closing (Oct 12 to Oct 13)
 
-### Day 29, Mon Oct 12: The number, week 5
+> Day 29 merged into Day 30. One post closes the run.
 
-> `SS_D29_metric-card` (A), with the five-Monday sparkline
+### Day 29, Mon Oct 12: The number, week 5 (merged into Day 30, not posted)
 
-**Official X**
-> Week 5, the last card of this run. [N] streams live on mainnet. [D] organisations registered.
-> All five Mondays in one line, every figure checkable on-chain. The door stays open.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**Personal X**
-> Five Mondays, five cards: [N] streams, [D] organisations registered.
-> [One honest line on the shape of the sparkline.]
-> Tomorrow: what this month taught us about who needs StackStream most.
-> Follow @Stackstream0X for the weekly numbers.
-> https://stackstream.xyz
-
-**WhatsApp**
-> Five honest Mondays. [N] streams, [D] teams. stackstream.xyz · X: @Stackstream0X
+> Not posted on its own. Its figures (11 streams, 1 organisation registered) went out in Day 30 on Tue Oct 13, since two posts with the same numbers on one day would repeat. The five-Monday sparkline was dropped: a line flat at 11 reads as nothing happening, when the real change was the first registration.
 
 ---
 
 ### Day 30, Tue Oct 13: Thirty days in the open
 
-> `SS_D30_thirty-days` (A, G), built to work whether numbers rose or barely moved · Name the door with the most pull from the scoreboard, or say plainly that none led
+> `SS_D30_thirty-days` v2, "30 days in the open", replacing the original card · Figures read from stackstream.xyz/api/stats on Oct 13: 11 streams, 1 organisation registered · Zero Authority is not named until Grimaldo agrees to be mentioned · No dates in the copy ("day one", not the start date)
+
+**Card brief (v2)**
+- 1080 x 1350 (4:5) for X and LinkedIn, plus 1080 x 1920 (9:16) for WhatsApp status. Background `#09090b`, soft glow or faint grid behind the hero number
+- Label, muted `#a1a1aa`, 28 to 32px: `STACKSTREAM · 30 DAYS IN THE OPEN`
+- Hero, the only orange element (`#f97316`): a large **1** in Geist Mono, about 360px. Below it in white, 56px: **organisation registered**. Below that, muted, 32px: *First on-chain registration, verifiable on Stacks*
+- Three tiles (`#18181b`, border `#27272a`), white Geist Mono numbers about 96px, muted labels 28px: **11** streams on mainnet · **125** contract tests passing · **1** independent audit
+- One line, white, 36px: *Strongest pull: DAOs paying contributors*
+- Footer: logo left, `stackstream.xyz · @Stackstream0X` right, muted, 28px
+- Rules: only the 1 is orange; nothing under 28px; no dates, targets, organisation names or Telegram
+- Optional motion for X: 4 to 6 seconds, tiles fade in one by one, then the 1 counts up from 0, last frame held 2 seconds
 
 **Official X**
 > Thirty days in the open.
-> Sep 14: 11 streams, 0 organisations. Today: [N] streams, [D] organisations.
-> The teams leaning in hardest: [door]. That is where the next month goes.
+> Day one: 11 streams, 0 organisations. Today: 11 streams, 1 organisation registered.
+> The pull came from grant programmes and DAOs paying contributors. That is where the next month goes.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **Personal X**
-> 30 days of posting real numbers: 11 to [N] streams, 0 to [D] organisations.
-> The biggest lesson: [door] needs this most. That is where I am heading next, and my DMs are open.
+> 30 days of posting real numbers. Streams held at 11, organisations went from 0 to 1.
+> The biggest lesson: DAOs paying contributors need this most. A sponsored test with real creators is next, and my DMs are open.
 > Follow @Stackstream0X for the weekly numbers.
 > https://stackstream.xyz
 
 **LinkedIn**
 > Thirty days ago we started testing one question in public: which part of the Stacks ecosystem needs payment streaming most?
-> StackStream serves teams paying contributors, grant programmes releasing funds, and individuals paid as they work. All three were live throughout, on mainnet, with audited contracts. We published usage every Monday, straight from the chain, and tracked every conversation by where it came from.
-> Result: [N] streams and [D] organisations registered, from 11 and 0. The strongest pull came from [door], measured by [registrations, calls, inbound]. The weakest was [door].
-> Next: [one sentence].
-> The lesson for anyone seeking product-market fit: measure behaviour by segment, not interest overall. The total hides the segment already leaning in.
+> StackStream serves teams paying contributors, grant programmes releasing funds, and individuals paid as they work. All three were live throughout, on mainnet, with audited contracts. We published usage every week, straight from the chain.
+> Result: streams held at 11, and organisations went from 0 to 1, the first registration on mainnet. The strongest pull came from DAOs and grant programmes, measured by conversations and that registration. Small teams showed interest but no action yet.
+> Next: a sponsored test where an organisation streams USDA to its creators, so the full flow runs with real people.
+> The lesson for anyone seeking product-market fit: measure behaviour by segment, not overall interest. The total hides the segment already leaning in.
 > Follow @Stackstream0X on X for the weekly numbers.
 > https://stackstream.xyz
 
 **Stacks Forum**, thread: "StackStream, 30 days in the open"
 > A retrospective for the ecosystem, posted the same day as the public numbers.
-> Numbers: 11 to [N] streams and 0 to [D] organisations, all verifiable at stackstream.xyz/api/stats. Any streams we opened ourselves are labelled: [list or "none"].
-> Conversations: [count] opened across teams, grant programmes, contributors, and ecosystem partners. The strongest response came from [door], the weakest from [door].
-> Shipped this month: streams in any token including a team's own, opened from one link; a warning on look-alike tokens; correct amounts for every token; and an open read API with an integration guide. Changing next: [one or two lines].
-> The contracts remain open source, independently audited, live on mainnet, and backed by 125 passing tests. If your Stacks project pays people by hand, I will still set it up with you personally.
+> Numbers: 11 streams (unchanged) and 0 to 1 organisations registered, all checkable at stackstream.xyz/api/stats. The 11 streams were opened by us and early testers around launch, not by organisations.
+> Conversations: opened across teams, grant programmes, contributors and ecosystem partners. The strongest response came from DAOs paying contributors, the weakest from small product teams.
+> Shipped this month: streams in any token, including a team's own, opened from one link; a warning on look-alike tokens; correct amounts for every token; prepared setup links an organisation can review and sign; linking streams to a workspace; a public directory of registered organisations; live network totals on the site; and an open read API with an integration guide.
+> Next: a sponsored creator test with a DAO, clearly labelled as funded by us.
+> The contracts remain open source, independently audited, live on mainnet and backed by 125 passing tests. If your Stacks project pays people by hand, I will set it up with you personally.
 > Weekly numbers on X: @Stackstream0X.
 > https://stackstream.xyz
 
 **Grantees Telegram**
-> 30-day run done: [N] streams, [D] organisations, and the clearest signal is that [door] wants this most. Thank you to everyone here who answered my question about how you pay people; it shaped the whole month. Happy to share the scoreboard format, and the test-stream offer never expires. stackstream.xyz
+> 30-day run done: 11 streams, our first organisation registered, and the clearest signal is that DAOs paying contributors want this most. Thank you to everyone here who answered my question about how you pay people; it shaped the whole month. The test-stream offer never expires. stackstream.xyz
 > Weekly numbers on X: @Stackstream0X.
 
 **WhatsApp**

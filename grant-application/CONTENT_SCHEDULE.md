@@ -714,7 +714,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ---
 
-### Day 30, Tue Oct 13: Thirty days in the open
+### Day 30, Tue Oct 13: Thirty days in the open (posted)
 
 > `SS_D30_thirty-days` v2, "30 days in the open", replacing the original card · Figures read from stackstream.xyz/api/stats on Oct 13: 11 streams, 1 organisation registered · Zero Authority is not named until Grimaldo agrees to be mentioned · No dates in the copy ("day one", not the start date)
 

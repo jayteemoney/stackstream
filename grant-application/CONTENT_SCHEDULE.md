@@ -728,7 +728,7 @@ Weekend days (6, 7, 13, 14, 20, 21, 27, 28) are removed.
 
 ---
 
-### Day 30, Tue Oct 13: Thirty days in the open
+### Day 30, Tue Oct 13: Thirty days in the open (posted)
 
 > `SS_D30_thirty-days` (A, G), built to work whether numbers rose or barely moved · Name the door with the most pull from the scoreboard, or say plainly that none led
 

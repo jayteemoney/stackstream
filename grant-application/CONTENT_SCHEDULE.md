@@ -1,5 +1,7 @@
 # StackStream Content Schedule: Sep 14 to Oct 13, 2026 (weekdays only)
 
+> **Status: closed.** This is the record of the Sep 14 to Oct 13, 2026 run. The live plan for the next 60 days, Mon Oct 26 to Thu Dec 24, 2026, is `CONTENT_SCHEDULE_V2.md`. The posts and messages here are history and must not be re-sent.
+>
 > Same day numbers as `DESIGNER_BRIEF_SEP2026.md`, so asset filenames still match. Who gets a message, and the messages themselves: `ECOSYSTEM_OUTREACH_SEP2026.md` and `M3_DAO_ACQUISITION_PLAN.md`. Voice and settlement rules: `MARKETING_PLAN_V2.md`. How to run a call once a team says yes: `TEAM_ONBOARDING_PLAYBOOK.md`.
 >
 > **Weekdays only, from Oct 4.** Saturday and Sunday posts are removed from the plan: Days 6, 7, 13, 14, 20, 21, 27 and 28 are not posted and are not moved to another day. Every weekday from Day 1 to Day 19 was posted.
@@ -121,7 +123,7 @@ Weekdays only. Follow-ups at three and ten days, then stop. Message texts are in
 
 | Send | Person | Door | Where it stands, Oct 5 | Message |
 |---|---|---|---|---|
-| **Mon Oct 5** | **Zero Authority DAO** (zero), runs DeGrants | 2 | Replied Sep 24. X Space Sep 25, call Sep 26 ended positively, with an offer to work together. No message from us since Sep 26 | Z1, the pilot proposal |
+| **Mon Oct 5** | **Zero Authority DAO** (zero), runs DeGrants | 2 | Replied Sep 24. X Space Sep 25, call Sep 26 ended with "Let's work together and see what happens". No message from us since Sep 26 | Z1, the pilot proposal |
 | Mon Oct 5 | **Grant Nissly**, Taptive and Stacks Labs | 1 | LinkedIn Sep 16 and Sep 21, silent | G2, one email, then stop |
 | **Tue Oct 6** | **Privara** (Samuel Dahunsi), fellow grantee | 1 | Onboarding call held and went well | P1, registration plus the integration questions |
 | Tue Oct 6 | **Mithil Thakore**, Velar | 1 | Not yet sent | V1, on the own-token day |

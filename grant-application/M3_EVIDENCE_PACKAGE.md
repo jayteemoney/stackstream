@@ -114,6 +114,12 @@ An organisation counts toward M3 only once its registration transaction confirms
 |---|---|---|---|---|---|
 | Oct 6, 2026 | Grimaldo (contact at Zero Authority DAO, registered from his own wallet) | [0x0e1ddc99…3dceeb](https://explorer.hiro.so/txid/0x0e1ddc9926223f93a408c6390b8d3f5ceb5e09dd46756fe44f1347a93b3dceeb?chain=mainnet), block 9,134,238, 15:33:44 UTC | 1 (stream 12) | USDA | 1.00 USDA through the organisation record |
 
+### Community and ecosystem events
+
+| Date | Event | Format | Role | Outcome |
+|---|---|---|---|---|
+| Oct 29, 2026 | BFF.ARMY Bootcamp (hosted by Bitflow / TheBigMac.btc) | Google Meet via Luma (recorded) | Speaker | Demonstrated StackStream: streaming payments block by block, paying in sBTC, live mainnet demo, use cases for grants, bounties, DAOs. Recording to be shared with the host after the call. |
+
 The organisation's own contract record reads: name Grimaldo, admin SP1A5M0ZRSNQMF8BNPQPM8WWC5PJ6HJ4GEKFP8W4M, active, created at block 9,134,238, one stream linked, 1.00 USDA deposited.
 
 ### The five creator streams, opened Oct 19, 2026

@@ -9,7 +9,7 @@ import { useWalletStore } from "@/stores/wallet-store";
 import { useBlockHeight } from "@/hooks/use-block-height";
 import { useStacksTx } from "@/hooks/use-stacks-tx";
 import { useTokenBalance } from "@/hooks/use-token-balance";
-import { buildCreateStreamTx, getSenderStreams } from "@/lib/stacks";
+import { buildCreateStreamTx, buildTrackStreamTx, getSenderStreams } from "@/lib/stacks";
 import {
   PREFILL_KEYS,
   buildStreamSetupLink,
@@ -42,6 +42,7 @@ export default function CreateStreamPage() {
   const { address, isConnected } = useWalletStore();
   const { blockHeight } = useBlockHeight();
   const { execute, isPending, isConfirming, txId, status, error, reset } = useStacksTx();
+  const { execute: executeTrack } = useStacksTx();
 
   // A prepared setup link fills the form once, on first render. The wallet
   // owner still reviews every field and signs; see lib/stream-setup-link.ts.
@@ -177,9 +178,11 @@ export default function CreateStreamPage() {
       toast.success("Stream created and confirmed on-chain!");
       // The wallet result carries no stream id. Stream ids only increase, so
       // the sender's highest id is the stream this transaction just created.
+      let newStreamId: number | null = null;
       try {
         const ids = await getSenderStreams(address);
-        setCreatedStreamId(ids.length > 0 ? Math.max(...ids) : null);
+        newStreamId = ids.length > 0 ? Math.max(...ids) : null;
+        setCreatedStreamId(newStreamId);
       } catch {
         setCreatedStreamId(null);
       }
@@ -188,6 +191,20 @@ export default function CreateStreamPage() {
       setDurationValue("30");
       setDurationUnit("days");
       setMemo("");
+      // Auto-link to organization if the sender has an active workspace
+      if (newStreamId !== null && workspace?.isActive) {
+        try {
+          const trackResult = await executeTrack(buildTrackStreamTx(newStreamId));
+          if (trackResult?.confirmed) {
+            toast.success(`Stream #${newStreamId} linked to ${workspace.name}`);
+            setCreatedStreamId(null);
+          } else if (trackResult && !trackResult.confirmed) {
+            toast.error("Stream created but could not be auto-linked. You can link it manually below.");
+          }
+        } catch {
+          // Don't block success flow if auto-link fails
+        }
+      }
     } else if (result && !result.confirmed) {
       toast.error(result.status === "timeout" ? "Transaction timed out" : `Stream creation failed: ${result.errorCode ?? result.status}`);
     }

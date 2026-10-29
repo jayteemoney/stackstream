@@ -15,6 +15,7 @@ import {
   optionalCVOf,
   stringUtf8CV,
   noneCV,
+  listCV,
   type ClarityValue,
   PostConditionMode,
   Pc,
@@ -553,6 +554,19 @@ export function buildTrackStreamTx(streamId: number) {
     contractName: factoryName,
     functionName: "track-stream",
     functionArgs: [uintCV(streamId)],
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [],
+    network: getNetwork(),
+  };
+}
+
+export function buildTrackStreamsTx(streamIds: number[]) {
+  const [factoryAddr, factoryName] = splitContract(STREAM_FACTORY_CONTRACT);
+  return {
+    contractAddress: factoryAddr,
+    contractName: factoryName,
+    functionName: "track-streams",
+    functionArgs: [listCV(streamIds.map((id) => uintCV(id)))],
     postConditionMode: PostConditionMode.Deny,
     postConditions: [],
     network: getNetwork(),

@@ -15,6 +15,7 @@ import {
   buildExpireStreamTx,
   requireTokenMetadata,
   UnresolvableTokenError,
+  buildTrackStreamsTx,
 } from "@/lib/stacks";
 import { formatTxError } from "@/lib/utils";
 import type { StreamData } from "@/lib/stacks";
@@ -24,7 +25,7 @@ import { useWorkspace, useTrackedStreams } from "@/hooks/use-workspace";
 import { STREAM_STATUS } from "@/lib/constants";
 import { toast } from "sonner";
 import Link from "next/link";
-import { PlusCircle, Zap, Filter } from "lucide-react";
+import { PlusCircle, Zap, Filter, Link2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,30 @@ export default function ManageStreamsPage() {
     streams.map((s) => s.id),
     canLink
   );
+  const [isLinkingAll, setIsLinkingAll] = useState(false);
+
+  async function linkAllUnlinked() {
+    if (!canLink || streams.length === 0) return;
+    const unlinked = streams.filter((s) => !tracked?.has(s.id));
+    if (unlinked.length === 0) {
+      toast.info("All streams are already linked");
+      return;
+    }
+    setIsLinkingAll(true);
+    try {
+      const result = await execute(buildTrackStreamsTx(unlinked.map((s) => s.id)));
+      if (result?.confirmed) {
+        toast.success(`Linked ${unlinked.length} stream${unlinked.length === 1 ? "" : "s"} to ${workspace!.name}`);
+        refreshTracked();
+      } else if (result && !result.confirmed) {
+        toast.error(formatTxError("Failed to link streams", result));
+      }
+    } catch (err) {
+      toast.error("Failed to link streams");
+    } finally {
+      setIsLinkingAll(false);
+    }
+  }
 
   const filteredStreams =
     filter === "all"

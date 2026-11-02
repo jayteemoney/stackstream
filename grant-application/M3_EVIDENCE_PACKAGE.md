@@ -126,13 +126,15 @@ The organisation's own contract record reads: name Grimaldo, admin SP1A5M0ZRSNQM
 
 All five were opened from the organisation's admin wallet between 02:23 and 02:33 UTC, each with a 1.00 USDA deposit, each running for 120,960 blocks, each paying one distinct recipient. On the observed chain cadence of about 9.8 seconds per block they run for about 13.7 days, ending around Nov 1, 2026 at 19:05 UTC. Read at block 9,268,786 on Oct 21, each was about 17 percent through.
 
-| Stream | Created (UTC) | Creation tx | Recipient | Claimed so far | Linked to the organisation record |
+**Test status: COMPLETE.** All five streams created, tracked to the organisation, and recipients interacted with them. Stream 12 was cancelled by the sender (Grimaldo, SP1A5M0ZRSNQMF8BNPQPM8WWC5PJ6HJ4GEKFP8W4M) on Nov 1, 2026 at 21:13:44 UTC (block 9390035). Streams 13, 15, and 16 have seen active claims; stream 14 has received no claims to date.
+
+| Stream | Created (UTC) | Creation tx | Recipient | Status | Linked to the organisation record |
 |---|---|---|---|---|---|
-| 12 | Oct 19, 02:23:57 | [0x5bcdb99d…4d5d](https://explorer.hiro.so/txid/0x5bcdb99d4e52de76b879a5b6d26eb85887df871a1a18b89af9eadca06a4a4d5d?chain=mainnet) | SP9VF4RPH7…Y4Y8M5 | 0 | Yes, Oct 19 at 13:02 UTC |
-| 13 | Oct 19, 02:26:41 | [0x21cf3b98…7b11](https://explorer.hiro.so/txid/0x21cf3b98fca88d096042e52fe199bd355029c8f4cf9f163d90712de9d6971b11?chain=mainnet) | SP2B04PBRM0…A6Z78JW | 0.064773 USDA | No |
-| 14 | Oct 19, 02:29:42 | [0x402d9017…bbb](https://explorer.hiro.so/txid/0x402d9017f711801659026d1359aef1e5a72cba4191fdb4b02eb0317001b37bbb?chain=mainnet) | SPT1ZQNA2S…VXRW5Y | 0 | No |
-| 15 | Oct 19, 02:31:03 | [0x361eb52c…3c38](https://explorer.hiro.so/txid/0x361eb52c338c8a6d873c785ec258cae8445d6d4170639d5968920d7f2cf93c38?chain=mainnet) | SP23BQZ3RN…KJGDKMX | 0 | No |
-| 16 | Oct 19, 02:32:30 | [0x3a0ce0e7…8f6](https://explorer.hiro.so/txid/0x3a0ce0e759efd92b04cc25add9bb88709ccaffbb5d1ebc59dbf9cef7405786f6?chain=mainnet) | SP1VK0QWBJ1…1QV564 | 0 | No |
+| 12 | Oct 19, 02:23:57 | [0x5bcdb99d…4d5d](https://explorer.hiro.so/txid/0x5bcdb99d4e52de76b879a5b6d26eb85887df871a1a18b89af9eadca06a4a4d5d?chain=mainnet) | SP9VF4RPH7…Y4Y8M5 | Cancelled by sender (Nov 1, 21:13:44 UTC) | Yes, Oct 19 at 13:02 UTC ([track-stream](https://explorer.hiro.so/txid/0x187aa44efa32032fa8db4d6aae61131d9c401f8208dfa61cd06098b5a0ea005a?chain=mainnet)) |
+| 13 | Oct 19, 02:26:41 | [0x21cf3b98…7b11](https://explorer.hiro.so/txid/0x21cf3b98fca88d096042e52fe199bd355029c8f4cf9f163d90712de9d6971b11?chain=mainnet) | SP2B04PBRM0…A6Z78JW | Active (claims ongoing) | Yes ([track-stream](https://explorer.hiro.so/txid/0x5264864add041f90f9ede358f7d066a44b150f52796af2b7ff0c3b0b95cfe924?chain=mainnet)) |
+| 14 | Oct 19, 02:29:42 | [0x402d9017…bbb](https://explorer.hiro.so/txid/0x402d9017f711801659026d1359aef1e5a72cba4191fdb4b02eb0317001b37bbb?chain=mainnet) | SPT1ZQNA2S…VXRW5Y | Active (no claims yet) | Yes ([track-stream](https://explorer.hiro.so/txid/0xab1e6ad622ffdc7d5632d19e4923555e93eeab1bce4dfc434fe1710d52305646?chain=mainnet)) |
+| 15 | Oct 19, 02:31:03 | [0x361eb52c…3c38](https://explorer.hiro.so/txid/0x361eb52c338c8a6d873c785ec258cae8445d6d4170639d5968920d7f2cf93c38?chain=mainnet) | SP23BQZ3RN…KJGDKMX | Active (claims ongoing) | Yes ([track-stream](https://explorer.hiro.so/txid/0x7a3765777435256f188f26bc835c1936fd0b743c8a2b281803fce5e438014681?chain=mainnet)) |
+| 16 | Oct 19, 02:32:30 | [0x3a0ce0e7…8f6](https://explorer.hiro.so/txid/0x3a0ce0e759efd92b04cc25add9bb88709ccaffbb5d1ebc59dbf9cef7405786f6?chain=mainnet) | SP1VK0QWBJ1…1QV564 | Active (claims ongoing) | Yes ([track-stream](https://explorer.hiro.so/txid/0x9ee1595e0e6816e8db201b64f9d8884c015f947923d207be80646c9b65db963c?chain=mainnet)) |
 
 The recipients are five separate mainnet wallets. Their social handles are in the local working file and are not published here, because permission to name them publicly was still open when the streams were opened. The linking of stream 12 is the [track-stream call of Oct 19, 13:02 UTC](https://explorer.hiro.so/txid/0x187aa44efa32032fa8db4d6aae61131d9c401f8208dfa61cd06098b5a0ea005a?chain=mainnet).
 

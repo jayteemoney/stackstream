@@ -1,0 +1,23 @@
+name: Promotion guard
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  source-branch:
+    name: PRs to main must come from staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source branch
+        if: github.head_ref != 'staging'
+        run: |
+          echo "::error::Changes reach main only by promoting the staging branch. Open this PR against staging instead."
+          exit 1
+
+      - name: Source branch allowed
+        run: echo "Source branch is staging."

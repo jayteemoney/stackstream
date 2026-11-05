@@ -41,7 +41,7 @@ feature/fix branch  ->  staging  ->  main
    gh pr create --base staging --fill
    ```
 
-4. Get CI green and one approving review, then merge into `staging`.
+4. Get the required checks green, then merge into `staging`.
 
 5. Verify the change on the staging deployment (or locally from `staging`).
 
@@ -58,7 +58,35 @@ Once `staging` is verified and fit for release:
 2. The `Promotion guard` check rejects any PR into `main` whose source branch is
    not `staging`.
 
-3. Get CI green and one approving review, then merge. `main` deploys to production.
+3. Get the required checks green, then merge. `main` deploys to production.
+
+## Staging environment
+
+`staging` is deployed to <https://staging.stackstream.xyz> and runs against
+Stacks **testnet**, not mainnet. Production (`main`) runs against mainnet.
+
+The testnet configuration is stored as branch-scoped Vercel environment
+variables for the `staging` branch:
+
+- `NEXT_PUBLIC_NETWORK=testnet`
+- `NEXT_PUBLIC_CONTRACT_DEPLOYER=ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V`
+- `NEXT_PUBLIC_CHAIN_ID=2147483648`
+- `NEXT_PUBLIC_RPC_URL=https://api.testnet.hiro.so`
+
+The testnet contracts are deployed with:
+
+```bash
+clarinet deployments generate --testnet --medium-cost
+clarinet deployments apply --testnet -d --no-dashboard
+```
+
+The deployer mnemonic lives in the gitignored `settings/Testnet.toml`; never
+commit it. Testnet STX comes from the
+[Hiro faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet).
+
+Staging is behind Vercel Authentication. To let testers without Vercel accounts
+in, add `staging.stackstream.xyz` under **Deployment Protection Exceptions**, or
+share a protected deployment link.
 
 ## Hotfixes
 
@@ -76,6 +104,10 @@ protection, but the fix must still be merged back into `staging` afterwards.
 - Frontend typecheck, lint, and production build
 - OpenClaw service typecheck
 
-The `staging` and `main` branches require a pull request, green CI, one
-approving review, and an up-to-date branch before merging. Force pushes and
-branch deletion are blocked.
+The `staging` and `main` branches require a pull request, the required status
+checks, and an up-to-date branch before merging. Force pushes and branch
+deletion are blocked.
+
+If GitHub Actions is unavailable (for example, an account billing lock), the
+required check is temporarily the Vercel build. Run the local checks above
+before merging and restore the full required checks once Actions is healthy.

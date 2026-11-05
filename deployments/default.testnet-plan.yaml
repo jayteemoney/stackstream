@@ -1,39 +1,38 @@
----
 id: 0
 name: Testnet deployment
 network: testnet
-stacks-node: "https://api.testnet.hiro.so"
-bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332"
+stacks-node: https://api.testnet.hiro.so
+bitcoin-node: http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332
 plan:
   batches:
-    - id: 0
-      transactions:
-        - contract-publish:
-            contract-name: sip-010-trait
-            expected-sender: ST2343MJFA65A4FD5N5ZDP00ETDG2GYJ4D2FBNXE0
-            cost: 10260
-            path: contracts/traits/sip-010-trait.clar
-            anchor-block-only: true
-            clarity-version: 3
-        - contract-publish:
-            contract-name: mock-sip010-token
-            expected-sender: ST2343MJFA65A4FD5N5ZDP00ETDG2GYJ4D2FBNXE0
-            cost: 26500
-            path: contracts/mocks/mock-sip010-token.clar
-            anchor-block-only: true
-            clarity-version: 3
-        - contract-publish:
-            contract-name: stream-manager
-            expected-sender: ST2343MJFA65A4FD5N5ZDP00ETDG2GYJ4D2FBNXE0
-            cost: 311340
-            path: contracts/stream-manager.clar
-            anchor-block-only: true
-            clarity-version: 3
-        - contract-publish:
-            contract-name: stream-factory
-            expected-sender: ST2343MJFA65A4FD5N5ZDP00ETDG2GYJ4D2FBNXE0
-            cost: 60810
-            path: contracts/stream-factory.clar
-            anchor-block-only: true
-            clarity-version: 3
-      epoch: "3.0"
+  - id: 0
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: sip-010-trait
+      expected-sender: ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V
+      cost: 140750
+      path: contracts/traits/sip-010-trait.clar
+      anchor-block-only: true
+      clarity-version: 3
+    - transaction-type: contract-publish
+      contract-name: mock-sip010-token
+      expected-sender: ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V
+      cost: 141101
+      path: contracts/mocks/mock-sip010-token.clar
+      anchor-block-only: true
+      clarity-version: 3
+    - transaction-type: contract-publish
+      contract-name: stream-manager
+      expected-sender: ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V
+      cost: 147156
+      path: contracts/stream-manager.clar
+      anchor-block-only: true
+      clarity-version: 3
+    - transaction-type: contract-publish
+      contract-name: stream-factory
+      expected-sender: ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V
+      cost: 142067
+      path: contracts/stream-factory.clar
+      anchor-block-only: true
+      clarity-version: 3
+    epoch: '3.0'

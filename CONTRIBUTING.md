@@ -56,23 +56,26 @@ Once `staging` is verified and fit for release:
    gh pr create --base main --head staging --title "Promote staging to production" --fill
    ```
 
-2. The `Promotion guard` check rejects any PR into `main` whose source branch is
-   not `staging` (it runs when GitHub Actions is available).
+2. Two guards reject any PR into `main` whose source branch is not `staging`:
+   the `Promotion guard` check (when GitHub Actions is available) and
+   `scripts/vercel-promotion-guard.mjs` in the Vercel install step (always).
 
 3. Get the required checks green, then merge. `main` deploys to production.
 
 ## Staging environment
 
 `staging` is deployed to <https://staging.stackstream.xyz> and runs against
-Stacks **testnet**, not mainnet. Production (`main`) runs against mainnet.
+Stacks **testnet**, not mainnet. All other Vercel preview deployments (work
+branches) also run against testnet; only production (`main`) runs against
+mainnet.
 
-The testnet configuration is stored as branch-scoped Vercel environment
-variables for the `staging` branch:
+The testnet configuration is stored as preview-scoped Vercel environment
+variables, so it applies to `staging` and every other preview deployment:
 
 - `NEXT_PUBLIC_NETWORK=testnet`
 - `NEXT_PUBLIC_CONTRACT_DEPLOYER=ST36MRYTKD8X92Q6386RA9QV62A14NJMM9D9DYM3V`
-- `NEXT_PUBLIC_CHAIN_ID=2147483648`
-- `NEXT_PUBLIC_RPC_URL=https://api.testnet.hiro.so`
+
+`NEXT_PUBLIC_CHAIN_ID` and `NEXT_PUBLIC_RPC_URL` are not read by the frontend.
 
 The testnet contracts are deployed with:
 
@@ -94,7 +97,8 @@ through **Deployment Protection Exceptions** when the team grows.
 Hotfixes follow the same path: branch off `staging`, open a PR into `staging`,
 verify, then promote `staging` to `main`. If production is broken and an
 expedited release is unavoidable, an administrator may temporarily relax branch
-protection, but the fix must still be merged back into `staging` afterwards.
+protection for a `staging` to `main` promotion, but the fix must still pass the
+Vercel promotion guard and be merged back into `staging` afterwards.
 
 ## CI
 
@@ -108,6 +112,10 @@ The checks live in `scripts/ci.sh` and run in two places:
 - Vercel runs `scripts/ci.sh all` as part of every deployment through
   `frontend/vercel.json`, so the required `Vercel` check covers the same three
   groups.
+- The Vercel install step (`scripts/vercel-install.sh`) runs
+  `scripts/vercel-promotion-guard.mjs` before installing dependencies. It fails
+  the build when an open PR targets `main` from a branch other than `staging`,
+  so the promotion rule is enforced even while GitHub Actions is unavailable.
 
 While GitHub Actions is unavailable (for example, an account billing lock),
 branch protection requires only the `Vercel` check. Once Actions is healthy,

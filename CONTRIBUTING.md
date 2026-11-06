@@ -29,9 +29,10 @@ feature/fix branch  ->  staging  ->  main
 2. Make changes and run the checks locally:
 
    ```bash
-   npm test
-   cd frontend && npx tsc --noEmit && npm run lint && npm run build
-   cd ../openclaw-service && npx tsc --noEmit
+   npm ci
+   npm ci --prefix frontend
+   npm ci --prefix openclaw-service
+   ./scripts/ci.sh all
    ```
 
 3. Push the branch and open a pull request **targeting `staging`**:
@@ -56,7 +57,7 @@ Once `staging` is verified and fit for release:
    ```
 
 2. The `Promotion guard` check rejects any PR into `main` whose source branch is
-   not `staging`.
+   not `staging` (it runs when GitHub Actions is available).
 
 3. Get the required checks green, then merge. `main` deploys to production.
 
@@ -84,9 +85,9 @@ The deployer mnemonic lives in the gitignored `settings/Testnet.toml`; never
 commit it. Testnet STX comes from the
 [Hiro faucet](https://explorer.hiro.so/sandbox/faucet?chain=testnet).
 
-Staging is behind Vercel Authentication. To let testers without Vercel accounts
-in, add `staging.stackstream.xyz` under **Deployment Protection Exceptions**, or
-share a protected deployment link.
+Staging is behind Vercel Authentication and is intentionally SSO-only while the
+project is maintained by a single person. External testers can be added later
+through **Deployment Protection Exceptions** when the team grows.
 
 ## Hotfixes
 
@@ -97,17 +98,22 @@ protection, but the fix must still be merged back into `staging` afterwards.
 
 ## CI
 
-`.github/workflows/test.yml` runs on every pull request and on pushes to
-`staging` and `main`:
+The checks live in `scripts/ci.sh` and run in two places:
 
-- Contract and unit tests (`npm test`)
-- Frontend typecheck, lint, and production build
-- OpenClaw service typecheck
+- `.github/workflows/test.yml` runs them as three jobs on every pull request and
+  on pushes to `staging` and `main`:
+  - Contract and unit tests (`npm test`)
+  - Frontend typecheck, lint, and production build
+  - OpenClaw service typecheck
+- Vercel runs `scripts/ci.sh all` as part of every deployment through
+  `frontend/vercel.json`, so the required `Vercel` check covers the same three
+  groups.
+
+While GitHub Actions is unavailable (for example, an account billing lock),
+branch protection requires only the `Vercel` check. Once Actions is healthy,
+restore the three job checks on both branches and the `Promotion guard` check on
+`main`.
 
 The `staging` and `main` branches require a pull request, the required status
 checks, and an up-to-date branch before merging. Force pushes and branch
 deletion are blocked.
-
-If GitHub Actions is unavailable (for example, an account billing lock), the
-required check is temporarily the Vercel build. Run the local checks above
-before merging and restore the full required checks once Actions is healthy.

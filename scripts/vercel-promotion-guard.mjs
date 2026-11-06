@@ -3,6 +3,7 @@
 const owner = process.env.VERCEL_GIT_REPO_OWNER;
 const repo = process.env.VERCEL_GIT_REPO_SLUG;
 const ref = process.env.VERCEL_GIT_COMMIT_REF;
+const commitSha = process.env.VERCEL_GIT_COMMIT_SHA;
 const pullRequestId = process.env.VERCEL_GIT_PULL_REQUEST_ID;
 
 const fail = (message) => {
@@ -67,19 +68,31 @@ if (ref === "main" || ref === "staging") {
   allow(`${ref} is a protected deployment branch`);
 }
 
+if (!commitSha) {
+  fail("missing VERCEL_GIT_COMMIT_SHA");
+}
+
 const url = new URL(apiUrl);
 url.searchParams.set("state", "open");
-url.searchParams.set("head", `${owner}:${ref}`);
+url.searchParams.set("base", "main");
+url.searchParams.set("per_page", "100");
 
 const openPullRequests = await request(url);
-const promotionPullRequest = openPullRequests.find(
-  (pr) => pr.base?.ref === "main" && pr.head?.repo?.full_name === `${owner}/${repo}`
+const matchingPullRequests = openPullRequests.filter(
+  (pr) => pr.head?.sha === commitSha
+);
+const blockedPullRequest = matchingPullRequests.find(
+  (pr) => !isSameRepoStaging(pr)
 );
 
-if (promotionPullRequest) {
+if (blockedPullRequest) {
   fail(
-    `PR #${promotionPullRequest.number} targets main from ${ref}; only staging may target main`
+    `PR #${blockedPullRequest.number} targets main from ${blockedPullRequest.head?.repo?.full_name}:${blockedPullRequest.head?.ref}; only ${owner}/${repo}:staging may target main`
   );
+}
+
+if (matchingPullRequests.length > 0) {
+  allow("commit is part of a staging promotion");
 }
 
 allow(`${ref} has no open promotion PR to main`);

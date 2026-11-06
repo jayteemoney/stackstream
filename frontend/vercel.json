@@ -1,0 +1,4 @@
+{
+  "installCommand": "cd .. && npm ci --include=dev --prefer-offline --no-audit --no-fund && npm ci --prefix frontend --include=dev --prefer-offline --no-audit --no-fund && npm ci --prefix openclaw-service --include=dev --prefer-offline --no-audit --no-fund",
+  "buildCommand": "cd .. && ./scripts/ci.sh all"
+}

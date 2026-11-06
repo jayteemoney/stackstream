@@ -1,8 +1,11 @@
 name: CI
 
+# Keep these commands in sync with scripts/ci.sh, which Vercel runs as part of
+# the required Vercel check while GitHub Actions is unavailable.
+
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   pull_request:
 
 # A newer push to the same branch makes the older run pointless.

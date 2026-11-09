@@ -277,6 +277,7 @@ export function AssistantWidget() {
       {/* Floating toggle button */}
       <button
         onClick={() => setOpen(!open)}
+        aria-label={open ? "Close Stacky assistant" : "Open Stacky assistant"}
         className={cn(
           "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-300",
           open
@@ -298,7 +299,7 @@ export function AssistantWidget() {
               <Zap className="h-3.5 w-3.5 text-brand-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-100">OpenClaw Assistant</p>
+              <p className="text-sm font-semibold text-zinc-100">Stacky</p>
               <p className="text-[10px] text-zinc-500">Query streams, workspaces, and blockchain state</p>
             </div>
           </div>

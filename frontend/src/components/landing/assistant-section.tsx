@@ -49,7 +49,7 @@ const capabilities = [
   },
 ];
 
-// Preview of the OpenClaw panel — mirrors the real in-app widget so visitors
+// Preview of the Stacky panel — mirrors the real in-app widget so visitors
 // see exactly what they get once they launch the app.
 function AssistantPreview() {
   const tabs = [
@@ -68,7 +68,7 @@ function AssistantPreview() {
           <Zap className="h-3.5 w-3.5 text-brand-400" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-zinc-100">OpenClaw Assistant</p>
+          <p className="text-sm font-semibold text-zinc-100">Stacky</p>
           <p className="text-[10px] text-zinc-500">
             Query streams, workspaces, and blockchain state
           </p>
@@ -149,14 +149,14 @@ export function AssistantSection() {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/5 px-3 py-1 text-xs font-medium text-brand-400">
               <Sparkles className="h-3.5 w-3.5" />
-              Built in: OpenClaw Assistant
+              Built in: Stacky
             </div>
             <h2 className="text-3xl font-bold text-zinc-100 md:text-4xl">
               An assistant that reads the chain for you
             </h2>
             <p className="mt-3 max-w-lg text-zinc-500">
-              OpenClaw lives inside the app. Ask it about any stream, address, or
-              workspace and it answers in a click — no block explorer, no raw
+              Stacky lives inside the app. Ask Stacky about any stream, address,
+              or workspace and it answers in a click — no block explorer, no raw
               contract calls, no guesswork.
             </p>
 
@@ -190,7 +190,7 @@ export function AssistantSection() {
             <div className="mt-8">
               <Link href="/dashboard">
                 <Button size="lg">
-                  Try OpenClaw in the app
+                  Try Stacky in the app
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>

@@ -23,8 +23,8 @@ const faqs = [
     a: "Funds sit in on-chain escrow, not in anyone's pocket. The recipient can only ever claim what they've already earned, and everything not yet earned stays yours. Pause, top up, or cancel at any time and the unearned remainder comes straight back to your wallet.",
   },
   {
-    q: "What is OpenClaw?",
-    a: "OpenClaw is the assistant built into the app. Ask it about any stream, sender, recipient, or workspace and it pulls the live on-chain answer instantly — no block explorer or raw contract calls needed.",
+    q: "What is Stacky?",
+    a: "Stacky is the assistant built into the app. Ask Stacky about any stream, sender, recipient, or workspace and it pulls the live on-chain answer instantly — no block explorer or raw contract calls needed.",
   },
   {
     q: "Who is StackStream for?",

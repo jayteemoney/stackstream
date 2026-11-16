@@ -1349,7 +1349,8 @@ describe("StackStream - Stream Manager Contract", () => {
 
         expect(claimableDuringPause).toBe(claimableAtPause);
 
-        simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+        const resume = simnet.callPublicFn(streamManagerContract, "resume-stream", [Cl.uint(streamId)], wallet1);
+        if ((resume.result as any).type !== "ok") break;
       }
     });
 
